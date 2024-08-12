@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
-  title: Catalog Microservice
-  description: API for managing currencies
+  title: Order Microservice
+  description: API for managing orders
   version: 1.0.0-alpha0
   license:
     name: Apache 2.0
@@ -1086,6 +1086,11 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 components:
+  securitySchemes:
+    cookie_access_token:
+      type: apiKey
+      in: cookie
+      name: access_token
   schemas:
     Currency:
       type: object
