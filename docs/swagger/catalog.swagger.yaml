@@ -1,0 +1,1014 @@
+openapi: 3.0.3
+info:
+  title: Catalog Microservice
+  description: API for categories, subcategories, services, and provider services
+  version: 1.0.0-alpha0
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: http://localhost:8080/api/v1
+  - url: https://handy.ge/api/v1
+tags:
+  - name: Category Types
+  - name: Categories
+  - name: Subcategories
+  - name: Services
+  - name: Provider Services
+paths:
+  /category-types:
+    get:
+      summary: List all category types
+      tags:
+        - Category Types
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/CategoryTypesArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Create a new category type
+      tags:
+        - Category Types
+      security:
+        - cookie_access_token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryTypeInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoryTypeInput'
+      responses:
+        '201':
+          $ref: '#/components/responses/CategoryType'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /category-types/{id}:
+    get:
+      summary: Get a specific category type by ID
+      tags:
+        - Category Types
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/CategoryType'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      summary: Update a category type
+      tags:
+        - Category Types
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryTypeInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoryTypeInput'
+      responses:
+        '200':
+          $ref: '#/components/schemas/CategoryType'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: Delete a category type
+      tags:
+        - Category Types
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Category type deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /categories:
+    get:
+      summary: List all categories
+      tags:
+        - Categories
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/CategoriesArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Create a new category
+      tags:
+        - Categories
+      security:
+        - cookie_access_token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+      responses:
+        '201':
+          $ref: '#/components/responses/Category'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /categories/{id}:
+    get:
+      summary: Get a specific category by ID
+      tags:
+        - Categories
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/Category'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      summary: Update a category
+      tags:
+        - Categories
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+          application/x-www-form-urlencoded:
+      responses:
+        '200':
+          $ref: '#/components/responses/Category'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: Delete a category
+      tags:
+        - Categories
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Category deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /subcategories:
+    get:
+      summary: List all subcategories
+      tags:
+        - Subcategories
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/CategoriesArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Create a new subcategory
+      tags:
+        - Subcategories
+      security:
+        - cookie_access_token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubcategoryInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubcategoryInput'
+      responses:
+        '201':
+          $ref: '#/components/responses/Subcategory'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /subcategories/{id}:
+    get:
+      summary: Get a specific subcategory by ID
+      tags:
+        - Subcategories
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/Subcategory'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      summary: Update a subcategory
+      tags:
+        - Subcategories
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubcategoryInput'
+      responses:
+        '200':
+          $ref: '#/components/responses/Subcategory'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: Delete a subcategory
+      tags:
+        - Subcategories
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Subcategory deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /services:
+    get:
+      summary: List all services
+      tags:
+        - Services
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/ServicesArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Create a new service
+      tags:
+        - Services
+      security:
+        - cookie_access_token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ServiceInput'
+      responses:
+        '201':
+          $ref: '#/components/responses/Service'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /services/{id}:
+    get:
+      summary: Get a specific service by ID
+      tags:
+        - Services
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/Service'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      summary: Update a service
+      tags:
+        - Services
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceInput'
+      responses:
+        '200':
+          $ref: '#/components/responses/Service'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: Delete a service
+      tags:
+        - Services
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Service deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /services/{id}/providers:
+    get:
+      summary: List provider services by service ID
+      tags:
+        - Services
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProviderIdsArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'  
+  /provider/{id}/services:
+    get:
+      summary: List provider services by provider ID
+      tags:
+        - Provider Services
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/ServicesArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Assign a service to a provider
+      tags:
+        - Provider Services
+      security:
+        - cookie_access_token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderService'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProviderService'
+      responses:
+        '201':
+          $ref: '#/components/responses/Service'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /providers/{provider_id}/services/{service_id}:
+    get:
+      summary: Get a provider service by provider ID and service ID
+      tags:
+        - Provider Services
+      security:
+        - cookie_access_token: []
+      parameters:
+        - name: provider_id
+          in: path
+          description: Provider ID
+          required: true
+          schema:
+            type: integer
+        - name: service_id
+          in: path
+          description: Service ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Service'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: Remove a service from a provider
+      tags:
+        - Provider Services
+      security:
+        - cookie_access_token: []
+      parameters:
+        - name: provider_id
+          in: path
+          description: Provider ID
+          required: true
+          schema:
+            type: integer
+        - name: service_id
+          in: path
+          description: Service ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Provider service removed
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /provider/me/services:
+    get:
+      summary: List my provider services
+      tags:
+        - Provider Services
+      security:
+        - cookie_access_token: []
+      responses:
+        '200':
+          $ref: '#/components/responses/ServicesArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Add a provider service for me
+      tags:
+        - Provider Services
+      security:
+        - cookie_access_token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                service_id:
+                  type: integer
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                service_id:
+                  type: integer
+      responses:
+        '201':
+          $ref: '#/components/responses/Service'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /provider/me/services/{id}:
+    get:
+      summary: Get a my service by service ID
+      tags:
+        - Provider Services
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/Service'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: Delete all my provider services
+      tags:
+        - Provider Services
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: A service for the authenticated user was deleted
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+components:
+  securitySchemes:
+    cookie_access_token:
+      type: apiKey
+      in: cookie
+      name: access_token
+  schemas:
+    CategoryType:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 2
+        name:
+          type: string
+          example: Home Appliance
+    CategoryTypeInput:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Home Appliance
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 12
+        type_id:
+          type: integer
+          example: 2
+        name:
+          type: string
+          example: Plumbing
+    CategoryInput:
+      type: object
+      properties:
+        type_id:
+          type: integer
+          example: 2
+        name:
+          type: string
+          example: Plumbing
+    Subcategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 345
+        category_id:
+          type: integer
+          example: 12
+        name:
+          type: string
+          example: Tap
+    SubcategoryInput:
+      type: object
+      properties:
+        category_id:
+          type: integer
+          example: 12
+        name:
+          type: string
+          example: Tap
+    Service:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1200
+        subcategory_id:
+          type: integer
+          example: 345
+        name:
+          type: string
+          example: Repair
+        description:
+          type: string
+          example: Repair of tap water
+    ServiceInput:
+      type: object
+      properties:
+        subcategory_id:
+          type: integer
+          example: 345
+        name:
+          type: string
+          example: Repair
+        description:
+          type: string
+          example: Repair of tap water
+    ProviderService:
+      type: object
+      properties:
+        provider_id:
+          type: string
+          example: 12345678901234
+        service_id:
+          type: integer
+          example: 12
+    ApiResponse:
+      type: object
+      properties:
+        data:
+          type: object
+    PageResponse:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        per_page:
+          type: integer
+          example: 10
+        total:
+          type: integer
+          example: 50
+        data:
+          type: array
+    BasicError:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BasicError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BasicError'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BasicError'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BasicError'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BasicError'
+    InternalError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BasicError'
+    CategoryTypesArr:
+      description: CategoryTypes array
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PageResponse'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CategoryType'  
+    CategoriesArr:
+      description: Categories array
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PageResponse'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Category'
+    SubcategoriesArr:
+      description: Subcategories array
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PageResponse'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Subcategory'
+    ServicesArr:
+      description: Services array
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PageResponse'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Service'
+    ProviderServicesArr:
+      description: Provider Services Array
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PageResponse'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProviderService'
+    ProviderIdsArr:
+      description: Provider ids array
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PageResponse'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        provider_id:
+                          type: string
+                          example: 1234567891234
+    CategoryType:
+      description: Category Type Response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CategoryType'
+    Category:
+      description: Category Response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Category'
+    Subcategory:
+      description: Subcategory Response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Subcategory'
+    Service:
+      description: Service Response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Service'
+  parameters:
+    id:
+      name: id
+      in: path
+      description: The ID of the resource
+      required: true
+      schema:
+        type: integer
+    per_page:
+      name: per_page
+      in: query
+      description: Number of items per page
+      required: false
+      schema:
+        type: integer
+        default: 10
+    page:
+      name: page
+      in: query
+      description: Page number
+      required: false
+      schema:
+        type: integer
+        default: 1

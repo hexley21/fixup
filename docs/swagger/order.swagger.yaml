@@ -1,0 +1,1678 @@
+openapi: 3.0.3
+info:
+  title: Catalog Microservice
+  description: API for managing currencies
+  version: 1.0.0-alpha0
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: http://localhost:8080/api/v1
+  - url: https://handy.ge/api/v1
+tags:
+  - name: Currencies
+  - name: Cities
+  - name: Orders
+  - name: Offers
+  - name: Jobs
+  - name: Reviews
+  - name: Locations
+  - name: Providers
+paths:
+  /currencies:
+    get:
+      summary: List all currencies
+      tags:
+        - Currencies
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/CurrenciesArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Create a new currency
+      tags:
+        - Currencies
+      security:
+        - cookie_access_token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CurrencyInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CurrencyInput'
+      responses:
+        '201':
+          $ref: '#/components/responses/Currency'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /currencies/{id}:
+    get:
+      summary: Get a specific currency by ID
+      tags:
+        - Currencies
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/Currency'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      summary: Update a currency
+      tags:
+        - Currencies
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CurrencyInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CurrencyInput'
+      responses:
+        '200':
+          $ref: '#/components/schemas/Currency'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: Delete a currency
+      tags:
+        - Currencies
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Currency deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /cities:
+    get:
+      summary: List all cities
+      tags:
+        - Cities
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/CitiesArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Create a new city
+      tags:
+        - Cities
+      security:
+        - cookie_access_token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CityInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CityInput'
+      responses:
+        '201':
+          $ref: '#/components/responses/City'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /cities/{id}:
+    get:
+      summary: Get a specific city by ID
+      tags:
+        - Cities
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/City'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      summary: Update a city
+      tags:
+        - Cities
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CityInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CityInput'
+      responses:
+        '200':
+          $ref: '#/components/responses/City'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: Delete a city
+      tags:
+        - Cities
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: City deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /cities/{id}/providers:
+    get:
+      summary: Get providers by city id
+      tags:
+        - Providers
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProviderIdsArr'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /orders:
+    get:
+      summary: List all orders
+      tags:
+        - Orders
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/OrdersArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Create a new order
+      tags:
+        - Orders
+      security:
+        - cookie_access_token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderInput'
+      responses:
+        '201':
+          $ref: '#/components/responses/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /orders/{id}:
+    get:
+      summary: Get a specific order by ID
+      tags:
+        - Orders
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/Order'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      summary: Update an order
+      tags:
+        - Orders
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderInput'
+      responses:
+        '200':
+          $ref: '#/components/responses/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: Delete an order
+      tags:
+        - Orders
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Order deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /offers:
+    post:
+      summary: Create a new offer
+      tags:
+        - Offers
+      security:
+        - cookie_access_token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfferInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OfferInput'
+      responses:
+        '201':
+          $ref: '#/components/responses/Offer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /offers/{id}:
+    get:
+      summary: Get a specific offer by ID
+      tags:
+        - Offers
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/Offer'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      summary: Update an offer
+      tags:
+        - Offers
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfferInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OfferInput'
+      responses:
+        '200':
+          $ref: '#/components/schemas/Offer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: Delete an offer
+      tags:
+        - Offers
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Offer deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /orders/{id}/offers:
+    get:
+      summary: List all offers by order
+      tags:
+        - Offers
+        - Orders
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/OffersArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /jobs:
+    post:
+      summary: Create a new job
+      tags:
+        - Jobs
+      security:
+        - cookie_access_token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/JobInput'
+      responses:
+        '201':
+          $ref: '#/components/responses/Job'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /jobs/{id}:
+    get:
+      summary: Get a specific job by ID
+      tags:
+        - Jobs
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/Job'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      summary: Update a job
+      tags:
+        - Jobs
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/JobInput'
+      responses:
+        '200':
+          $ref: '#/components/schemas/Job'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: Delete a job
+      tags:
+        - Jobs
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Job deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /reviews:
+    post:
+      summary: Create a new review
+      tags:
+        - Reviews
+      security:
+        - cookie_access_token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReviewInput'
+      responses:
+        '201':
+          $ref: '#/components/responses/Review'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /reviews/{id}:
+    get:
+      summary: Get a specific review by ID
+      tags:
+        - Reviews
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/Review'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      summary: Update a review
+      tags:
+        - Reviews
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewPatch'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReviewPatch'
+      responses:
+        '200':
+          $ref: '#/components/responses/Review'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: Delete a review
+      tags:
+        - Reviews
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Review deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /providers/{id}/location:
+    get:
+      summary: Get a specific provider location by ID
+      tags:
+        - Locations
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProviderLocation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Create a new provider location
+      tags:
+        - Locations
+        - Providers
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderLocationInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProviderLocationInput'
+      responses:
+        '201':
+          $ref: '#/components/responses/ProviderLocation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      summary: Update a provider location
+      tags:
+        - Locations
+        - Providers
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderLocationInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProviderLocationInput'
+      responses:
+        '200':
+          $ref: '#/components/schemas/ProviderLocation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /providers/me/location:
+    get:
+      summary: Get self provider location by ID
+      tags:
+        - Locations
+      security:
+        - cookie_access_token: []
+      responses:
+        '200':
+          $ref: '#/components/responses/ProviderLocation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      summary: Update self provider location
+      tags:
+        - Locations
+        - Providers
+      security:
+        - cookie_access_token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderLocationInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProviderLocationInput'
+      responses:
+        '200':
+          $ref: '#/components/schemas/ProviderLocation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /providers/{id}/offers:
+    get:
+      summary: List all offers by provider
+      tags:
+        - Offers
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/OffersArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /providers/{id}/jobs:
+    get:
+      summary: List all jobs
+      tags:
+        - Jobs
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/JobsArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /providers/{id}/reviews:
+    get:
+      summary: List all reviews
+      tags:
+        - Reviews
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/ReviewsArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /providers/me/offers:
+    get:
+      summary: List all offers by self provider
+      tags:
+        - Offers
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/OffersArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /providers/me/jobs:
+    get:
+      summary: List all jobs
+      tags:
+        - Jobs
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/JobsArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /providers/me/reviews:
+    get:
+      summary: List all reviews
+      tags:
+        - Reviews
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/ReviewsArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /customers/{id}/orders:
+    get:
+      summary: List all orders of a customer by id
+      tags:
+        - Orders
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/OrdersArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /customers/{id}/jobs:
+    get:
+      summary: List all jobs
+      tags:
+        - Jobs
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/JobsArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /customers/{id}/reviews:
+    get:
+      summary: List all reviews
+      tags:
+        - Reviews
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/ReviewsArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /customers/me/orders:
+    get:
+      summary: List all orders of a self customer
+      tags:
+        - Orders
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/OrdersArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /customers/me/jobs:
+    get:
+      summary: List all jobs
+      tags:
+        - Jobs
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/JobsArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /customers/me/reviews:
+    get:
+      summary: List all reviews
+      tags:
+        - Reviews
+      security:
+        - cookie_access_token: []
+      parameters:
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          $ref: '#/components/responses/ReviewsArr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+components:
+  schemas:
+    Currency:
+      type: object
+      properties:
+        id:
+          type: integer
+        currency:
+          type: string
+        code:
+          type: string
+        symbol:
+          type: string
+    CurrencyInput:
+      type: object
+      properties:
+        currency:
+          type: string
+        code:
+          type: string
+        symbol:
+          type: string
+      required:
+        - currency
+        - code
+        - symbol
+    City:
+      type: object
+      properties:
+        city_id:
+          type: integer
+        name:
+          type: string
+        location:
+          type: string
+          description: Point location in GEOGRAPHY(POINT, 4326) format
+        country:
+          type: string
+        iso2:
+          type: string
+        admin_name:
+          type: string
+        capital:
+          type: string
+    CityInput:
+      type: object
+      properties:
+        name:
+          type: string
+        location:
+          type: string
+          description: Point location in GEOGRAPHY(POINT, 4326) format
+        country:
+          type: string
+        iso2:
+          type: string
+        admin_name:
+          type: string
+        capital:
+          type: string
+      required:
+        - name
+        - location
+        - country
+        - iso2
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        user_id:
+          type: integer
+          format: int64
+        service_id:
+          type: integer
+        location:
+          type: object
+          properties:
+            longitude:
+              type: number
+            latitude:
+              type: number
+        time_start:
+          type: string
+          format: date-time
+        time_end:
+          type: string
+          format: date-time
+        description:
+          type: string
+    OrderInput:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          format: int64
+        service_id:
+          type: integer
+        location:
+          type: object
+          properties:
+            longitude:
+              type: number
+            latitude:
+              type: number
+        time_start:
+          type: string
+          format: date-time
+        time_end:
+          type: string
+          format: date-time
+        description:
+          type: string
+      required:
+        - user_id
+        - service_id
+        - time_start
+        - time_end
+        - description
+    ProviderLocation:
+      type: object
+      properties:
+        provider_id:
+          type: string
+          format: int64
+        city_id:
+          type: integer
+        location:
+          type: object
+          properties:
+            longitude:
+              type: number
+            latitude:
+              type: number
+        address:
+          type: string
+    ProviderLocationInput:
+      type: object
+      properties:
+        city_id:
+          type: integer
+        location:
+          type: object
+          properties:
+            longitude:
+              type: number
+            latitude:
+              type: number
+        address:
+          type: string
+      required:
+        - city_id
+        - address
+    Offer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: int64
+        provider_id:
+          type: string
+          format: int64
+        order_id:
+          type: string
+          format: int64
+        price:
+          type: number
+          format: decimal
+        currency_id:
+          type: integer
+        book_time:
+          type: string
+          format: date-time
+    OfferInput:
+      type: object
+      properties:
+        provider_id:
+          type: integer
+          format: int64
+        order_id:
+          type: integer
+          format: int64
+        price:
+          type: number
+          format: decimal
+        currency_id:
+          type: integer
+        book_time:
+          type: string
+          format: date-time
+      required:
+        - provider_id
+        - order_id
+        - price
+        - currency_id
+        - book_time
+    Job:
+      type: object
+      properties:
+        id:
+          type: string
+          format: int64
+        offer_id:
+          type: string
+          format: int64
+        order_id:
+          type: string
+          format: int64
+        user_id:
+          type: string
+          format: int64
+        provider_id:
+          type: string
+          format: int64
+        service_id:
+          type: integer
+        status:
+          type: string
+          enum:
+            - PENDING
+            - IN_PROGRESS
+            - COMPLETED
+            - CANCELLED
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    JobInput:
+      type: object
+      properties:
+        offer_id:
+          type: string
+          format: int64
+        order_id:
+          type: string
+          format: int64
+        user_id:
+          type: integer
+          format: int64
+        provider_id:
+          type: integer
+          format: int64
+        service_id:
+          type: integer
+        status:
+          type: string
+          enum:
+            - PENDING
+            - IN_PROGRESS
+            - COMPLETED
+            - CANCELLED
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - user_id
+        - provider_id
+        - service_id
+        - status
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+          format: int64
+        job_id:
+          type: string
+          format: int64
+        user_id:
+          type: string
+          format: int64
+        provider_id:
+          type: string
+          format: int64
+        rating:
+          type: number
+          format: float
+        comment:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    ReviewInput:
+      type: object
+      properties:
+        job_id:
+          type: integer
+          format: int64
+        user_id:
+          type: integer
+          format: int64
+        provider_id:
+          type: integer
+          format: int64
+        rating:
+          type: number
+          format: float
+        comment:
+          type: string
+      required:
+        - job_id
+        - provider_id
+        - rating
+    ReviewPatch:
+      type: object
+      properties:
+        rating:
+          type: number
+          format: float
+        comment:
+          type: string
+      required:
+        - rating
+    ApiResponse:
+      type: object
+      properties:
+        data:
+          type: object
+    PageResponse:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        per_page:
+          type: integer
+          example: 10
+        total:
+          type: integer
+          example: 50
+        data:
+          type: array
+    BasicError:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+  responses:
+    CurrenciesArr:
+      description: Currencies array
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PageResponse'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Currency'
+    CitiesArr:
+      description: Cities array
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PageResponse'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/City'
+    OrdersArr:
+      description: Orders array
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PageResponse'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+    ProviderLocationsArr:
+      description: Provider locations array
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PageResponse'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProviderLocation'
+    ProviderIdsArr:
+      description: Provider ids array
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PageResponse'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        provider_id:
+                          type: string
+                          example: 1234567891234
+    OffersArr:
+      description: Offers array
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PageResponse'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Offer'
+    JobsArr:
+      description: Jobs array
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PageResponse'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Job'
+    ReviewsArr:
+      description: Reviews array
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PageResponse'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Review'
+    Currency:
+      description: Currency Response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Currency'
+    City:
+      description: City Response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/City'
+    Order:
+      description: Order Response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Order'
+    ProviderLocation:
+      description: Provider location Response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProviderLocation'
+    Offer:
+      description: Offer Response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Offer'
+    Job:
+      description: Job Response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Job'
+    Review:
+      description: Review Response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Review'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BasicError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BasicError'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BasicError'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BasicError'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BasicError'
+    InternalError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BasicError'
+  parameters:
+    id:
+      name: id
+      in: path
+      description: The ID of the resource
+      required: true
+      schema:
+        type: integer
+    per_page:
+      name: per_page
+      in: query
+      description: Number of items per page
+      required: false
+      schema:
+        type: integer
+        default: 10
+    page:
+      name: page
+      in: query
+      description: Page number
+      required: false
+      schema:
+        type: integer
+        default: 1

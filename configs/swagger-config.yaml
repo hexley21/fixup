@@ -1,0 +1,7 @@
+urls:
+  - url: ./user.swagger.yaml
+    name: user
+  - url: ./catalog.swagger.yaml
+    name: catalog
+  - url: ./order.swagger.yaml
+    name: order
