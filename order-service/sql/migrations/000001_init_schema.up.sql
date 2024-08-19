@@ -23,7 +23,7 @@ CREATE TABLE cities (
 
 -- Orders table
 CREATE TABLE orders (
-    id BIGINT NOT NULL,
+    id BIGINT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     service_id INTEGER NOT NULL,
     location GEOGRAPHY(POINT, 4326),
@@ -44,7 +44,7 @@ CREATE TABLE provider_locations (
 CREATE TABLE offers (
     id BIGINT PRIMARY KEY NOT NULL,
     provider_id BIGINT NOT NULL,
-    order_id BIGINT NOT NULL REFERENCES orders(id),
+    order_id BIGINT REFERENCES orders(id) NOT NULL,
     price NUMERIC(10, 4) NOT NULL,
     currency_id INT REFERENCES currencies(id) NOT NULL,
     book_time TIMESTAMP NOT NULL
@@ -52,7 +52,7 @@ CREATE TABLE offers (
 
 -- jobs table
 CREATE TABLE jobs (
-    id BIGINT PRIMARY KEY NOT NULL,
+    id BIGINT PRIMARY KEY ,
     offer_id BIGINT NOT NULL REFERENCES offers(id),
     order_id BIGINT NOT NULL REFERENCES orders(id),
     user_id BIGINT NOT NULL,
@@ -66,10 +66,10 @@ CREATE TABLE jobs (
 -- Reviews Table
 CREATE TABLE reviews (
     id BIGINT PRIMARY KEY NOT NULL,
-    job_id BIGINT NOT NULL REFERENCES job(id),
+    job_id BIGINT NOT NULL REFERENCES jobs(id),
     user_id BIGINT NOT NULL,
     provider_id BIGINT NOT NULL,
-    rating NUMERIC(3,2) CHECK (rating >= 0 AND rating <= 5 AND (rating % 0.5) == 0) NOT NULL,
+    rating NUMERIC(3,2) CHECK (rating >= 0 AND rating <= 5 AND (rating * 10) % 5 = 0) NOT NULL,
     comment TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

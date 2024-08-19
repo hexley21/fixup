@@ -1,5 +1,5 @@
 FROM swaggerapi/swagger-ui:latest
 
 COPY ./docs/swagger/*.yaml /usr/share/nginx/html/
-COPY ./configs/swagger-config.yaml /usr/share/nginx/html/swagger-config.yaml
+COPY ./build/config/swagger-config.yaml /usr/share/nginx/html/swagger-config.yaml
 ENV CONFIG_URL ./swagger-config.yaml
