@@ -1,0 +1,5 @@
+FROM swaggerapi/swagger-ui:latest
+
+COPY ./api/swagger/*.yaml /usr/share/nginx/html/
+COPY ./config/swagger.config.yml /usr/share/nginx/html/swagger.config.yml
+ENV CONFIG_URL ./swagger.config.yml

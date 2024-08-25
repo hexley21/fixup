@@ -2,7 +2,7 @@ services:
   swagger-ui:
     build:
       context: .
-      dockerfile: ./build/Dockerfile.swagger
+      dockerfile: ./docker/Dockerfile.swagger
     ports:
       - "8080:8080"
   user-db:
