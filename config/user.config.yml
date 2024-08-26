@@ -1,0 +1,29 @@
+http:
+    port: 8080
+
+postgres:
+    port: 5433
+    host: db
+    db_name: user
+    max-connections: 50
+    min-connections: 10
+    max-conn-lifetime: 180
+    max-conn-idle-time: 60
+    healthcheck-period: 60
+
+redis:
+    port: 5432
+    host: db
+    db_name: 0
+    dial_timeout: 30
+
+jwt:
+    access_ttl: 2h
+    refresh_ttl: 168h
+
+hasher:
+    salt_len: 16
+    key_len: 79
+    time: 3
+    memory: 65536
+    threads: 4

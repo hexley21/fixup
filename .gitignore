@@ -22,7 +22,7 @@ go.work
 go.work.sum
 
 docker-data
-*/generated
+**/generated
 
 .env
 .envrc

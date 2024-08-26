@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"math"
 	"os"
 	"time"
@@ -14,25 +13,37 @@ type (
 	Config struct {
 		HTTP     HTTP
 		Postgres Postgres
-		Auth     Auth
+		Redis    Redis
+		JWT      JWT
+		Argon2   Argon2
 	}
 
 	HTTP struct {
-		Port    int      `yaml:"port"`
-		Origins []string `yaml:"origins"`
+		Port int `yaml:"port"`
 	}
 
 	Postgres struct {
-		Port     int    `yaml:"port"`
-		Host     string `yaml:"host"`
-		Db       string
-		User     string
-		Password string
+		Port              int    `yaml:"port"`
+		Host              string `yaml:"host"`
+		DBName            string `yaml:"db_name"`
+		User              string
+		Password          string
+		SslMode           string
+		MaxConns          int32         `yaml:"max-connections"`
+		MinConns          int32         `yaml:"min-connections"`
+		HealthCheckPeriod time.Duration `yaml:"healthcheck-period"`
+		MaxConnLifetime   time.Duration `yaml:"max-conn-lifetime"`
+		MaxConnIdleTime   time.Duration `yaml:"max-conn-idle-time"`
 	}
 
-	Auth struct {
-		JWT    JWT
-		Hasher Argon2
+	Redis struct {
+		Port        int    `yaml:"port"`
+		Host        string `yaml:"host"`
+		DBName      int    `yaml:"db_name"`
+		User        string
+		Password    string
+		SslMode     bool
+		DialTimeout time.Duration
 	}
 
 	JWT struct {
@@ -52,7 +63,7 @@ type (
 	}
 )
 
-func Init(configDir string) (*Config, error) {
+func LoadConfig(configDir string) (*Config, error) {
 	var cfg Config
 
 	if err := parseEnv(&cfg); err != nil {
@@ -63,20 +74,22 @@ func Init(configDir string) (*Config, error) {
 }
 
 func parseConfig(configDir string, cfg *Config) (*Config, error) {
-	yamlFile, err := os.Open(configDir)
+	yamlFile, err := os.ReadFile(configDir)
 	if err != nil {
 		return nil, err
 	}
 
-	defer yamlFile.Close()
-
-	decorder := yaml.NewDecoder(yamlFile)
-
-	if err = decorder.Decode(&cfg); err != nil {
+	if err = yaml.Unmarshal(yamlFile, &cfg); err != nil {
 		return nil, err
 	}
 
-	cfg.Auth.Hasher.Breakpoint = int(math.Ceil(79.0 * 4.0 / 3.0))
+	cfg.Postgres.MaxConnLifetime *= time.Second
+	cfg.Postgres.MaxConnIdleTime *= time.Second
+	cfg.Postgres.HealthCheckPeriod *= time.Second
+
+	cfg.Redis.DialTimeout *= time.Second
+
+	cfg.Argon2.Breakpoint = int(math.Ceil(79.0 * 4.0 / 3.0))
 
 	return cfg, nil
 }
@@ -86,22 +99,16 @@ func parseEnv(cfg *Config) error {
 		return err
 	}
 
-	cfg.Auth.JWT.AccessSecret = os.Getenv("JWT_ACCESS_SECRET")
-	cfg.Auth.JWT.RefreshSecret = os.Getenv("JWT_REFRESH_SECRET")
+	cfg.JWT.AccessSecret = os.Getenv("JWT_ACCESS_SECRET")
+	cfg.JWT.RefreshSecret = os.Getenv("JWT_REFRESH_SECRET")
 
 	cfg.Postgres.User = os.Getenv("POSTGRES_USER")
 	cfg.Postgres.Password = os.Getenv("POSTGRES_PASSWORD")
-	cfg.Postgres.Db = os.Getenv("POSTGRES_DB")
+	cfg.Postgres.SslMode = os.Getenv("POSTGRES_SSL_MODE")
+
+	cfg.Redis.User = os.Getenv("REDIS_USER")
+	cfg.Redis.Password = os.Getenv("REDIS_PASSWORD")
+	cfg.Redis.SslMode = os.Getenv("REDIS_SSL_MODE") == "true"
 
 	return nil
-}
-
-func GetDbSource(cfg *Config) string {
-	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable",
-		cfg.Postgres.User,
-		cfg.Postgres.Password,
-		cfg.Postgres.Host,
-		cfg.Postgres.Port,
-		cfg.Postgres.Db,
-	)
 }
