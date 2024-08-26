@@ -1,0 +1,10 @@
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+
+COPY ./config/order.config.yml ./config/config.yml
+COPY ./bin/order ./app
+COPY ./.env ./.env
+
+CMD ["./app"]

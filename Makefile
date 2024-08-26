@@ -4,7 +4,7 @@ MAKEFLAGS += --no-print-directory
 
 SWAGGER_CONF=./configs/swagger-config.yaml
 
-SRVCS=user catalog order
+SRVCS=user catalog order chat
 
 
 build:

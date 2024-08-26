@@ -1,21 +1,24 @@
 http:
-    port: 8080
+    port: 80
+    idle_timeout: 60s
+    read_timeout: 10s
+    write_timeout: 30s
 
 postgres:
-    port: 5434
+    port: 5435
     host: db
     db_name: order
     max-connections: 50
     min-connections: 10
-    max-conn-lifetime: 180
-    max-conn-idle-time: 60
-    healthcheck-period: 60
+    max-conn-lifetime: 180s
+    max-conn-idle-time: 60s
+    healthcheck-period: 60s
 
 redis:
-    port: 5432
+    port: 6379
     host: db
     db_name: 0
-    dial_timeout: 30
+    dial_timeout: 30s
 
 jwt:
     access_ttl: 2h
@@ -27,3 +30,7 @@ hasher:
     time: 3
     memory: 65536
     threads: 4
+
+logging:
+    level: debug
+    caller_enabled: true

@@ -11,11 +11,13 @@ import (
 
 type (
 	Config struct {
+		IsProd   bool
 		HTTP     HTTP
 		Postgres Postgres
 		Redis    Redis
 		JWT      JWT
 		Argon2   Argon2
+		Logging  Logging
 	}
 
 	HTTP struct {
@@ -29,8 +31,8 @@ type (
 		User              string
 		Password          string
 		SslMode           string
-		MaxConns          int32         `yaml:"max-connections"`
-		MinConns          int32         `yaml:"min-connections"`
+		MaxConns          int32 `yaml:"max-connections"`
+		MinConns          int32 `yaml:"min-connections"`
 		HealthCheckPeriod time.Duration `yaml:"healthcheck-period"`
 		MaxConnLifetime   time.Duration `yaml:"max-conn-lifetime"`
 		MaxConnIdleTime   time.Duration `yaml:"max-conn-idle-time"`
@@ -61,6 +63,11 @@ type (
 		Threads    uint8  `yaml:"threads"`
 		Breakpoint int
 	}
+
+	Logging struct {
+		LogLevel      string `yaml:"level"`
+		CallerEnabled bool   `yaml:"caller_enabled"`
+	}
 )
 
 func LoadConfig(configDir string) (*Config, error) {
@@ -83,12 +90,6 @@ func parseConfig(configDir string, cfg *Config) (*Config, error) {
 		return nil, err
 	}
 
-	cfg.Postgres.MaxConnLifetime *= time.Second
-	cfg.Postgres.MaxConnIdleTime *= time.Second
-	cfg.Postgres.HealthCheckPeriod *= time.Second
-
-	cfg.Redis.DialTimeout *= time.Second
-
 	cfg.Argon2.Breakpoint = int(math.Ceil(79.0 * 4.0 / 3.0))
 
 	return cfg, nil
@@ -109,6 +110,8 @@ func parseEnv(cfg *Config) error {
 	cfg.Redis.User = os.Getenv("REDIS_USER")
 	cfg.Redis.Password = os.Getenv("REDIS_PASSWORD")
 	cfg.Redis.SslMode = os.Getenv("REDIS_SSL_MODE") == "true"
+
+	cfg.IsProd = os.Getenv("IS_PROD") == "true"
 
 	return nil
 }
