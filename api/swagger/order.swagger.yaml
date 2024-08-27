@@ -52,9 +52,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CurrencyInput'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/CurrencyInput'
       responses:
         '201':
           $ref: '#/components/responses/Currency'
@@ -98,9 +95,6 @@ paths:
         required: true
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/CurrencyInput'
-          application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/CurrencyInput'
       responses:
@@ -168,9 +162,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CityInput'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/CityInput'
       responses:
         '201':
           $ref: '#/components/responses/City'
@@ -214,9 +205,6 @@ paths:
         required: true
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/CityInput'
-          application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/CityInput'
       responses:
@@ -306,9 +294,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/OrderInput'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/OrderInput'
       responses:
         '201':
           $ref: '#/components/responses/Order'
@@ -352,9 +337,6 @@ paths:
         required: true
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/OrderInput'
-          application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/OrderInput'
       responses:
@@ -402,9 +384,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/OfferInput'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/OfferInput'
       responses:
         '201':
           $ref: '#/components/responses/Offer'
@@ -448,9 +427,6 @@ paths:
         required: true
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/OfferInput'
-          application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/OfferInput'
       responses:
@@ -522,9 +498,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/JobInput'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/JobInput'
       responses:
         '201':
           $ref: '#/components/responses/Job'
@@ -568,9 +541,6 @@ paths:
         required: true
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/JobInput'
-          application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/JobInput'
       responses:
@@ -618,9 +588,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ReviewInput'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/ReviewInput'
       responses:
         '201':
           $ref: '#/components/responses/Review'
@@ -664,9 +631,6 @@ paths:
         required: true
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/ReviewPatch'
-          application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/ReviewPatch'
       responses:
@@ -736,9 +700,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ProviderLocationInput'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/ProviderLocationInput'
       responses:
         '201':
           $ref: '#/components/responses/ProviderLocation'
@@ -763,9 +724,6 @@ paths:
         required: true
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/ProviderLocationInput'
-          application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/ProviderLocationInput'
       responses:
@@ -810,9 +768,6 @@ paths:
         required: true
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/ProviderLocationInput'
-          application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/ProviderLocationInput'
       responses:

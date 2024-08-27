@@ -67,9 +67,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UserInput'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/UserInput'
+          
       responses:
         '200':
           $ref: '#/components/responses/User'
@@ -113,9 +111,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ChangePasswordInput'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/ChangePasswordInput'
+          
       responses:
         '204':
           description: Password changed successfully
@@ -137,9 +133,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CustomerInput'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/CustomerInput'
+          
       responses:
         '200':
           description: Successful customer register
@@ -166,9 +160,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ProviderInput'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/ProviderInput'
+          
       responses:
         '200':
           description: Successful provider register
@@ -188,6 +180,14 @@ paths:
       tags:
         - Auth
       summary: Authenticates user
+      requestBody:
+        description: Provider Arguments
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginInput'
+          
       responses:
         '200':
           description: Successful login
@@ -372,6 +372,20 @@ components:
         - last_name
         - password
         - personal_id_number
+    LoginInput:
+      type: object
+      properties:
+        email:
+          type: string
+          maxLength: 40
+          example: example@email.com
+        password:
+          type: string
+          format: password
+          description: The current password of the user.
+          example: StrongPassword123
+      required:
+        - password
     ChangePasswordInput:
       type: object
       properties:
