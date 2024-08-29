@@ -23,7 +23,7 @@ else
 endif
 
 
-compose:
+compose: build
 	@docker-compose up --build --remove-orphans
 
 
@@ -38,7 +38,7 @@ migrate-down:
 	@$(MAKE) migrate db=$(db) way=down
 
 migrate:
-	migrate -path ./$(db)-service/sql/migrations -database "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT_$(db)}/$(db)?sslmode=disable" -verbose $(way)
+	migrate -path ./sql/$(db)/migrations -database "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT_$(db)}/$(db)?sslmode=disable" -verbose $(way)
 
 migrate-init:
 	migrate create -ext sql -dir ./$(db)-service/sql/migrations/ -seq init_schema

@@ -6,13 +6,13 @@ import (
 )
 
 type User struct {
-	ID          int64            `json:"id"`
-	FirstName   string           `json:"first_name"`
-	LastName    string           `json:"last_name"`
-	PhoneNumber string           `json:"phone_number"`
-	Email       string           `json:"email"`
-	Hash        string           `json:"hash"`
-	Role        enum.UserRole    `json:"role"`
-	UserStatus  pgtype.Bool      `json:"user_status"`
-	CreatedAt   pgtype.Timestamp `json:"created_at"`
+	ID          int64
+	FirstName   string
+	LastName    string
+	PhoneNumber string
+	Email       string
+	Hash        string
+	Role        enum.UserRole
+	UserStatus  pgtype.Bool
+	CreatedAt   pgtype.Timestamp
 }
