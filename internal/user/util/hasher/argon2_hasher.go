@@ -17,7 +17,7 @@ type Argon2Hasher struct {
 	config.Argon2
 }
 
-func New(hasherCfg config.Argon2) *Argon2Hasher {
+func NewHasher(hasherCfg config.Argon2) *Argon2Hasher {
 	return &Argon2Hasher{hasherCfg}
 }
 

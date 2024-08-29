@@ -1,12 +1,15 @@
-http:
-    port: 80
-    idle_timeout: 60s
-    read_timeout: 10s
-    write_timeout: 30s
+server:
+    http:
+        port: 80
+        idle_timeout: 60s
+        read_timeout: 10s
+        write_timeout: 30s
+    instance_id: 1
+    shutdown_timeout: 10s
 
 postgres:
-    port: 5436
-    host: db
+    port: 5432
+    host: chat-db
     db_name: chat
     max-connections: 50
     min-connections: 10

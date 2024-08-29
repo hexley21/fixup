@@ -27,11 +27,11 @@ func main() {
 	})
 
 	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.HTTP.Port),
+		Addr:         fmt.Sprintf(":%d", cfg.Server.HTTP.Port),
 		Handler:      mux,
-		IdleTimeout:  cfg.HTTP.IdleTimeout,
-		ReadTimeout:  cfg.HTTP.ReadTimeout,
-		WriteTimeout: cfg.HTTP.WriteTimeout,
+		IdleTimeout:  cfg.Server.HTTP.IdleTimeout,
+		ReadTimeout:  cfg.Server.HTTP.ReadTimeout,
+		WriteTimeout: cfg.Server.HTTP.WriteTimeout,
 	}
 	
 	srv.ListenAndServe()

@@ -1,12 +1,16 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"log"
 	"net/http"
 
+	"github.com/bwmarrin/snowflake"
+	"github.com/hexley21/handy/cmd/util/shutdown"
+	"github.com/hexley21/handy/internal/user/app"
+	"github.com/hexley21/handy/internal/user/util/hasher"
 	"github.com/hexley21/handy/pkg/config"
-	"github.com/hexley21/handy/pkg/logger"
+	"github.com/hexley21/handy/pkg/infra/postgres"
 	"github.com/hexley21/handy/pkg/logger/zap"
 )
 
@@ -16,25 +20,34 @@ func main() {
 		log.Fatalf("could not load config: %v\n", err)
 	}
 
-	var zapLogger logger.Logger = zap.InitLogger(cfg.Logging, cfg.IsProd)
+	zapLogger := zap.InitLogger(cfg.Logging, cfg.IsProd)
 
-
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello World")
-		return
-	})
-
-	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.HTTP.Port),
-		Handler:      mux,
-		IdleTimeout:  cfg.HTTP.IdleTimeout,
-		ReadTimeout:  cfg.HTTP.ReadTimeout,
-		WriteTimeout: cfg.HTTP.WriteTimeout,
+	pgPool, err := postgres.InitPool(&cfg.Postgres)
+	if err != nil {
+		zapLogger.Fatal(err)
 	}
-	
-	srv.ListenAndServe()
 
-	zapLogger.Debug("Server Started")
+	snowflakeNode, err := snowflake.NewNode(cfg.Server.InstanceId)
+	if err != nil {
+		zapLogger.Fatal(err)
+	}
+
+	argon2Hasher := hasher.NewHasher(cfg.Argon2)
+
+	server := app.NewServer(cfg, zapLogger, pgPool, snowflakeNode, argon2Hasher)
+
+
+	shutdownError := make(chan error)
+	go shutdown.NotifyShutdown(server, zapLogger, shutdownError)
+
+	err = server.Run()
+	if !errors.Is(err, http.ErrServerClosed) {
+		zapLogger.Error(err)
+	}
+
+	if err := <- shutdownError; err != nil {
+		zapLogger.Error(err)
+	}
+
+	zapLogger.Info("server stopped")
 }
