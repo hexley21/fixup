@@ -12,7 +12,7 @@ import (
 
 var ErrNoConnection = errors.New("no connection")
 
-func InitPool(cfg *config.Postgres) *pgxpool.Pool {
+func InitPool(cfg *config.Postgres) (*pgxpool.Pool, error) {
 	var dataSourceName string
 	dataSourceName = fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s",
 		cfg.Host,
@@ -24,7 +24,7 @@ func InitPool(cfg *config.Postgres) *pgxpool.Pool {
 
 	poolCfg, err := pgxpool.ParseConfig(dataSourceName)
 	if err != nil {
-		log.Fatalf("could not parse config: %v\n", err)
+		return nil, err
 	}
 
 	poolCfg.MaxConns = cfg.MaxConns
@@ -33,24 +33,24 @@ func InitPool(cfg *config.Postgres) *pgxpool.Pool {
 	poolCfg.MaxConnLifetime = cfg.MaxConnLifetime
 	poolCfg.HealthCheckPeriod = cfg.HealthCheckPeriod
 
-	connPool, err := pgxpool.NewWithConfig(context.Background(), poolCfg)
+	pgPool, err := pgxpool.NewWithConfig(context.Background(), poolCfg)
 	if err != nil {
-		log.Fatalf("unable to create connection pool: %v\n", err)
+		return nil, err
 	}
 
-	if err := connPool.Ping(context.Background()); err != nil {
-		log.Fatalf("database is offline: %v\n", err)
+	if err := pgPool.Ping(context.Background()); err != nil {
+		return nil, err
 	}
 
-	return connPool
+	return pgPool, nil
 }
 
-func Close(connPool *pgxpool.Pool) error {
-	if connPool == nil {
+func Close(pgPool *pgxpool.Pool) error {
+	if pgPool == nil {
 		return ErrNoConnection
 	}
 
-	connPool.Close()
+	pgPool.Close()
 	log.Println("database was closed")
 
 	return nil
