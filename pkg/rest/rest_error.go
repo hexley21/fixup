@@ -8,9 +8,10 @@ import (
 
 var (
 	BadRequest          = newError(errors.New("bad request"), http.StatusBadRequest)
-	NotFound            = newError(errors.New("not found"), http.StatusNotFound)
 	Unauthorized        = newError(errors.New("inauthorized"), http.StatusUnauthorized)
 	Forbidden           = newError(errors.New("forbidden"), http.StatusForbidden)
+	NotFound            = newError(errors.New("not found"), http.StatusNotFound)
+	Conflict            = newError(errors.New("conflict"), http.StatusConflict)
 	InternalServerError = newError(errors.New("internal server error"), http.StatusInternalServerError)
 )
 
@@ -35,7 +36,7 @@ func writeError(w http.ResponseWriter, err *ErrorResponse) error {
 		http.Error(w, e.Error(), http.StatusInternalServerError)
 		return e
 	}
-	
+
 	return err
 }
 
@@ -47,16 +48,21 @@ func WriteBadRequestError(w http.ResponseWriter) error {
 	return writeError(w, BadRequest)
 }
 
-func WriteNotFoundError(w http.ResponseWriter) error {
-	return writeError(w, NotFound)
-}
-
 func WriteUnauthorizedError(w http.ResponseWriter) error {
 	return writeError(w, Unauthorized)
 }
 
+
 func WriteForbiddenError(w http.ResponseWriter) error {
 	return writeError(w, Forbidden)
+}
+
+func WriteNotFoundError(w http.ResponseWriter) error {
+	return writeError(w, NotFound)
+}
+
+func WriteConflictError(w http.ResponseWriter) error {
+	return writeError(w, Conflict)
 }
 
 func WriteInternalServerError(w http.ResponseWriter) error {

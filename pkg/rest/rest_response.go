@@ -27,3 +27,7 @@ func WriteResponse[T any](w http.ResponseWriter, data T, code int) error {
 
 	return nil
 }
+
+func WriteOkResponse[T any](w http.ResponseWriter, data T) error {
+	return WriteResponse(w, data, http.StatusOK)
+}

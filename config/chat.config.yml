@@ -27,7 +27,7 @@ jwt:
     access_ttl: 2h
     refresh_ttl: 168h
 
-hasher:
+argon2:
     salt_len: 16
     key_len: 79
     time: 3
