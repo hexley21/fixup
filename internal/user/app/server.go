@@ -7,6 +7,7 @@ import (
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-chi/chi/v5"
+	v1_http "github.com/hexley21/handy/internal/user/delivery/http/v1"
 	"github.com/hexley21/handy/internal/user/repository"
 	"github.com/hexley21/handy/internal/user/service"
 	"github.com/hexley21/handy/internal/user/util"
@@ -37,6 +38,15 @@ func NewServer(
 ) *server {
 	userRepository := repository.NewUserRepository(dbPool, snowflakeNode)
 
+	emailService := service.NewEmailService(logger)
+
+	authService := service.NewAuthService(
+		userRepository,
+		emailService,
+		dbPool,
+		hasher,
+	)
+
 	mux := chi.NewRouter()
 
 	http := &http.Server{
@@ -55,12 +65,14 @@ func NewServer(
 		mux,
 		snowflakeNode,
 		hasher,
-		service.NewAuthService(userRepository),
+		authService,
 		service.NewUserService(userRepository),
 	}
 }
 
 func (s *server) Run() error {
+	v1_http.NewRouter(s.logger, s.authService, s.userService).MapV1Routes(s.router)
+
 	s.router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello World"))
 	})
