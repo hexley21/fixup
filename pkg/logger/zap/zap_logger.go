@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-type ZapLogger struct {
+type zapLogger struct {
 	sugarLogger *zap.SugaredLogger
 }
 
@@ -31,7 +31,7 @@ func getLoggerLevel(lvl string) zapcore.Level {
 }
 
 
-func InitLogger(cfg config.Logging, isProduction bool) *ZapLogger {
+func InitLogger(cfg config.Logging, isProduction bool) *zapLogger {
 	logWriter := zapcore.AddSync(os.Stdout)
 
 	var encoderCfg zapcore.EncoderConfig
@@ -77,29 +77,30 @@ func InitLogger(cfg config.Logging, isProduction bool) *ZapLogger {
 		options = append(options, zap.AddCallerSkip(1))
 	}
 
-	return &ZapLogger{sugarLogger: zap.New(core, options...).Sugar()}
+	return &zapLogger{sugarLogger: zap.New(core, options...).Sugar()}
 }
 
-func (l *ZapLogger) Debug(msg string, args ...any) {
+func (l *zapLogger) Debug(msg string, args ...any) {
 	l.sugarLogger.Debugw(msg, args...)
 }
 
-func (l *ZapLogger) Info(msg string, args ...any) {
+func (l *zapLogger) Info(msg string, args ...any) {
 	l.sugarLogger.Infow(msg, args...)
 }
 
-func (l *ZapLogger) Warn(msg string, args ...any) {
+func (l *zapLogger) Warn(msg string, args ...any) {
 	l.sugarLogger.Warnw(msg, args...)
 }
 
-func (l *ZapLogger) Error(err error, args ...any) {
+func (l *zapLogger) Error(err error, args ...any) {
 	l.sugarLogger.Errorw(err.Error(), args...)
 }
 
-func (l *ZapLogger) Panic(err error, args ...any) {
-	l.sugarLogger.Panicw(err.Error(), args...)
+func (l *zapLogger) ErrorCause(err error, cause any) {
+	l.Error(err, "cause", cause)
 }
 
-func (l *ZapLogger) Fatal(err error, args ...any) {
+
+func (l *zapLogger) Fatal(err error, args ...any) {
 	l.sugarLogger.Fatalw(err.Error(), args...)
 }
