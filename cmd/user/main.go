@@ -12,6 +12,7 @@ import (
 	"github.com/hexley21/handy/pkg/config"
 	"github.com/hexley21/handy/pkg/infra/postgres"
 	"github.com/hexley21/handy/pkg/logger/zap"
+	"github.com/hexley21/handy/pkg/mailer/gomail"
 )
 
 func main() {
@@ -20,7 +21,7 @@ func main() {
 		log.Fatalf("could not load config: %v\n", err)
 	}
 
-	zapLogger := zap.InitLogger(cfg.Logging, cfg.IsProd)
+	zapLogger := zap.InitLogger(cfg.Logging, cfg.Server.IsProd)
 
 	pgPool, err := postgres.InitPool(&cfg.Postgres)
 	if err != nil {
@@ -32,10 +33,9 @@ func main() {
 		zapLogger.Fatal(err)
 	}
 
+	goMailer := gomail.NewGoMailer(&cfg.Mailer)
 	argon2Hasher := hasher.NewHasher(cfg.Argon2)
-
-	server := app.NewServer(cfg, zapLogger, pgPool, snowflakeNode, argon2Hasher)
-
+	server := app.NewServer(cfg, zapLogger, pgPool, snowflakeNode, argon2Hasher, goMailer, cfg.Mailer.User)
 
 	shutdownError := make(chan error)
 	go shutdown.NotifyShutdown(server, zapLogger, shutdownError)
@@ -45,7 +45,7 @@ func main() {
 		zapLogger.Error(err)
 	}
 
-	if err := <- shutdownError; err != nil {
+	if err := <-shutdownError; err != nil {
 		zapLogger.Error(err)
 	}
 

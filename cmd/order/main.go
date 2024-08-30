@@ -16,7 +16,7 @@ func main() {
 		log.Fatalf("could not load config: %v\n", err)
 	}
 
-	var zapLogger logger.Logger = zap.InitLogger(cfg.Logging, cfg.IsProd)
+	var zapLogger logger.Logger = zap.InitLogger(cfg.Logging, cfg.Server.IsProd)
 
 
 	mux := http.NewServeMux()

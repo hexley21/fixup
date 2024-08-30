@@ -14,6 +14,7 @@ import (
 	"github.com/hexley21/handy/pkg/config"
 	"github.com/hexley21/handy/pkg/infra/postgres"
 	"github.com/hexley21/handy/pkg/logger"
+	"github.com/hexley21/handy/pkg/mailer"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -35,16 +36,17 @@ func NewServer(
 	dbPool *pgxpool.Pool,
 	snowflakeNode *snowflake.Node,
 	hasher util.Hasher,
+	mailer mailer.Mailer,
+	emailAddress string,
 ) *server {
 	userRepository := repository.NewUserRepository(dbPool, snowflakeNode)
 
-	emailService := service.NewEmailService(logger)
-
 	authService := service.NewAuthService(
 		userRepository,
-		emailService,
 		dbPool,
 		hasher,
+		mailer,
+		emailAddress,
 	)
 
 	mux := chi.NewRouter()

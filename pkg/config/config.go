@@ -3,6 +3,7 @@ package config
 import (
 	"math"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -11,12 +12,12 @@ import (
 
 type (
 	Config struct {
-		IsProd   bool
 		Server   Server
 		Postgres Postgres
 		Redis    Redis
 		JWT      JWT
 		Argon2   Argon2
+		Mailer   Mailer
 		Logging  Logging
 	}
 
@@ -24,6 +25,8 @@ type (
 		HTTP            HTTP
 		ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
 		InstanceId      int64         `yaml:"instance_id"`
+		Email           string        `yaml:"email"`
+		IsProd          bool
 	}
 
 	HTTP struct {
@@ -62,6 +65,13 @@ type (
 		AccessTTL     time.Duration `yaml:"access_ttl"`
 		RefreshSecret string
 		RefreshTTL    time.Duration `yaml:"refresh_ttl"`
+	}
+
+	Mailer struct {
+		Host     string
+		Port     int
+		User     string
+		Password string
 	}
 
 	Argon2 struct {
@@ -105,7 +115,8 @@ func parseConfig(configDir string, cfg *Config) (*Config, error) {
 }
 
 func parseEnv(cfg *Config) error {
-	if err := godotenv.Load(); err != nil {
+	err := godotenv.Load()
+	if err != nil {
 		return err
 	}
 
@@ -120,7 +131,16 @@ func parseEnv(cfg *Config) error {
 	cfg.Redis.Password = os.Getenv("REDIS_PASSWORD")
 	cfg.Redis.SslMode = os.Getenv("REDIS_SSL_MODE") == "true"
 
-	cfg.IsProd = os.Getenv("IS_PROD") == "true"
+	cfg.Server.IsProd = os.Getenv("IS_PROD") == "true"
+
+	cfg.Mailer.Host = os.Getenv("SMTP_HOST")
+	cfg.Mailer.Port, err = strconv.Atoi(os.Getenv("SMTP_PORT"))
+	if err != nil {
+		return err
+	}
+
+	cfg.Mailer.User = os.Getenv("SMTP_USER")
+	cfg.Mailer.Password = os.Getenv("SMTP_PASSWORD")
 
 	return nil
 }
