@@ -2,12 +2,14 @@ package service
 
 import (
 	"context"
+	"html/template"
 
 	"github.com/hexley21/handy/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/handy/internal/user/delivery/http/v1/dto/mapper"
 	"github.com/hexley21/handy/internal/user/enum"
 	"github.com/hexley21/handy/internal/user/repository"
 	"github.com/hexley21/handy/internal/user/util"
+	"github.com/hexley21/handy/pkg/mailer"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -18,17 +20,19 @@ type AuthService interface {
 
 type authServiceImpl struct {
 	userRepository repository.UserRepository
-	emailService   EmailService
 	dbPool         *pgxpool.Pool
 	hasher         util.Hasher
+	mailer         mailer.Mailer
+	emailAddres    string
 }
 
-func NewAuthService(userRepository repository.UserRepository, emailService EmailService, dbPool *pgxpool.Pool, hasher util.Hasher) AuthService {
+func NewAuthService(userRepository repository.UserRepository, dbPool *pgxpool.Pool, hasher util.Hasher, mailer mailer.Mailer, emailAddres string) AuthService {
 	return &authServiceImpl{
 		userRepository: userRepository,
-		emailService:   emailService,
 		dbPool:         dbPool,
 		hasher:         hasher,
+		mailer:         mailer,
+		emailAddres:    emailAddres,
 	}
 }
 
@@ -50,7 +54,7 @@ func (s *authServiceImpl) RegisterCustomer(ctx context.Context, dto *dto.Registe
 		return nil, err
 	}
 
-	if err := s.emailService.SendConfirmation(ctx, user.Email); err != nil {
+	if err := s.sendConfirmationEmail(user.Email, user.FirstName, user.LastName); err != nil {
 		if err := tx.Rollback(ctx); err != nil {
 			return nil, err
 		}
@@ -65,7 +69,24 @@ func (s *authServiceImpl) RegisterCustomer(ctx context.Context, dto *dto.Registe
 	if err != nil {
 		return nil, err
 	}
-	
 
 	return res, nil
+}
+
+func (s *authServiceImpl) sendConfirmationEmail(email string, name string, link string) error {
+	t, err := template.ParseFiles("./templates/register_confirm.templ")
+	if err != nil {
+		return err
+	}
+
+	return s.mailer.SendHTML(
+		s.emailAddres,
+		email,
+		"Account Confirmation",
+		t,
+		struct {
+			Name string
+			Link string
+		}{Name: name, Link: link},
+	)
 }
