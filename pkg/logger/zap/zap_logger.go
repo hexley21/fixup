@@ -97,7 +97,7 @@ func (l *zapLogger) Error(err error, args ...any) {
 }
 
 func (l *zapLogger) ErrorCause(err error, cause any) {
-	l.Error(err, "cause", cause)
+	l.sugarLogger.Errorw(err.Error(), "cause", cause)
 }
 
 

@@ -50,7 +50,7 @@ func (h *authHandler) RegisterCustomer() http.HandlerFunc {
 			return
 		}
 		if err != nil {
-			h.logger.ErrorCause(rest.WriteBadRequestError(w), err)
+			h.logger.ErrorCause(rest.WriteInternalServerError(w), err)
 			return
 		}
 
