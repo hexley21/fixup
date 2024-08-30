@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/hexley21/handy/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/handy/internal/user/service"
+	"github.com/hexley21/handy/pkg/http/handler"
 	"github.com/hexley21/handy/pkg/logger"
 	"github.com/hexley21/handy/pkg/rest"
 	"github.com/jackc/pgerrcode"
@@ -33,31 +34,28 @@ func NewAuthHandler(
 	}
 }
 
-func (h *authHandler) RegisterCustomer() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (h *authHandler) RegisterCustomer() handler.ErrorHandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		var dto dto.RegisterUser
 
 		if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-			h.logger.ErrorCause(rest.WriteBadRequestError(w), err)
-			return
+			return err
 		}
 
 		user, err := h.service.RegisterCustomer(context.Background(), &dto)
 
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-			h.logger.ErrorCause(rest.WriteConflictError(w), err)
-			return
+			return err
 		}
 		if err != nil {
-			h.logger.ErrorCause(rest.WriteInternalServerError(w), err)
-			return
+			return err
 		}
 
 		if err := rest.WriteOkResponse(w, user); err != nil {
 			h.logger.Error(err)
-			return 
+			return err
 		}
-		
+		return nil
 	}
 }

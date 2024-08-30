@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/hexley21/handy/internal/user/service"
+	"github.com/hexley21/handy/pkg/http/handler"
 	"github.com/hexley21/handy/pkg/logger"
 	"github.com/hexley21/handy/pkg/rest"
 	"github.com/jackc/pgx/v5"
@@ -31,24 +32,19 @@ func NewUserHandler(
 	}
 }
 
-func (h *userHandler) FindUserById() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (h *userHandler) FindUserById() handler.ErrorHandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		user, err := h.service.FindUserById(context.Background(), chi.URLParam(r, "id"))
 		if errors.Is(err, pgx.ErrNoRows) {
-			h.logger.ErrorCause(rest.WriteNotFoundError(w), err)
-			return
+			return rest.NotFound
 		}
 		if errors.Is(err, strconv.ErrSyntax) {
-			h.logger.ErrorCause(rest.WriteBadRequestError(w), err)
-			return
+			return rest.BadRequest
 		}
 		if err != nil {
-			h.logger.ErrorCause(rest.WriteInternalServerError(w), err)
-			return
+			return rest.InternalServerError
 		}
 
-		if err := rest.WriteOkResponse(w, user); err != nil {
-			h.logger.Error(err)
-		}
+		return rest.WriteResponse(w, user, http.StatusOK)
 	}
 }

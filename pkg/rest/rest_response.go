@@ -13,16 +13,12 @@ func newApiResponse[T any](data T) *apiResponse[T] {
 	return &apiResponse[T]{Data: data}
 }
 
-func write(w http.ResponseWriter,value any) error {
-	return json.NewEncoder(w).Encode(value)
-}
-
 func WriteResponse[T any](w http.ResponseWriter, data T, code int) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 
-	if err := write(w, newApiResponse(data)); err != nil {
-		return WriteInternalServerError(w)
+	if err := json.NewEncoder(w).Encode(newApiResponse(data)); err != nil {
+		return json.NewEncoder(w).Encode(err)
 	}
 
 	return nil
