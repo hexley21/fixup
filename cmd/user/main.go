@@ -11,7 +11,7 @@ import (
 	"github.com/hexley21/handy/internal/user/util/hasher"
 	"github.com/hexley21/handy/pkg/config"
 	"github.com/hexley21/handy/pkg/infra/postgres"
-	"github.com/hexley21/handy/pkg/logger/zap"
+	"github.com/hexley21/handy/pkg/logger"
 	"github.com/hexley21/handy/pkg/mailer/gomail"
 )
 
@@ -21,7 +21,7 @@ func main() {
 		log.Fatalf("could not load config: %v\n", err)
 	}
 
-	zapLogger := zap.InitLogger(cfg.Logging, cfg.Server.IsProd)
+	zapLogger := logger.NewZapLogger(cfg.Logging, cfg.Server.IsProd)
 
 	pgPool, err := postgres.InitPool(&cfg.Postgres)
 	if err != nil {

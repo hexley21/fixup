@@ -1,11 +1,7 @@
 server:
-    http:
-        port: 80
-        idle_timeout: 60s
-        read_timeout: 10s
-        write_timeout: 30s
-    shutdown_timeout: 10s
+    http_port: 80
     instance_id: 1
+    shutdown_timeout: 10s
 
 postgres:
     port: 5432

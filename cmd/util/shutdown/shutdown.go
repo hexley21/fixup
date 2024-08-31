@@ -1,15 +1,14 @@
 package shutdown
 
 import (
+	"github.com/labstack/echo/v4"
 	"io"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"github.com/hexley21/handy/pkg/logger"
 )
 
-func NotifyShutdown(serverCloser io.Closer, logger logger.Logger, shutdownError chan<- error) {
+func NotifyShutdown(serverCloser io.Closer, logger echo.Logger, shutdownError chan<- error) {
 	sig := make(chan os.Signal, 1)
 
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)

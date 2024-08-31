@@ -22,18 +22,11 @@ type (
 	}
 
 	Server struct {
-		HTTP            HTTP
+		HttpPort        int           `yaml:"http_port"`
 		ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
 		InstanceId      int64         `yaml:"instance_id"`
 		Email           string        `yaml:"email"`
 		IsProd          bool
-	}
-
-	HTTP struct {
-		Port         int           `yaml:"port"`
-		IdleTimeout  time.Duration `yaml:"idle_timeout"`
-		ReadTimeout  time.Duration `yaml:"read_timeout"`
-		WriteTimeout time.Duration `yaml:"write_timeout"`
 	}
 
 	Postgres struct {

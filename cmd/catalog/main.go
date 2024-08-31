@@ -7,7 +7,9 @@ import (
 
 	"github.com/hexley21/handy/pkg/config"
 	"github.com/hexley21/handy/pkg/logger"
-	"github.com/hexley21/handy/pkg/logger/zap"
+	"github.com/hexley21/handy/pkg/rest"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -16,25 +18,26 @@ func main() {
 		log.Fatalf("could not load config: %v\n", err)
 	}
 
-	var zapLogger logger.Logger = zap.InitLogger(cfg.Logging, cfg.Server.IsProd)
+	e := echo.New()
 
+	e.Logger = logger.NewZapLogger(cfg.Logging, cfg.Server.IsProd)
 
-	mux := http.NewServeMux()
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello World")
-		return
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello World")
 	})
 
-	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.Server.HTTP.Port),
-		Handler:      mux,
-		IdleTimeout:  cfg.Server.HTTP.IdleTimeout,
-		ReadTimeout:  cfg.Server.HTTP.ReadTimeout,
-		WriteTimeout: cfg.Server.HTTP.WriteTimeout,
+	e.HTTPErrorHandler = func(err error, c echo.Context) {
+		if apiErr, ok := err.(rest.ErrorResponse); ok {
+			c.JSON(apiErr.Status, apiErr)
+			c.Logger().Error(err)
+			return
+		}
+		c.Logger().Error(err)
+		c.JSON(http.StatusInternalServerError, rest.InternalServerError)
 	}
-	
-	srv.ListenAndServe()
 
-	zapLogger.Debug("Server Started")
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", cfg.Server.HttpPort)))
 }

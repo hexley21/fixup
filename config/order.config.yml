@@ -1,9 +1,5 @@
 server:
-    http:
-        port: 80
-        idle_timeout: 60s
-        read_timeout: 10s
-        write_timeout: 30s
+    http_port: 80
     instance_id: 1
     shutdown_timeout: 10s
 

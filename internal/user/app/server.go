@@ -3,27 +3,26 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/bwmarrin/snowflake"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"net/http"
 
-	"github.com/bwmarrin/snowflake"
-	"github.com/go-chi/chi/v5"
 	v1_http "github.com/hexley21/handy/internal/user/delivery/http/v1"
 	"github.com/hexley21/handy/internal/user/repository"
 	"github.com/hexley21/handy/internal/user/service"
 	"github.com/hexley21/handy/internal/user/util"
 	"github.com/hexley21/handy/pkg/config"
 	"github.com/hexley21/handy/pkg/infra/postgres"
-	"github.com/hexley21/handy/pkg/logger"
 	"github.com/hexley21/handy/pkg/mailer"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/hexley21/handy/pkg/rest"
 )
 
 type server struct {
 	cfg           *config.Config
-	logger        logger.Logger
 	dbPool        *pgxpool.Pool
-	http          *http.Server
-	router        chi.Router
+	echo          *echo.Echo
 	snowflakeNode *snowflake.Node
 	hasher        util.Hasher
 	authService   service.AuthService
@@ -32,7 +31,7 @@ type server struct {
 
 func NewServer(
 	cfg *config.Config,
-	logger logger.Logger,
+	logger echo.Logger,
 	dbPool *pgxpool.Pool,
 	snowflakeNode *snowflake.Node,
 	hasher util.Hasher,
@@ -49,22 +48,15 @@ func NewServer(
 		emailAddress,
 	)
 
-	mux := chi.NewRouter()
+	e := echo.New()
 
-	http := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.Server.HTTP.Port),
-		Handler:      mux,
-		IdleTimeout:  cfg.Server.HTTP.IdleTimeout,
-		ReadTimeout:  cfg.Server.HTTP.ReadTimeout,
-		WriteTimeout: cfg.Server.HTTP.WriteTimeout,
-	}
+	e.Logger = logger
+	e.HTTPErrorHandler = httpErrorHandler
 
 	return &server{
 		cfg,
-		logger,
 		dbPool,
-		http,
-		mux,
+		e,
 		snowflakeNode,
 		hasher,
 		authService,
@@ -73,21 +65,23 @@ func NewServer(
 }
 
 func (s *server) Run() error {
-	v1_http.NewRouter(s.logger, s.authService, s.userService).MapV1Routes(s.router)
+	s.echo.Use(middleware.Logger())
+	s.echo.Use(middleware.Recover())
 
-	s.router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello World"))
+	v1_http.NewRouter(s.authService, s.userService).MapV1Routes(s.echo)
+
+	s.echo.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello World")
 	})
 
-	s.logger.Info("Server is starting...")
-	return s.http.ListenAndServe()
+	return s.echo.Start(fmt.Sprintf(":%d", s.cfg.Server.HttpPort))
 }
 
 func (s *server) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), s.cfg.Server.ShutdownTimeout)
 	defer cancel()
 
-	if err := s.http.Shutdown(ctx); err != nil {
+	if err := s.echo.Shutdown(ctx); err != nil {
 		return err
 	}
 
@@ -96,4 +90,14 @@ func (s *server) Close() error {
 	}
 
 	return nil
+}
+
+func httpErrorHandler(err error, c echo.Context) {
+	if apiErr, ok := err.(rest.ErrorResponse); ok {
+		c.JSON(apiErr.Status, apiErr)
+		c.Logger().Error(err)
+		return
+	}
+	c.Logger().Error(err)
+	c.JSON(http.StatusInternalServerError, rest.InternalServerError)
 }
