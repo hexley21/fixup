@@ -11,6 +11,7 @@ type AuthJwt interface {
 	GenerateAccessKey(id string, role string) (string, error)
 	GenerateRefreshKey(id string, role string) (string, error)
 	VerifyAccessToken(tokenString string) (*AuthClaims, error)
+	VerifyRefreshToken(tokenString string) (*AuthClaims, error)
 }
 
 type authJwtImpl struct {
@@ -31,6 +32,15 @@ func (j *authJwtImpl) GenerateRefreshKey(id string, role string) (string, error)
 
 func (j *authJwtImpl) VerifyAccessToken(tokenString string) (*AuthClaims, error) {
 	mapClaims, err := jwt.VerifyJWT(tokenString, j.cfg.AccessSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	return newAuthClaims(mapClaims["id"].(string), mapClaims["role"].(string), time.Duration(mapClaims["exp"].(float64))), nil
+}
+
+func (j *authJwtImpl) VerifyRefreshToken(tokenString string) (*AuthClaims, error) {
+	mapClaims, err := jwt.VerifyJWT(tokenString, j.cfg.RefreshSecret)
 	if err != nil {
 		return nil, err
 	}

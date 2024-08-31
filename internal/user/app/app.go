@@ -14,8 +14,8 @@ import (
 	"github.com/hexley21/handy/internal/user/delivery/http/v1/jwt"
 	"github.com/hexley21/handy/internal/user/repository"
 	"github.com/hexley21/handy/internal/user/service"
-	"github.com/hexley21/handy/internal/user/util"
 	"github.com/hexley21/handy/pkg/config"
+	"github.com/hexley21/handy/pkg/hasher"
 	"github.com/hexley21/handy/pkg/infra/postgres"
 	"github.com/hexley21/handy/pkg/mailer"
 	"github.com/hexley21/handy/pkg/rest"
@@ -26,7 +26,7 @@ type server struct {
 	dbPool        *pgxpool.Pool
 	echo          *echo.Echo
 	snowflakeNode *snowflake.Node
-	hasher        util.Hasher
+	hasher        hasher.Hasher
 	authJwt       jwt.AuthJwt
 	authService   service.AuthService
 	userService   service.UserService
@@ -37,7 +37,7 @@ func NewServer(
 	logger echo.Logger,
 	dbPool *pgxpool.Pool,
 	snowflakeNode *snowflake.Node,
-	hasher util.Hasher,
+	hasher hasher.Hasher,
 	mailer mailer.Mailer,
 	emailAddress string,
 ) *server {

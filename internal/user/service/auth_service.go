@@ -8,7 +8,7 @@ import (
 	"github.com/hexley21/handy/internal/user/delivery/http/v1/dto/mapper"
 	"github.com/hexley21/handy/internal/user/enum"
 	"github.com/hexley21/handy/internal/user/repository"
-	"github.com/hexley21/handy/internal/user/util"
+	"github.com/hexley21/handy/pkg/hasher"
 	"github.com/hexley21/handy/pkg/mailer"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -21,12 +21,12 @@ type AuthService interface {
 type authServiceImpl struct {
 	userRepository repository.UserRepository
 	dbPool         *pgxpool.Pool
-	hasher         util.Hasher
+	hasher         hasher.Hasher
 	mailer         mailer.Mailer
 	emailAddres    string
 }
 
-func NewAuthService(userRepository repository.UserRepository, dbPool *pgxpool.Pool, hasher util.Hasher, mailer mailer.Mailer, emailAddres string) AuthService {
+func NewAuthService(userRepository repository.UserRepository, dbPool *pgxpool.Pool, hasher hasher.Hasher, mailer mailer.Mailer, emailAddres string) AuthService {
 	return &authServiceImpl{
 		userRepository: userRepository,
 		dbPool:         dbPool,

@@ -1,4 +1,4 @@
-package util
+package hasher
 
 type Hasher interface {
 	HashPassword(password string) string
