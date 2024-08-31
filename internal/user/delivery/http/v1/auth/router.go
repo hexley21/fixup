@@ -6,5 +6,5 @@ import (
 
 func (h *authHandler) MapRoutes(e *echo.Group) {
 	registerGroup := e.Group("/register")
-	registerGroup.GET("/customer", h.RegisterCustomer())
+	registerGroup.POST("/customer", h.RegisterCustomer())
 }

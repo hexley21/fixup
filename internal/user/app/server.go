@@ -3,13 +3,15 @@ package app
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/bwmarrin/snowflake"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"net/http"
 
 	v1_http "github.com/hexley21/handy/internal/user/delivery/http/v1"
+	"github.com/hexley21/handy/internal/user/delivery/http/v1/jwt"
 	"github.com/hexley21/handy/internal/user/repository"
 	"github.com/hexley21/handy/internal/user/service"
 	"github.com/hexley21/handy/internal/user/util"
@@ -25,6 +27,7 @@ type server struct {
 	echo          *echo.Echo
 	snowflakeNode *snowflake.Node
 	hasher        util.Hasher
+	authJwt       jwt.AuthJwt
 	authService   service.AuthService
 	userService   service.UserService
 }
@@ -59,6 +62,7 @@ func NewServer(
 		e,
 		snowflakeNode,
 		hasher,
+		jwt.NewAuthJwtImpl(&cfg.JWT),
 		authService,
 		service.NewUserService(userRepository),
 	}
@@ -67,8 +71,9 @@ func NewServer(
 func (s *server) Run() error {
 	s.echo.Use(middleware.Logger())
 	s.echo.Use(middleware.Recover())
+	s.echo.Use(middleware.CORS())
 
-	v1_http.NewRouter(s.authService, s.userService).MapV1Routes(s.echo)
+	v1_http.NewRouter(s.authService, s.userService, s.authJwt).MapV1Routes(s.echo)
 
 	s.echo.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello World")
@@ -98,6 +103,6 @@ func httpErrorHandler(err error, c echo.Context) {
 		c.Logger().Error(err)
 		return
 	}
-	c.Logger().Error(err)
+	// c.Logger().Error(err)
 	c.JSON(http.StatusInternalServerError, rest.InternalServerError)
 }
