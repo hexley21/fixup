@@ -24,15 +24,17 @@ func NewUserHandler(service service.UserService) *userHandler {
 
 func (h *userHandler) FindUserById() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		user, err := h.service.FindUserById(context.Background(), c.Param("id"))
+		userId := c.Param("id")
+
+		user, err := h.service.FindUserById(context.Background(), userId)
 		if errors.Is(err, pgx.ErrNoRows) {
-			return rest.NotFound
+			return rest.NewNotFoundError(err, "User not found")
 		}
 		if errors.Is(err, strconv.ErrSyntax) {
-			return rest.BadRequest
+			return rest.NewInvalidArgumentsError(err)
 		}
 		if err != nil {
-			return rest.InternalServerError
+			return err
 		}
 
 		return c.JSON(http.StatusOK, rest.NewApiResponse(user))
