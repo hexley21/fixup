@@ -18,7 +18,7 @@ paths:
         - Users
       summary: Finds user by id
       security:
-        - cookie_access_token: []
+        - access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
@@ -37,7 +37,7 @@ paths:
         - Users
       summary: Deletes user by id
       security:
-        - cookie_access_token: []
+        - access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
@@ -56,7 +56,7 @@ paths:
         - Users
       summary: Updates users's details
       security:
-        - cookie_access_token: []
+        - access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -84,7 +84,7 @@ paths:
         - Users
       summary: Get self user
       security:
-        - cookie_access_token: []
+        - access_token: []
       responses:
         '200':
           $ref: '#/components/responses/User'
@@ -102,7 +102,7 @@ paths:
         - Users
       summary: Change user password
       security:
-        - cookie_access_token: []
+        - access_token: []
       description: Allows a user to change their password.
       requestBody:
         required: true
@@ -235,14 +235,11 @@ paths:
           $ref: '#/components/responses/InternalError'
 components:
   securitySchemes:
-    cookie_access_token:
-      type: apiKey
-      in: cookie
+    access_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
       name: access_token
-    cookie_refresh_token:
-      type: apiKey
-      in: cookie
-      name: refresh_token
   schemas:
     User:
       type: object

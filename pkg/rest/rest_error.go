@@ -1,32 +1,27 @@
 package rest
 
 import (
-	"errors"
 	"fmt"
-	"net/http"
-)
-
-var (
-	BadRequest          = newError(errors.New("bad request"), http.StatusBadRequest)
-	Unauthorized        = newError(errors.New("inauthorized"), http.StatusUnauthorized)
-	Forbidden           = newError(errors.New("forbidden"), http.StatusForbidden)
-	NotFound            = newError(errors.New("not found"), http.StatusNotFound)
-	Conflict            = newError(errors.New("conflict"), http.StatusConflict)
-	InternalServerError = newError(errors.New("internal server error"), http.StatusInternalServerError)
 )
 
 type ErrorResponse struct {
+	Cause   error  `json:"-"`
 	Message string `json:"message"`
 	Status  int    `json:"status"`
 }
 
 func (e ErrorResponse) Error() string {
-	return fmt.Sprintf("status: %d - error: %s", e.Status, e.Message)
+	if e.Cause == nil {
+		return fmt.Sprintf("status: %d - message: %s", e.Status, e.Message)
+	}
+
+	return fmt.Sprintf("status: %d - message: %s - cause: %s", e.Status, e.Message, e.Cause.Error())
 }
 
-func newError(err error, status int) ErrorResponse {
+func newError(cause error, message string, status int) ErrorResponse {
 	return ErrorResponse{
-		Message: err.Error(),
+		Cause:   cause,
+		Message: message,
 		Status:  status,
 	}
 }

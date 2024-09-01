@@ -21,7 +21,7 @@ paths:
       tags:
         - Category Types
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/per_page'
         - $ref: '#/components/parameters/page'
@@ -41,7 +41,7 @@ paths:
       tags:
         - Category Types
       security:
-        - cookie_access_token: []
+        e_access_token: []
       requestBody:
         required: true
         content:
@@ -65,7 +65,7 @@ paths:
       tags:
         - Category Types
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
@@ -84,7 +84,7 @@ paths:
       tags:
         - Category Types
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -111,7 +111,7 @@ paths:
       tags:
         - Category Types
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
@@ -131,7 +131,7 @@ paths:
       tags:
         - Categories
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/per_page'
         - $ref: '#/components/parameters/page'
@@ -151,7 +151,7 @@ paths:
       tags:
         - Categories
       security:
-        - cookie_access_token: []
+        e_access_token: []
       requestBody:
         required: true
         content:
@@ -175,7 +175,7 @@ paths:
       tags:
         - Categories
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
@@ -194,7 +194,7 @@ paths:
       tags:
         - Categories
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -221,7 +221,7 @@ paths:
       tags:
         - Categories
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
@@ -242,7 +242,7 @@ paths:
       tags:
         - Subcategories
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/per_page'
         - $ref: '#/components/parameters/page'
@@ -262,7 +262,7 @@ paths:
       tags:
         - Subcategories
       security:
-        - cookie_access_token: []
+        e_access_token: []
       requestBody:
         required: true
         content:
@@ -286,7 +286,7 @@ paths:
       tags:
         - Subcategories
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
@@ -305,7 +305,7 @@ paths:
       tags:
         - Subcategories
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -332,7 +332,7 @@ paths:
       tags:
         - Subcategories
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
@@ -352,7 +352,7 @@ paths:
       tags:
         - Services
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/per_page'
         - $ref: '#/components/parameters/page'
@@ -372,7 +372,7 @@ paths:
       tags:
         - Services
       security:
-        - cookie_access_token: []
+        e_access_token: []
       requestBody:
         required: true
         content:
@@ -396,7 +396,7 @@ paths:
       tags:
         - Services
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
@@ -415,7 +415,7 @@ paths:
       tags:
         - Services
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -442,7 +442,7 @@ paths:
       tags:
         - Services
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
@@ -462,7 +462,7 @@ paths:
       tags:
         - Services
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
@@ -484,7 +484,7 @@ paths:
       tags:
         - Provider Services
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
@@ -505,7 +505,7 @@ paths:
       tags:
         - Provider Services
       security:
-        - cookie_access_token: []
+        e_access_token: []
       requestBody:
         required: true
         content:
@@ -529,7 +529,7 @@ paths:
       tags:
         - Provider Services
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - name: provider_id
           in: path
@@ -561,7 +561,7 @@ paths:
       tags:
         - Provider Services
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - name: provider_id
           in: path
@@ -592,7 +592,7 @@ paths:
       tags:
         - Provider Services
       security:
-        - cookie_access_token: []
+        e_access_token: []
       responses:
         '200':
           $ref: '#/components/responses/ServicesArr'
@@ -611,7 +611,7 @@ paths:
       tags:
         - Provider Services
       security:
-        - cookie_access_token: []
+        e_access_token: []
       requestBody:
         required: true
         content:
@@ -638,7 +638,7 @@ paths:
       tags:
         - Provider Services
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
@@ -659,7 +659,7 @@ paths:
       tags:
         - Provider Services
       security:
-        - cookie_access_token: []
+        e_access_token: []
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
@@ -675,9 +675,10 @@ paths:
           $ref: '#/components/responses/InternalError'
 components:
   securitySchemes:
-    cookie_access_token:
-      type: apiKey
-      in: cookie
+    access_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
       name: access_token
   schemas:
     CategoryType:

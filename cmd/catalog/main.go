@@ -36,7 +36,7 @@ func main() {
 			return
 		}
 		c.Logger().Error(err)
-		c.JSON(http.StatusInternalServerError, rest.InternalServerError)
+		c.JSON(http.StatusInternalServerError, "Internal server error")
 	}
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", cfg.Server.HttpPort)))

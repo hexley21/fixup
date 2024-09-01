@@ -9,21 +9,23 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/labstack/echo/v4"
 
+	"github.com/hexley21/handy/internal/common/jwt"
 	"github.com/hexley21/handy/internal/user/delivery/http/v1/dto"
-	"github.com/hexley21/handy/internal/user/delivery/http/v1/jwt"
 	"github.com/hexley21/handy/internal/user/service"
 	"github.com/hexley21/handy/pkg/rest"
 )
 
 type authHandler struct {
-	service service.AuthService
-	authJwt jwt.AuthJwt
+	service          service.AuthService
+	accessGenerator  jwt.AuthJwtGenerator
+	refreshGenerator jwt.AuthJwtGenerator
 }
 
-func NewAuthHandler(service service.AuthService, authJwt jwt.AuthJwt) *authHandler {
+func NewAuthHandler(service service.AuthService, accessGenerator jwt.AuthJwtGenerator, refreshGenerator jwt.AuthJwtGenerator) *authHandler {
 	return &authHandler{
 		service,
-		authJwt,
+		accessGenerator,
+		refreshGenerator,
 	}
 }
 
@@ -38,32 +40,38 @@ func (h *authHandler) RegisterCustomer() echo.HandlerFunc {
 
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-			return rest.Conflict
+			return rest.NewConflictError(err, "User already exists")
 		}
 		if err != nil {
-			return err
+			return rest.NewInternalServerError(err)
 		}
 
-		accessCookie := new(http.Cookie)
-		refreshCookie := new(http.Cookie)
-
-		accessCookie.Name = "access_token"
-		refreshCookie.Name = "refresh_token"
-
-		accessToken, err := h.authJwt.GenerateAccessKey(user.ID, user.Role)
+		accessToken, err := h.accessGenerator.GenerateToken(user.ID, user.Role)
 		if err != nil {
-			return err
+			return rest.NewInvalidArgumentsError(err)
 		}
-		refreshToken, err := h.authJwt.GenerateRefreshKey(user.ID, user.Role)
+		refreshToken, err := h.refreshGenerator.GenerateToken(user.ID, user.Role)
 		if err != nil {
-			return err
+			return rest.NewInvalidArgumentsError(err)
 		}
 
-		accessCookie.Value = accessToken
-		refreshCookie.Value = refreshToken
+		accessCookie := http.Cookie{
+			Name:     "access_token",
+			Value:    accessToken,
+			Secure:   true,
+			HttpOnly: true,
+		}
 
-		c.SetCookie(accessCookie)
-		c.SetCookie(refreshCookie)
+		refreshCookie := http.Cookie{
+			Name:     "refresh_token",
+			Value:    refreshToken,
+			Secure:   true,
+			HttpOnly: true,
+		}
+
+		c.SetCookie(&accessCookie)
+		c.SetCookie(&refreshCookie)
+
 		return c.NoContent(http.StatusOK)
 	}
 }
