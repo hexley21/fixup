@@ -29,6 +29,35 @@ func NewAuthHandler(service service.AuthService, accessGenerator jwt.AuthJwtGene
 	}
 }
 
+func (h *authHandler) setCookies(c echo.Context, userId string, role string) error {
+	accessToken, err := h.accessGenerator.GenerateToken(userId, role)
+	if err != nil {
+		return rest.NewInvalidArgumentsError(err)
+	}
+	refreshToken, err := h.refreshGenerator.GenerateToken(userId, role)
+	if err != nil {
+		return rest.NewInvalidArgumentsError(err)
+	}
+
+	accessCookie := http.Cookie{
+		Name:     "access_token",
+		Value:    accessToken,
+		Secure:   true,
+		HttpOnly: true,
+	}
+
+	refreshCookie := http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Secure:   true,
+		HttpOnly: true,
+	}
+
+	c.SetCookie(&accessCookie)
+	c.SetCookie(&refreshCookie)
+	return nil
+}
+
 func (h *authHandler) RegisterCustomer() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var dto dto.RegisterUser
@@ -46,31 +75,30 @@ func (h *authHandler) RegisterCustomer() echo.HandlerFunc {
 			return rest.NewInternalServerError(err)
 		}
 
-		accessToken, err := h.accessGenerator.GenerateToken(user.ID, user.Role)
+		h.setCookies(c, user.ID, user.Role)
+
+		return c.NoContent(http.StatusOK)
+	}
+}
+
+func (h *authHandler) RegisterProvider() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var dto dto.RegisterProvider
+		if err := c.Bind(&dto); err != nil {
+			return err
+		}
+
+		user, err := h.service.RegisterProvider(context.Background(), &dto)
+
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			return rest.NewConflictError(err, "User already exists")
+		}
 		if err != nil {
-			return rest.NewInvalidArgumentsError(err)
-		}
-		refreshToken, err := h.refreshGenerator.GenerateToken(user.ID, user.Role)
-		if err != nil {
-			return rest.NewInvalidArgumentsError(err)
+			return rest.NewInternalServerError(err)
 		}
 
-		accessCookie := http.Cookie{
-			Name:     "access_token",
-			Value:    accessToken,
-			Secure:   true,
-			HttpOnly: true,
-		}
-
-		refreshCookie := http.Cookie{
-			Name:     "refresh_token",
-			Value:    refreshToken,
-			Secure:   true,
-			HttpOnly: true,
-		}
-
-		c.SetCookie(&accessCookie)
-		c.SetCookie(&refreshCookie)
+		h.setCookies(c, user.ID, user.Role)
 
 		return c.NoContent(http.StatusOK)
 	}
