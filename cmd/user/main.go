@@ -9,6 +9,7 @@ import (
 	"github.com/hexley21/handy/cmd/util/shutdown"
 	"github.com/hexley21/handy/internal/user/app"
 	"github.com/hexley21/handy/pkg/config"
+	"github.com/hexley21/handy/pkg/encryption/aes"
 	"github.com/hexley21/handy/pkg/hasher/argon2"
 	"github.com/hexley21/handy/pkg/infra/postgres"
 	"github.com/hexley21/handy/pkg/logger"
@@ -35,7 +36,9 @@ func main() {
 
 	goMailer := gomail.NewGoMailer(&cfg.Mailer)
 	argon2Hasher := argon2.NewHasher(cfg.Argon2)
-	server := app.NewServer(cfg, zapLogger, pgPool, snowflakeNode, argon2Hasher, goMailer, cfg.Mailer.User)
+	aesEncryption := aes.NewAesEncryptor(cfg.AesEncryptor.Key)
+	
+	server := app.NewServer(cfg, zapLogger, pgPool, snowflakeNode, argon2Hasher, aesEncryption, goMailer, cfg.Mailer.User)
 
 	shutdownError := make(chan error)
 	go shutdown.NotifyShutdown(server, zapLogger, shutdownError)

@@ -12,13 +12,14 @@ import (
 
 type (
 	Config struct {
-		Server   Server
-		Postgres Postgres
-		Redis    Redis
-		JWT      JWT
-		Argon2   Argon2
-		Mailer   Mailer
-		Logging  Logging
+		Server       Server
+		Postgres     Postgres
+		Redis        Redis
+		JWT          JWT
+		Argon2       Argon2
+		AesEncryptor AesEncryptor
+		Mailer       Mailer
+		Logging      Logging
 	}
 
 	Server struct {
@@ -74,6 +75,10 @@ type (
 		Memory     uint32 `yaml:"memory"`
 		Threads    uint8  `yaml:"threads"`
 		Breakpoint int
+	}
+
+	AesEncryptor struct {
+		Key string
 	}
 
 	Logging struct {
@@ -134,6 +139,8 @@ func parseEnv(cfg *Config) error {
 
 	cfg.Mailer.User = os.Getenv("SMTP_USER")
 	cfg.Mailer.Password = os.Getenv("SMTP_PASSWORD")
+
+	cfg.AesEncryptor.Key = os.Getenv("ENCRYPTION_KEY")
 
 	return nil
 }

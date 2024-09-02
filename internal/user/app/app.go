@@ -14,6 +14,7 @@ import (
 	"github.com/hexley21/handy/internal/user/repository"
 	"github.com/hexley21/handy/internal/user/service"
 	"github.com/hexley21/handy/pkg/config"
+	"github.com/hexley21/handy/pkg/encryption"
 	"github.com/hexley21/handy/pkg/hasher"
 	"github.com/hexley21/handy/pkg/infra/postgres"
 	"github.com/hexley21/handy/pkg/mailer"
@@ -26,6 +27,7 @@ type server struct {
 	echo          *echo.Echo
 	snowflakeNode *snowflake.Node
 	hasher        hasher.Hasher
+	encryptor     encryption.Encryptor
 	authService   service.AuthService
 	userService   service.UserService
 }
@@ -36,15 +38,19 @@ func NewServer(
 	dbPool *pgxpool.Pool,
 	snowflakeNode *snowflake.Node,
 	hasher hasher.Hasher,
+	encryptor encryption.Encryptor,
 	mailer mailer.Mailer,
 	emailAddress string,
 ) *server {
 	userRepository := repository.NewUserRepository(dbPool, snowflakeNode)
+	providerRepository := repository.NewProviderRepository(dbPool)
 
 	authService := service.NewAuthService(
 		userRepository,
+		providerRepository,
 		dbPool,
 		hasher,
+		encryptor,
 		mailer,
 		emailAddress,
 	)
@@ -60,6 +66,7 @@ func NewServer(
 		e,
 		snowflakeNode,
 		hasher,
+		encryptor,
 		authService,
 		service.NewUserService(userRepository),
 	}

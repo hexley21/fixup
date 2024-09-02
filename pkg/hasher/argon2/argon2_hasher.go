@@ -13,15 +13,15 @@ import (
 
 var ErrPasswordMismatch = errors.New("password does not match")
 
-type Argon2Hasher struct {
+type argon2Hasher struct {
 	config.Argon2
 }
 
-func NewHasher(hasherCfg config.Argon2) *Argon2Hasher {
-	return &Argon2Hasher{hasherCfg}
+func NewHasher(hasherCfg config.Argon2) *argon2Hasher {
+	return &argon2Hasher{hasherCfg}
 }
 
-func (h *Argon2Hasher) HashPassword(password string) string {
+func (h *argon2Hasher) HashPassword(password string) string {
 	saltInBytes := h.GetSalt()
 	salt := base64.RawStdEncoding.EncodeToString(saltInBytes)
 
@@ -30,7 +30,7 @@ func (h *Argon2Hasher) HashPassword(password string) string {
 	return fmt.Sprint(hash, salt)
 }
 
-func (h *Argon2Hasher) HashPasswordWithSalt(password string, salt string) (string, error) {
+func (h *argon2Hasher) HashPasswordWithSalt(password string, salt string) (string, error) {
 	decodedSalt, err := base64.RawStdEncoding.DecodeString(salt)
 	if err != nil {
 		return "", err
@@ -39,7 +39,7 @@ func (h *Argon2Hasher) HashPasswordWithSalt(password string, salt string) (strin
 	return fmt.Sprint(base64.RawStdEncoding.EncodeToString(argon2.Key([]byte(password), decodedSalt, h.Time, h.Memory, h.Threads, h.KeyLen)), salt), nil
 }
 
-func (h *Argon2Hasher) VerifyPassword(password string, hash string) error {
+func (h *argon2Hasher) VerifyPassword(password string, hash string) error {
 	salt := hash[h.Breakpoint:]
 
 	newHash, err := h.HashPasswordWithSalt(password, salt)
@@ -55,7 +55,7 @@ func (h *Argon2Hasher) VerifyPassword(password string, hash string) error {
 	return ErrPasswordMismatch
 }
 
-func (h *Argon2Hasher) GetSalt() []byte {
+func (h *argon2Hasher) GetSalt() []byte {
 	salt := make([]byte, h.SaltLen)
 	io.ReadFull(rand.Reader, salt)
 
