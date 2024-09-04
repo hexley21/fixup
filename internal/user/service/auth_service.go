@@ -52,7 +52,7 @@ func NewAuthService(
 }
 
 func (s *authServiceImpl) sendConfirmationEmail(email string, name string, link string) error {
-	t, err := template.ParseFiles("./templates/register_confirm.templ")
+	t, err := template.ParseFiles("./templates/register_confirm.html")
 	if err != nil {
 		return err
 	}
