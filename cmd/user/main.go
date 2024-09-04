@@ -14,6 +14,7 @@ import (
 	"github.com/hexley21/handy/pkg/infra/postgres"
 	"github.com/hexley21/handy/pkg/logger"
 	"github.com/hexley21/handy/pkg/mailer/gomail"
+	"github.com/hexley21/handy/pkg/validator"
 )
 
 func main() {
@@ -23,6 +24,7 @@ func main() {
 	}
 
 	zapLogger := logger.NewZapLogger(cfg.Logging, cfg.Server.IsProd)
+	playgroundValidator := validator.NewValidator()
 
 	pgPool, err := postgres.InitPool(&cfg.Postgres)
 	if err != nil {
@@ -37,8 +39,8 @@ func main() {
 	goMailer := gomail.NewGoMailer(&cfg.Mailer)
 	argon2Hasher := argon2.NewHasher(cfg.Argon2)
 	aesEncryption := aes.NewAesEncryptor(cfg.AesEncryptor.Key)
-	
-	server := app.NewServer(cfg, zapLogger, pgPool, snowflakeNode, argon2Hasher, aesEncryption, goMailer, cfg.Mailer.User)
+
+	server := app.NewServer(cfg, zapLogger, playgroundValidator, pgPool, snowflakeNode, argon2Hasher, aesEncryption, goMailer, cfg.Mailer.User)
 
 	shutdownError := make(chan error)
 	go shutdown.NotifyShutdown(server, zapLogger, shutdownError)

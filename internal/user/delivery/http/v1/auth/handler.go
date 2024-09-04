@@ -60,12 +60,16 @@ func (h *authHandler) setCookies(c echo.Context, userId string, role string) err
 
 func (h *authHandler) RegisterCustomer() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		var dto dto.RegisterUser
-		if err := c.Bind(&dto); err != nil {
+		dto := new(dto.RegisterUser)
+		if err := c.Bind(dto); err != nil {
 			return err
 		}
 
-		user, err := h.service.RegisterCustomer(context.Background(), &dto)
+		if err := c.Validate(dto); err != nil {
+			return rest.NewInvalidArgumentsError(err)
+		}
+
+		user, err := h.service.RegisterCustomer(context.Background(), dto)
 
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
@@ -83,12 +87,16 @@ func (h *authHandler) RegisterCustomer() echo.HandlerFunc {
 
 func (h *authHandler) RegisterProvider() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		var dto dto.RegisterProvider
-		if err := c.Bind(&dto); err != nil {
+		dto := new(dto.RegisterProvider)
+		if err := c.Bind(dto); err != nil {
 			return err
 		}
 
-		user, err := h.service.RegisterProvider(context.Background(), &dto)
+		if err := c.Validate(dto); err != nil {
+			return rest.NewInvalidArgumentsError(err)
+		}
+
+		user, err := h.service.RegisterProvider(context.Background(), dto)
 
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
@@ -101,5 +109,11 @@ func (h *authHandler) RegisterProvider() echo.HandlerFunc {
 		h.setCookies(c, user.ID, user.Role)
 
 		return c.NoContent(http.StatusOK)
+	}
+}
+
+func (h *authHandler) Login() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		return nil
 	}
 }

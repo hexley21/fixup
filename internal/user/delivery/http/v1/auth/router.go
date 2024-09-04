@@ -10,5 +10,7 @@ func (h *authHandler) MapRoutes(e *echo.Group) *echo.Group {
 	registerGroup.POST("/customer", h.RegisterCustomer())
 	registerGroup.POST("/provider", h.RegisterProvider())
 
+	e.POST("/login", h.Login())
+
 	return registerGroup
 }

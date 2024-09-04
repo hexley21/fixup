@@ -21,6 +21,11 @@ import (
 	"github.com/hexley21/handy/pkg/rest"
 )
 
+type services struct {
+	authService service.AuthService
+	userService service.UserService
+}
+
 type server struct {
 	cfg           *config.Config
 	dbPool        *pgxpool.Pool
@@ -28,13 +33,13 @@ type server struct {
 	snowflakeNode *snowflake.Node
 	hasher        hasher.Hasher
 	encryptor     encryption.Encryptor
-	authService   service.AuthService
-	userService   service.UserService
+	services      services
 }
 
 func NewServer(
 	cfg *config.Config,
 	logger echo.Logger,
+	validator echo.Validator,
 	dbPool *pgxpool.Pool,
 	snowflakeNode *snowflake.Node,
 	hasher hasher.Hasher,
@@ -55,10 +60,13 @@ func NewServer(
 		emailAddress,
 	)
 
+	userService := service.NewUserService(userRepository)
+
 	e := echo.New()
 
 	e.Logger = logger
 	e.HTTPErrorHandler = httpErrorHandler
+	e.Validator = validator
 
 	return &server{
 		cfg,
@@ -67,8 +75,10 @@ func NewServer(
 		snowflakeNode,
 		hasher,
 		encryptor,
-		authService,
-		service.NewUserService(userRepository),
+		services{
+			authService: authService,
+			userService: userService,
+		},
 	}
 }
 
@@ -77,7 +87,11 @@ func (s *server) Run() error {
 	s.echo.Use(middleware.Recover())
 	s.echo.Use(middleware.CORS())
 
-	v1_http.NewRouter(s.cfg.JWT, s.authService, s.userService).MapV1Routes(s.echo)
+	v1_http.NewRouter(
+		s.cfg.JWT,
+		s.services.authService,
+		s.services.userService,
+	).MapV1Routes(s.echo)
 
 	s.echo.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello World")
