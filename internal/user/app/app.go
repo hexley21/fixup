@@ -44,13 +44,14 @@ func NewServer(
 	validator echo.Validator,
 	dbPool *pgxpool.Pool,
 	s3Bucket s3.Bucket,
+	cdnFileInvalidator cdn.FileInvalidator,
 	snowflakeNode *snowflake.Node,
 	hasher hasher.Hasher,
 	encryptor encryption.Encryptor,
 	mailer mailer.Mailer,
 	emailAddress string,
 ) *server {
-	cloudFrontURLSigner := cdn.NewCloudFrontURLSigner(cfg.CDN)
+	cloudFrontURLSigner := cdn.NewCloudFrontURLSigner(cfg.AWS.CDN)
 
 	userRepository := repository.NewUserRepository(dbPool, snowflakeNode)
 	providerRepository := repository.NewProviderRepository(dbPool)
@@ -69,6 +70,7 @@ func NewServer(
 	userService := service.NewUserService(
 		userRepository,
 		s3Bucket,
+		cdnFileInvalidator,
 		cloudFrontURLSigner,
 	)
 

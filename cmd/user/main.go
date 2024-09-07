@@ -11,6 +11,7 @@ import (
 	"github.com/hexley21/handy/pkg/config"
 	"github.com/hexley21/handy/pkg/encryption/aes"
 	"github.com/hexley21/handy/pkg/hasher/argon2"
+	"github.com/hexley21/handy/pkg/infra/cdn"
 	"github.com/hexley21/handy/pkg/infra/postgres"
 	"github.com/hexley21/handy/pkg/infra/s3"
 	"github.com/hexley21/handy/pkg/logger"
@@ -27,12 +28,19 @@ func main() {
 	zapLogger := logger.NewZapLogger(cfg.Logging, cfg.Server.IsProd)
 	playgroundValidator := validator.NewValidator()
 
+
+	zapLogger.Print(cfg)
 	pgPool, err := postgres.NewPool(&cfg.Postgres)
 	if err != nil {
 		zapLogger.Fatal(err)
 	}
 
-	awsS3Bucket, err := s3.NewClient(cfg.S3)
+	awsS3Bucket, err := s3.NewClient(cfg.AWS.AWSCfg, cfg.AWS.S3)
+	if err != nil {
+		zapLogger.Fatal(err)
+	}
+
+	awsCloudFrontCdn, err := cdn.NewClient(cfg.AWS.AWSCfg, cfg.AWS.CDN)
 	if err != nil {
 		zapLogger.Fatal(err)
 	}
@@ -46,7 +54,19 @@ func main() {
 	argon2Hasher := argon2.NewHasher(cfg.Argon2)
 	aesEncryption := aes.NewAesEncryptor(cfg.AesEncryptor.Key)
 
-	server := app.NewServer(cfg, zapLogger, playgroundValidator, pgPool, awsS3Bucket, snowflakeNode, argon2Hasher, aesEncryption, goMailer, cfg.Mailer.User)
+	server := app.NewServer(
+		cfg,
+		zapLogger,
+		playgroundValidator,
+		pgPool,
+		awsS3Bucket,
+		awsCloudFrontCdn,
+		snowflakeNode,
+		argon2Hasher,
+		aesEncryption,
+		goMailer,
+		cfg.Mailer.User,
+	)
 
 	shutdownError := make(chan error)
 	go shutdown.NotifyShutdown(server, zapLogger, shutdownError)

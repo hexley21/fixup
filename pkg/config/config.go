@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
@@ -11,6 +12,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
 )
@@ -20,8 +24,7 @@ type (
 		Server       Server
 		Postgres     Postgres
 		Redis        Redis
-		S3           S3
-		CDN          CDN
+		AWS          AWS
 		JWT          JWT
 		Argon2       Argon2
 		AesEncryptor AesEncryptor
@@ -61,19 +64,29 @@ type (
 		DialTimeout time.Duration
 	}
 
-	S3 struct {
+	AWS struct {
+		AWSCfg AWSCfg
+		S3      S3
+		CDN     CDN
+	}
+
+	AWSCfg struct {
 		Region          string `yaml:"region"`
-		Bucket          string `yaml:"bucket"`
-		RandomNameSize  int    `yaml:"random_name_size"`
 		AccessKeyID     string
 		SecretAccessKey string
 	}
 
+	S3 struct {
+		Bucket         string `yaml:"bucket"`
+		RandomNameSize int    `yaml:"random_name_size"`
+	}
+
 	CDN struct {
-		UrlFmt     string        `yaml:"url_fmt"`
-		Expiry     time.Duration `yaml:"expiry"`
-		PrivateKey *rsa.PrivateKey
-		KeyPairId  string
+		UrlFmt         string        `yaml:"url_fmt"`
+		Expiry         time.Duration `yaml:"expiry"`
+		DistributionId string
+		PrivateKey     *rsa.PrivateKey
+		KeyPairId      string
 	}
 
 	JWT struct {
@@ -123,6 +136,19 @@ func LoadConfig(configDir string) (*Config, error) {
 	return parseConfig(configDir, &cfg)
 }
 
+func (cfg AWSCfg) LoadDefaultConfig(ctx context.Context) (aws.Config, error) {
+	return config.LoadDefaultConfig(
+		ctx,
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(
+				cfg.AccessKeyID,
+				cfg.SecretAccessKey,
+				"",
+			)),
+		config.WithRegion(cfg.Region),
+	)
+}
+
 func parseConfig(configDir string, cfg *Config) (*Config, error) {
 	yamlFile, err := os.ReadFile(configDir)
 	if err != nil {
@@ -155,10 +181,11 @@ func parseEnv(cfg *Config) error {
 	cfg.Redis.Password = os.Getenv("REDIS_PASSWORD")
 	cfg.Redis.SslMode = os.Getenv("REDIS_SSL_MODE") == "true"
 
-	cfg.S3.AccessKeyID = os.Getenv("S3_AC_ID")
-	cfg.S3.SecretAccessKey = os.Getenv("S3_SECRET_AC")
+	cfg.AWS.AWSCfg.AccessKeyID = os.Getenv("AWS_AC_ID")
+	cfg.AWS.AWSCfg.SecretAccessKey = os.Getenv("AWS_SECRET_AC")
 
-	cfg.CDN.KeyPairId = os.Getenv("CDN_KP_ID")
+	cfg.AWS.CDN.KeyPairId = os.Getenv("CDN_KP_ID")
+	cfg.AWS.CDN.DistributionId = os.Getenv("CDN_DISTRIBUTION_ID")
 
 	cfg.Server.IsProd = os.Getenv("IS_PROD") == "true"
 
@@ -178,18 +205,18 @@ func parseEnv(cfg *Config) error {
 
 func parseKeys(cfg *Config) error {
 	pkFile, err := os.ReadFile("./keys/cdn/private_key.pem")
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
-    block, _ := pem.Decode(pkFile)
-    if block == nil {
-        return errors.New("failed to decode PEM block")
-    }
+	block, _ := pem.Decode(pkFile)
+	if block == nil {
+		return errors.New("failed to decode PEM block")
+	}
 
-    if block.Type != "PRIVATE KEY" {
+	if block.Type != "PRIVATE KEY" {
 		return fmt.Errorf("unsupported block type: %s", block.Type)
-    }
+	}
 
 	privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
@@ -201,7 +228,7 @@ func parseKeys(cfg *Config) error {
 		return errors.New("private key is not an RSA key")
 	}
 
-	cfg.CDN.PrivateKey = rsaKey
+	cfg.AWS.CDN.PrivateKey = rsaKey
 
 	return nil
 }
