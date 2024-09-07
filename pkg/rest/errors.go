@@ -6,34 +6,21 @@ import (
 )
 
 var (
-	ErrJwtNotImplemented = NewInternalServerError(errors.New("jwt middleware not implemented"))
+	// 400
+	ErrInvalidArguments = NewInvalidArgumentsError(nil)
+	ErrInvalidFileType = NewBadRequestError(nil, "Invalid file type")
+	ErrTooManyFiles = NewBadRequestError(nil, "Too many files")
+	ErrNoFile = NewBadRequestError(nil, "No file provided")
+	// 403
 	ErrInsufficientRights = NewForbiddenError(nil, "Not enough permissions")
+	// 500
+	ErrJwtNotImplemented = NewInternalServerError(errors.New("jwt middleware not implemented"))
 )
-
-func NewBadRequestError(cause error, message string) ErrorResponse {
-	return newError(cause, message, http.StatusBadRequest)
-}
-
-func NewUnauthorizedError(cause error, message string) ErrorResponse {
-	return newError(cause, message, http.StatusUnauthorized)
-}
-
-func NewForbiddenError(cause error, message string) ErrorResponse {
-	return newError(cause, message, http.StatusForbidden)
-}
-
-func NewNotFoundError(cause error, message string) ErrorResponse {
-	return newError(cause, message, http.StatusNotFound)
-}
-
-func NewConflictError(cause error, message string) ErrorResponse {
-	return newError(cause, message, http.StatusConflict)
-}
-
-func NewInternalServerError(cause error) ErrorResponse {
-	return newError(cause, "Something went wrong", http.StatusInternalServerError)
-}
 
 func NewInvalidArgumentsError(cause error) ErrorResponse {
 	return newError(cause, "Invalid arguments", http.StatusBadRequest)
+}
+
+func NewReadFileError(cause error) ErrorResponse {
+	return newError(cause, "Failed read file", http.StatusInternalServerError)
 }

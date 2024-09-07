@@ -32,7 +32,7 @@ func main() {
 		zapLogger.Fatal(err)
 	}
 
-	_, err = s3.NewClient(cfg.S3)
+	awsS3Bucket, err := s3.NewClient(cfg.S3)
 	if err != nil {
 		zapLogger.Fatal(err)
 	}
@@ -46,7 +46,7 @@ func main() {
 	argon2Hasher := argon2.NewHasher(cfg.Argon2)
 	aesEncryption := aes.NewAesEncryptor(cfg.AesEncryptor.Key)
 
-	server := app.NewServer(cfg, zapLogger, playgroundValidator, pgPool, snowflakeNode, argon2Hasher, aesEncryption, goMailer, cfg.Mailer.User)
+	server := app.NewServer(cfg, zapLogger, playgroundValidator, pgPool, awsS3Bucket, snowflakeNode, argon2Hasher, aesEncryption, goMailer, cfg.Mailer.User)
 
 	shutdownError := make(chan error)
 	go shutdown.NotifyShutdown(server, zapLogger, shutdownError)

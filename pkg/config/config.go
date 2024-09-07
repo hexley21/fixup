@@ -16,6 +16,7 @@ type (
 		Postgres     Postgres
 		Redis        Redis
 		S3           S3
+		CDN          CDN
 		JWT          JWT
 		Argon2       Argon2
 		AesEncryptor AesEncryptor
@@ -58,8 +59,16 @@ type (
 	S3 struct {
 		Region          string `yaml:"region"`
 		Bucket          string `yaml:"bucket"`
+		RandomNameSize  int    `yaml:"random_name_size"`
 		AccessKeyID     string
 		SecretAccessKey string
+	}
+
+	CDN struct {
+		UrlFmt     string        `yaml:"url_fmt"`
+		Expiry     time.Duration `yaml:"expiry"`
+		PrivateKey string
+		KeyPairId  string
 	}
 
 	JWT struct {
@@ -97,6 +106,10 @@ type (
 
 func LoadConfig(configDir string) (*Config, error) {
 	var cfg Config
+
+	if err := parseKeys(&cfg); err != nil {
+		return nil, err
+	}
 
 	if err := parseEnv(&cfg); err != nil {
 		return nil, err
@@ -140,6 +153,8 @@ func parseEnv(cfg *Config) error {
 	cfg.S3.AccessKeyID = os.Getenv("S3_AC_ID")
 	cfg.S3.SecretAccessKey = os.Getenv("S3_SECRET_AC")
 
+	cfg.CDN.KeyPairId = os.Getenv("CDN_KP_ID")
+
 	cfg.Server.IsProd = os.Getenv("IS_PROD") == "true"
 
 	cfg.Mailer.Host = os.Getenv("SMTP_HOST")
@@ -156,3 +171,13 @@ func parseEnv(cfg *Config) error {
 	return nil
 }
 
+func parseKeys(cfg *Config) error {
+	pkFile, err := os.ReadFile("./keys/cdn/private_key.pem")
+	if err != nil {
+		return err
+	}
+
+	cfg.CDN.PrivateKey = string(pkFile)
+
+	return nil
+}

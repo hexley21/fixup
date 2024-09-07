@@ -7,5 +7,6 @@ COPY ./config/user.config.yml ./config/config.yml
 COPY ./templates/auth ./templates
 COPY ./bin/user ./app
 COPY ./.env ./.env
+COPY ./keys/cdn/private_key.pem ./keys/cdn/private_key.pem
 
 CMD ["./app"]

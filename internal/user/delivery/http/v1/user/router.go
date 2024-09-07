@@ -10,7 +10,9 @@ func (h *userHandler) MapRoutes(e *echo.Group, secretKey string) *echo.Group {
 
 	usersGroup.Use(middleware.EchoJWTMiddleware(secretKey))
 	usersGroup.Use(middleware.EchoIsSelfOrAdminMiddleware())
-	usersGroup.GET("/:id", h.FindUserById())
+	
+	usersGroup.GET("/:id", h.findUserById)
+	usersGroup.POST("/:id/pfp", h.uploadProfilePicture)
 
 	return usersGroup
 }

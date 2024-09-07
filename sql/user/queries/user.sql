@@ -10,12 +10,13 @@ INSERT INTO users (
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7
 )
-RETURNING id, first_name, last_name, phone_number, email, role, user_status, created_at;
+RETURNING *;
 
 -- name: UpdateUserStatus :exec
-UPDATE users
-  set user_status = $2
-WHERE id = $1;
+UPDATE users SET user_status = $2 WHERE id = $1;
+
+-- name: UpdateUserPicture :exec
+UPDATE users SET picture_name = $2 WHERE id = $1;
 
 -- name: DeleteUser :exec
 DELETE FROM users

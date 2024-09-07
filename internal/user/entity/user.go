@@ -11,6 +11,7 @@ type User struct {
 	LastName    string
 	PhoneNumber string
 	Email       string
+	PictureName pgtype.Text
 	Hash        string
 	Role        enum.UserRole
 	UserStatus  pgtype.Bool

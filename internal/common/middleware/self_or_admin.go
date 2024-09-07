@@ -17,7 +17,8 @@ func EchoIsSelfOrAdminMiddleware() echo.MiddlewareFunc {
 				return rest.ErrJwtNotImplemented
 			}
 
-			if !(userClaims.ID == c.Param("id") || userClaims.Role == enum.UserRoleADMIN) {
+			idParam := c.Param("id")
+			if !(userClaims.ID == idParam || idParam == "me" || userClaims.Role == enum.UserRoleADMIN) {
 				return rest.ErrInsufficientRights
 			}
 

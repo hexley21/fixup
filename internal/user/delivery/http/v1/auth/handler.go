@@ -58,58 +58,54 @@ func (h *authHandler) setCookies(c echo.Context, userId string, role string) err
 	return nil
 }
 
-func (h *authHandler) RegisterCustomer() echo.HandlerFunc {
-	return func(c echo.Context) error {
-		dto := new(dto.RegisterUser)
-		if err := c.Bind(dto); err != nil {
-			return err
-		}
-
-		if err := c.Validate(dto); err != nil {
-			return rest.NewInvalidArgumentsError(err)
-		}
-
-		user, err := h.service.RegisterCustomer(context.Background(), dto)
-
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-			return rest.NewConflictError(err, "User already exists")
-		}
-		if err != nil {
-			return rest.NewInternalServerError(err)
-		}
-
-		h.setCookies(c, user.ID, user.Role)
-
-		return c.NoContent(http.StatusOK)
+func (h *authHandler) registerCustomer(c echo.Context) error {
+	dto := new(dto.RegisterUser)
+	if err := c.Bind(dto); err != nil {
+		return err
 	}
+
+	if err := c.Validate(dto); err != nil {
+		return rest.NewInvalidArgumentsError(err)
+	}
+
+	user, err := h.service.RegisterCustomer(context.Background(), dto)
+
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+		return rest.NewConflictError(err, "User already exists")
+	}
+	if err != nil {
+		return rest.NewInternalServerError(err)
+	}
+
+	h.setCookies(c, user.ID, user.Role)
+
+	return c.NoContent(http.StatusOK)
 }
 
-func (h *authHandler) RegisterProvider() echo.HandlerFunc {
-	return func(c echo.Context) error {
-		dto := new(dto.RegisterProvider)
-		if err := c.Bind(dto); err != nil {
-			return err
-		}
-
-		if err := c.Validate(dto); err != nil {
-			return rest.NewInvalidArgumentsError(err)
-		}
-
-		user, err := h.service.RegisterProvider(context.Background(), dto)
-
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-			return rest.NewConflictError(err, "User already exists")
-		}
-		if err != nil {
-			return rest.NewInternalServerError(err)
-		}
-
-		h.setCookies(c, user.ID, user.Role)
-
-		return c.NoContent(http.StatusOK)
+func (h *authHandler) registerProvider(c echo.Context) error {
+	dto := new(dto.RegisterProvider)
+	if err := c.Bind(dto); err != nil {
+		return err
 	}
+
+	if err := c.Validate(dto); err != nil {
+		return rest.NewInvalidArgumentsError(err)
+	}
+
+	user, err := h.service.RegisterProvider(context.Background(), dto)
+
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+		return rest.NewConflictError(err, "User already exists")
+	}
+	if err != nil {
+		return rest.NewInternalServerError(err)
+	}
+
+	h.setCookies(c, user.ID, user.Role)
+
+	return c.NoContent(http.StatusOK)
 }
 
 func (h *authHandler) Login() echo.HandlerFunc {

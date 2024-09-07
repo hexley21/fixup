@@ -29,6 +29,7 @@ type authServiceImpl struct {
 	encryptor          encryption.Encryptor
 	mailer             mailer.Mailer
 	emailAddres        string
+	cdnUrlFmt          string
 }
 
 func NewAuthService(
@@ -39,6 +40,7 @@ func NewAuthService(
 	encryptor encryption.Encryptor,
 	mailer mailer.Mailer,
 	emailAddres string,
+	cdnUrlFmt string,
 ) AuthService {
 	return &authServiceImpl{
 		userRepository:     userRepository,
@@ -48,6 +50,7 @@ func NewAuthService(
 		encryptor:          encryptor,
 		mailer:             mailer,
 		emailAddres:        emailAddres,
+		cdnUrlFmt:          cdnUrlFmt,
 	}
 }
 
@@ -110,7 +113,7 @@ func (s *authServiceImpl) RegisterCustomer(ctx context.Context, dto *dto.Registe
 		return nil, err
 	}
 
-	res, err := mapper.MapUserToDto(user)
+	res, err := mapper.MapUserToDto(user, s.cdnUrlFmt)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +163,7 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, dto *dto.Registe
 		return nil, err
 	}
 
-	res, err := mapper.MapUserToDto(user)
+	res, err := mapper.MapUserToDto(user, s.cdnUrlFmt)
 	if err != nil {
 		return nil, err
 	}

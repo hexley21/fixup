@@ -7,8 +7,8 @@ import (
 func (h *authHandler) MapRoutes(e *echo.Group) *echo.Group {
 	registerGroup := e.Group("/register")
 	
-	registerGroup.POST("/customer", h.RegisterCustomer())
-	registerGroup.POST("/provider", h.RegisterProvider())
+	registerGroup.POST("/customer", h.registerCustomer)
+	registerGroup.POST("/provider", h.registerProvider)
 
 	e.POST("/login", h.Login())
 

@@ -17,6 +17,7 @@ import (
 	"github.com/hexley21/handy/pkg/encryption"
 	"github.com/hexley21/handy/pkg/hasher"
 	"github.com/hexley21/handy/pkg/infra/postgres"
+	"github.com/hexley21/handy/pkg/infra/s3"
 	"github.com/hexley21/handy/pkg/mailer"
 	"github.com/hexley21/handy/pkg/rest"
 )
@@ -41,6 +42,7 @@ func NewServer(
 	logger echo.Logger,
 	validator echo.Validator,
 	dbPool *pgxpool.Pool,
+	s3Bucket s3.Bucket,
 	snowflakeNode *snowflake.Node,
 	hasher hasher.Hasher,
 	encryptor encryption.Encryptor,
@@ -58,9 +60,10 @@ func NewServer(
 		encryptor,
 		mailer,
 		emailAddress,
+		cfg.CDN.UrlFmt,
 	)
 
-	userService := service.NewUserService(userRepository)
+	userService := service.NewUserService(userRepository, s3Bucket)
 
 	e := echo.New()
 
@@ -116,11 +119,10 @@ func (s *server) Close() error {
 }
 
 func httpErrorHandler(err error, c echo.Context) {
+	c.Logger().Error(err)
 	if apiErr, ok := err.(rest.ErrorResponse); ok {
 		c.JSON(apiErr.Status, apiErr)
-		c.Logger().Error(err)
 		return
 	}
-	c.Logger().Error(err)
 	c.JSON(http.StatusInternalServerError, rest.NewInternalServerError(err))
 }

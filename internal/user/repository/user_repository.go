@@ -16,11 +16,12 @@ type UserRepository interface {
 	DeleteUser(ctx context.Context, id int64) error
 	GetById(ctx context.Context, id int64) (entity.User, error)
 	GetUserPasswordHash(ctx context.Context, id int64) (string, error)
+	UpdateUserPicture(ctx context.Context, arg UpdateUserPictureParams) error
 	UpdateUserStatus(ctx context.Context, arg UpdateUserStatusParams) error
 }
 
 type userRepositoryImpl struct {
-	db postgres.DBTX
+	db        postgres.DBTX
 	snowflake *snowflake.Node
 }
 
@@ -45,12 +46,13 @@ RETURNING id, first_name, last_name, phone_number, email, role, user_status, cre
 `
 
 type CreateUserParams struct {
-	FirstName   string        `json:"first_name"`
-	LastName    string        `json:"last_name"`
-	PhoneNumber string        `json:"phone_number"`
-	Email       string        `json:"email"`
-	Hash        string        `json:"hash"`
-	Role        enum.UserRole `json:"role"`
+	FirstName   string
+	LastName    string
+	PhoneNumber string
+	Email       string
+	Hash        string
+	PictureName string
+	Role        enum.UserRole
 }
 
 func (r *userRepositoryImpl) CreateUser(ctx context.Context, arg CreateUserParams) (entity.User, error) {
@@ -88,7 +90,7 @@ func (r *userRepositoryImpl) DeleteUser(ctx context.Context, id int64) error {
 }
 
 const getById = `-- name: GetById :one
-SELECT id, first_name, last_name, phone_number, email, role, user_status, created_at FROM users WHERE id = $1
+SELECT id, first_name, last_name, phone_number, email, picture_name, role, user_status, created_at FROM users WHERE id = $1
 `
 
 func (r *userRepositoryImpl) GetById(ctx context.Context, id int64) (entity.User, error) {
@@ -100,6 +102,7 @@ func (r *userRepositoryImpl) GetById(ctx context.Context, id int64) (entity.User
 		&i.LastName,
 		&i.PhoneNumber,
 		&i.Email,
+		&i.PictureName,
 		&i.Role,
 		&i.UserStatus,
 		&i.CreatedAt,
@@ -118,10 +121,22 @@ func (r *userRepositoryImpl) GetUserPasswordHash(ctx context.Context, id int64) 
 	return hash, err
 }
 
+const updateUserPicture = `-- name: UpdateUserPicture :exec
+UPDATE users SET picture_name = $2 WHERE id = $1
+`
+
+type UpdateUserPictureParams struct {
+	ID          int64
+	PictureName pgtype.Text
+}
+
+func (r *userRepositoryImpl) UpdateUserPicture(ctx context.Context, arg UpdateUserPictureParams) error {
+	_, err := r.db.Exec(ctx, updateUserPicture, arg.ID, arg.PictureName)
+	return err
+}
+
 const updateUserStatus = `-- name: UpdateUserStatus :exec
-UPDATE users
-  set user_status = $2
-WHERE id = $1
+UPDATE users SET user_status = $2 WHERE id = $1
 `
 
 type UpdateUserStatusParams struct {

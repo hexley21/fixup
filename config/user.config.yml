@@ -20,8 +20,14 @@ redis:
     dial_timeout: 30s
 
 s3:
-    endpoint: eu-north-1
+    region: eu-north-1
     bucket: fixup.com
+    random_name_size: 32
+
+cdn:
+    url_fmt: https://d20eri1dy5h30b.cloudfront.net/%s
+    expiry: 24h
+
 
 jwt:
     access_ttl: 2h
