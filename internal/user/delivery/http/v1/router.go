@@ -10,16 +10,16 @@ import (
 )
 
 type v1Router struct {
-	cfgJwt      config.JWT
-	authService service.AuthService
-	userService service.UserService
+	cfgJwt       config.JWT
+	authService  service.AuthService
+	userService  service.UserService
 }
 
 func NewRouter(cfgJwt config.JWT, authService service.AuthService, userService service.UserService) *v1Router {
 	return &v1Router{
-		cfgJwt:      cfgJwt,
-		authService: authService,
-		userService: userService,
+		cfgJwt:       cfgJwt,
+		authService:  authService,
+		userService:  userService,
 	}
 }
 

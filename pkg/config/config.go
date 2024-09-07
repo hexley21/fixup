@@ -1,6 +1,11 @@
 package config
 
 import (
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
+	"errors"
+	"fmt"
 	"math"
 	"os"
 	"strconv"
@@ -67,7 +72,7 @@ type (
 	CDN struct {
 		UrlFmt     string        `yaml:"url_fmt"`
 		Expiry     time.Duration `yaml:"expiry"`
-		PrivateKey string
+		PrivateKey *rsa.PrivateKey
 		KeyPairId  string
 	}
 
@@ -173,11 +178,30 @@ func parseEnv(cfg *Config) error {
 
 func parseKeys(cfg *Config) error {
 	pkFile, err := os.ReadFile("./keys/cdn/private_key.pem")
+    if err != nil {
+        return err
+    }
+
+    block, _ := pem.Decode(pkFile)
+    if block == nil {
+        return errors.New("failed to decode PEM block")
+    }
+
+    if block.Type != "PRIVATE KEY" {
+		return fmt.Errorf("unsupported block type: %s", block.Type)
+    }
+
+	privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
-		return err
+		return fmt.Errorf("error parsing PKCS#8 private key: %w", err)
 	}
 
-	cfg.CDN.PrivateKey = string(pkFile)
+	rsaKey, ok := privateKey.(*rsa.PrivateKey)
+	if !ok {
+		return errors.New("private key is not an RSA key")
+	}
+
+	cfg.CDN.PrivateKey = rsaKey
 
 	return nil
 }

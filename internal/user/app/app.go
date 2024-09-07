@@ -16,6 +16,7 @@ import (
 	"github.com/hexley21/handy/pkg/config"
 	"github.com/hexley21/handy/pkg/encryption"
 	"github.com/hexley21/handy/pkg/hasher"
+	"github.com/hexley21/handy/pkg/infra/cdn"
 	"github.com/hexley21/handy/pkg/infra/postgres"
 	"github.com/hexley21/handy/pkg/infra/s3"
 	"github.com/hexley21/handy/pkg/mailer"
@@ -49,6 +50,8 @@ func NewServer(
 	mailer mailer.Mailer,
 	emailAddress string,
 ) *server {
+	cloudFrontURLSigner := cdn.NewCloudFrontURLSigner(cfg.CDN)
+
 	userRepository := repository.NewUserRepository(dbPool, snowflakeNode)
 	providerRepository := repository.NewProviderRepository(dbPool)
 
@@ -60,10 +63,14 @@ func NewServer(
 		encryptor,
 		mailer,
 		emailAddress,
-		cfg.CDN.UrlFmt,
+		cloudFrontURLSigner,
 	)
 
-	userService := service.NewUserService(userRepository, s3Bucket)
+	userService := service.NewUserService(
+		userRepository,
+		s3Bucket,
+		cloudFrontURLSigner,
+	)
 
 	e := echo.New()
 

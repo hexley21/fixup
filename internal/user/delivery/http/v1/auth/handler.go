@@ -68,7 +68,7 @@ func (h *authHandler) registerCustomer(c echo.Context) error {
 		return rest.NewInvalidArgumentsError(err)
 	}
 
-	user, err := h.service.RegisterCustomer(context.Background(), dto)
+	user, err := h.service.RegisterCustomer(context.Background(), *dto)
 
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
@@ -93,7 +93,7 @@ func (h *authHandler) registerProvider(c echo.Context) error {
 		return rest.NewInvalidArgumentsError(err)
 	}
 
-	user, err := h.service.RegisterProvider(context.Background(), dto)
+	user, err := h.service.RegisterProvider(context.Background(), *dto)
 
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {

@@ -14,17 +14,27 @@ import (
 )
 
 type userHandler struct {
-	service service.UserService
+	service      service.UserService
 }
 
 func NewUserHandler(service service.UserService) *userHandler {
 	return &userHandler{
-		service,
+		service:      service,
 	}
 }
 
 func (h *userHandler) findUserById(c echo.Context) error {
-	userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	idParam := c.Param("id")
+
+	if idParam == "me" {
+		user, ok := c.Get("user").(jwt.UserClaims)
+		if !ok {
+			return rest.ErrJwtNotImplemented
+		}
+		idParam = user.ID
+	}
+
+	userId, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
 		return rest.NewInternalServerError(err)
 	}

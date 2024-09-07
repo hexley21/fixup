@@ -3,6 +3,7 @@ module github.com/hexley21/handy
 go 1.22.5
 
 require (
+	github.com/aws/aws-sdk-go-v2/feature/cloudfront/sign v1.7.15
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/go-playground/validator/v10 v10.22.0
 	github.com/golang-jwt/jwt/v5 v5.2.1

@@ -11,14 +11,15 @@ import (
 	"github.com/hexley21/handy/internal/user/repository"
 	"github.com/hexley21/handy/pkg/encryption"
 	"github.com/hexley21/handy/pkg/hasher"
+	"github.com/hexley21/handy/pkg/infra/cdn"
 	"github.com/hexley21/handy/pkg/mailer"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type AuthService interface {
-	RegisterCustomer(ctx context.Context, dto *dto.RegisterUser) (*dto.User, error)
-	RegisterProvider(ctx context.Context, dto *dto.RegisterProvider) (*dto.User, error)
+	RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error)
+	RegisterProvider(ctx context.Context, registerDto dto.RegisterProvider) (dto.User, error)
 }
 
 type authServiceImpl struct {
@@ -28,8 +29,8 @@ type authServiceImpl struct {
 	hasher             hasher.Hasher
 	encryptor          encryption.Encryptor
 	mailer             mailer.Mailer
+	cdnUrlSigner       cdn.URLSigner
 	emailAddres        string
-	cdnUrlFmt          string
 }
 
 func NewAuthService(
@@ -40,7 +41,7 @@ func NewAuthService(
 	encryptor encryption.Encryptor,
 	mailer mailer.Mailer,
 	emailAddres string,
-	cdnUrlFmt string,
+	cdnUrlSigner cdn.URLSigner,
 ) AuthService {
 	return &authServiceImpl{
 		userRepository:     userRepository,
@@ -50,7 +51,7 @@ func NewAuthService(
 		encryptor:          encryptor,
 		mailer:             mailer,
 		emailAddres:        emailAddres,
-		cdnUrlFmt:          cdnUrlFmt,
+		cdnUrlSigner:       cdnUrlSigner,
 	}
 }
 
@@ -72,7 +73,8 @@ func (s *authServiceImpl) sendConfirmationEmail(email string, name string, link 
 	)
 }
 
-func (s *authServiceImpl) registerUser(ctx context.Context, dto *dto.RegisterUser, tx pgx.Tx) (*entity.User, error) {
+func (s *authServiceImpl) registerUser(ctx context.Context, dto dto.RegisterUser, tx pgx.Tx) (entity.User, error) {
+	var user entity.User
 	user, err := s.userRepository.WithTx(tx).CreateUser(ctx, repository.CreateUserParams{
 		FirstName:   dto.FirstName,
 		LastName:    dto.LastName,
@@ -83,89 +85,93 @@ func (s *authServiceImpl) registerUser(ctx context.Context, dto *dto.RegisterUse
 	})
 	if err != nil {
 		if err := tx.Rollback(ctx); err != nil {
-			return nil, err
+			return user, err
 		}
-		return nil, err
+		return user, err
 	}
 
-	return &user, nil
+	return user, nil
 }
 
-func (s *authServiceImpl) RegisterCustomer(ctx context.Context, dto *dto.RegisterUser) (*dto.User, error) {
+func (s *authServiceImpl) RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error) {
+	var dto dto.User
+
 	tx, err := s.dbPool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
 	if err != nil {
-		return nil, err
+		return dto, err
 	}
 
-	user, err := s.registerUser(ctx, dto, tx)
+	user, err := s.registerUser(ctx, registerDto, tx)
 	if err != nil {
-		return nil, err
+		return dto, err
 	}
 
 	if err := s.sendConfirmationEmail(user.Email, user.FirstName, user.LastName); err != nil {
 		if err := tx.Rollback(ctx); err != nil {
-			return nil, err
+			return dto, err
 		}
-		return nil, err
+		return dto, err
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		return nil, err
+		return dto, err
 	}
 
-	res, err := mapper.MapUserToDto(user, s.cdnUrlFmt)
+	dto, err = mapper.MapUserToDto(user, s.cdnUrlSigner)
 	if err != nil {
-		return nil, err
+		return dto, err
 	}
 
-	return res, nil
+	return dto, nil
 }
 
-func (s *authServiceImpl) RegisterProvider(ctx context.Context, dto *dto.RegisterProvider) (*dto.User, error) {
+func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.RegisterProvider) (dto.User, error) {
+	var dto dto.User
+
 	tx, err := s.dbPool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
 	if err != nil {
-		return nil, err
+		return dto, err
 	}
 
-	user, err := s.registerUser(ctx, &dto.RegisterUser, tx)
+	user, err := s.registerUser(ctx, registerDto.RegisterUser, tx)
 	if err != nil {
-		return nil, err
+		return dto, err
 	}
 
-	enc, err := s.encryptor.Encrypt([]byte(dto.PersonalIDNumber))
+	enc, err := s.encryptor.Encrypt([]byte(registerDto.PersonalIDNumber))
 	if err != nil {
 		if err := tx.Rollback(ctx); err != nil {
-			return nil, err
+			return dto, err
 		}
-		return nil, err
+		return dto, err
 	}
 
 	err = s.providerRepository.WithTx(tx).CreateProvider(ctx, repository.CreateProviderParams{
 		PersonalIDNumber:  enc,
-		PersonalIDPreview: dto.PersonalIDNumber[len(dto.PersonalIDNumber)-5:],
+		PersonalIDPreview: registerDto.PersonalIDNumber[len(registerDto.PersonalIDNumber)-5:],
 		UserID:            user.ID,
 	})
 	if err != nil {
 		if err := tx.Rollback(ctx); err != nil {
-			return nil, err
+			return dto, err
 		}
-		return nil, err
+		return dto, err
 	}
 
 	if err := s.sendConfirmationEmail(user.Email, user.FirstName, user.LastName); err != nil {
 		if err := tx.Rollback(ctx); err != nil {
-			return nil, err
+			return dto, err
 		}
-		return nil, err
+		return dto, err
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		return nil, err
+		return dto, err
 	}
 
-	res, err := mapper.MapUserToDto(user, s.cdnUrlFmt)
+	res, err := mapper.MapUserToDto(user, s.cdnUrlSigner)
 	if err != nil {
-		return nil, err
+		return dto, err
 	}
 
 	return res, nil
