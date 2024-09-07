@@ -12,3 +12,8 @@ type RegisterProvider struct {
 	RegisterUser
 	PersonalIDNumber string `json:"personal_id_number" validate:"required,number"`
 }
+
+type Login struct {
+	Email    string `json:"email" validate:"required,email,max=40"`
+	Password string `json:"password" validate:"required,min=8"`
+}

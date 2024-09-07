@@ -1,8 +1,8 @@
 -- name: GetById :one
 SELECT * FROM users WHERE id = $1;
 
--- name: GetUserPasswordHash :one
-SELECT hash FROM users WHERE id = $1;
+-- name: GetUserCredentialsByEmail :one
+SELECT id, role, hash FROM users WHERE email = $1;
 
 -- name: CreateUser :one
 INSERT INTO users (

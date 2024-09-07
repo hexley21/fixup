@@ -99,7 +99,19 @@ func (h *authHandler) registerProvider(c echo.Context) error {
 }
 
 func (h *authHandler) Login(c echo.Context) error {
-	return nil
+	dto := new(dto.Login)
+	if err := c.Bind(dto); err != nil {
+		return err
+	}
+
+	user, err := h.service.AuthenticateUser(context.Background(), *dto)
+	if err != nil {
+		return rest.NewUnauthorizedError(err, "Incorrect email or password")
+	}
+
+	setCookies(c, h.accessGenerator, "access_token", user.ID, user.Role)
+	setCookies(c, h.refreshGenerator, "refresh_token", user.ID, user.Role)
+	return c.NoContent(http.StatusOK)
 }
 
 func (h *authHandler) Refresh(c echo.Context) error {

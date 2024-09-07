@@ -15,7 +15,7 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (entity.User, error)
 	DeleteUser(ctx context.Context, id int64) error
 	GetById(ctx context.Context, id int64) (entity.User, error)
-	GetUserPasswordHash(ctx context.Context, id int64) (string, error)
+	GetUserCredentialsByEmail(ctx context.Context, email string) (GetUserCredentialsByEmailRow, error)
 	UpdateUserPicture(ctx context.Context, arg UpdateUserPictureParams) error
 	UpdateUserStatus(ctx context.Context, arg UpdateUserStatusParams) error
 }
@@ -110,15 +110,21 @@ func (r *userRepositoryImpl) GetById(ctx context.Context, id int64) (entity.User
 	return i, err
 }
 
-const getUserPasswordHash = `-- name: GetUserPasswordHash :one
-SELECT hash FROM users WHERE id = $1
+const getUserCredentialsByEmail = `-- name: GetUserCredentialsByEmail :one
+SELECT id, role, hash FROM users WHERE email = $1
 `
 
-func (r *userRepositoryImpl) GetUserPasswordHash(ctx context.Context, id int64) (string, error) {
-	row := r.db.QueryRow(ctx, getUserPasswordHash, id)
-	var hash string
-	err := row.Scan(&hash)
-	return hash, err
+type GetUserCredentialsByEmailRow struct {
+	ID   int64
+	Role enum.UserRole
+	Hash string
+}
+
+func (r *userRepositoryImpl) GetUserCredentialsByEmail(ctx context.Context, email string) (GetUserCredentialsByEmailRow, error) {
+	row := r.db.QueryRow(ctx, getUserCredentialsByEmail, email)
+	var i GetUserCredentialsByEmailRow
+	err := row.Scan(&i.ID, &i.Role, &i.Hash)
+	return i, err
 }
 
 const updateUserPicture = `-- name: UpdateUserPicture :exec

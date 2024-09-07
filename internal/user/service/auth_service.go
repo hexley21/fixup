@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"html/template"
+	"strconv"
 
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto/mapper"
@@ -20,6 +21,7 @@ import (
 type AuthService interface {
 	RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error)
 	RegisterProvider(ctx context.Context, registerDto dto.RegisterProvider) (dto.User, error)
+	AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.User, error)
 }
 
 type authServiceImpl struct {
@@ -175,4 +177,22 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 	}
 
 	return res, nil
+}
+
+func (s *authServiceImpl) AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.User, error) {
+	var dto dto.User
+	creds, err := s.userRepository.GetUserCredentialsByEmail(ctx, loginDto.Email)
+	if err != nil {
+		return dto, err
+	}
+
+	err = s.hasher.VerifyPassword(loginDto.Password, creds.Hash)
+	if err != nil {
+		return dto, err
+	}
+
+	dto.ID = strconv.FormatInt(creds.ID, 10)
+	dto.Role = string(creds.Role)
+
+	return dto, nil
 }
