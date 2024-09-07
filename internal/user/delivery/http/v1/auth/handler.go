@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -13,6 +14,11 @@ import (
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/service"
 	"github.com/hexley21/fixup/pkg/rest"
+)
+
+var (
+	access_token_cookie  = "access_token"
+	refresh_token_cookie = "refresh_token"
 )
 
 type authHandler struct {
@@ -46,6 +52,18 @@ func setCookies(c echo.Context, jwtGenerator jwt.AuthJwtGenerator, cookieName st
 	return nil
 }
 
+func eraseCookie(c echo.Context, cookieName string) {
+	cookie := http.Cookie{
+		Name:     cookieName,
+		Value:    "",
+		Expires:  time.Unix(0, 0),
+		MaxAge:   -1,
+		HttpOnly: true,
+	}
+
+	c.SetCookie(&cookie)
+}
+
 func (h *authHandler) registerCustomer(c echo.Context) error {
 	dto := new(dto.RegisterUser)
 	if err := c.Bind(dto); err != nil {
@@ -66,8 +84,8 @@ func (h *authHandler) registerCustomer(c echo.Context) error {
 		return rest.NewInternalServerError(err)
 	}
 
-	setCookies(c, h.accessGenerator, "access_token", user.ID, user.Role)
-	setCookies(c, h.refreshGenerator, "refresh_token", user.ID, user.Role)
+	setCookies(c, h.accessGenerator, access_token_cookie, user.ID, user.Role)
+	setCookies(c, h.refreshGenerator, refresh_token_cookie, user.ID, user.Role)
 
 	return c.NoContent(http.StatusOK)
 }
@@ -92,8 +110,8 @@ func (h *authHandler) registerProvider(c echo.Context) error {
 		return rest.NewInternalServerError(err)
 	}
 
-	setCookies(c, h.accessGenerator, "access_token", user.ID, user.Role)
-	setCookies(c, h.refreshGenerator, "refresh_token", user.ID, user.Role)
+	setCookies(c, h.accessGenerator, access_token_cookie, user.ID, user.Role)
+	setCookies(c, h.refreshGenerator, refresh_token_cookie, user.ID, user.Role)
 
 	return c.NoContent(http.StatusOK)
 }
@@ -109,8 +127,15 @@ func (h *authHandler) Login(c echo.Context) error {
 		return rest.NewUnauthorizedError(err, "Incorrect email or password")
 	}
 
-	setCookies(c, h.accessGenerator, "access_token", user.ID, user.Role)
-	setCookies(c, h.refreshGenerator, "refresh_token", user.ID, user.Role)
+	setCookies(c, h.accessGenerator, access_token_cookie, user.ID, user.Role)
+	setCookies(c, h.refreshGenerator, refresh_token_cookie, user.ID, user.Role)
+	return c.NoContent(http.StatusOK)
+}
+
+func (h *authHandler) Logout(c echo.Context) error {
+	eraseCookie(c, access_token_cookie)
+	eraseCookie(c, refresh_token_cookie)
+
 	return c.NoContent(http.StatusOK)
 }
 
@@ -120,6 +145,6 @@ func (h *authHandler) Refresh(c echo.Context) error {
 		return rest.ErrJwtNotImplemented
 	}
 
-	setCookies(c, h.accessGenerator, "access_token", user.ID, string(user.Role))
+	setCookies(c, h.accessGenerator, access_token_cookie, user.ID, string(user.Role))
 	return nil
 }
