@@ -9,9 +9,13 @@ import (
 )
 
 func MapUserToDto(entity entity.User, urlSigner cdn.URLSigner) (dto.User, error) {
-	url, err := urlSigner.SignURL(entity.PictureName.String)
-	if err != nil {
-		return dto.User{}, err
+	var url string
+	if entity.PictureName.String != "" {
+		signedUrl, err := urlSigner.SignURL(entity.PictureName.String)
+		if err != nil {
+			return dto.User{}, err
+		}
+		url = signedUrl
 	}
 
 	return dto.User{
