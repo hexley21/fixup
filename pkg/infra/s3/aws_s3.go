@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/hexley21/handy/pkg/config"
+	"github.com/hexley21/fixup/pkg/config"
 )
 
 type awsS3 struct {

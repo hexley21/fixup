@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/hexley21/handy/pkg/infra/postgres"
+	"github.com/hexley21/fixup/pkg/infra/postgres"
 )
 
 type ProviderRepository interface {

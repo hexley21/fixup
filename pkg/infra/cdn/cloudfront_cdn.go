@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/hexley21/handy/pkg/config"
+	"github.com/hexley21/fixup/pkg/config"
 )
 
 type cloudfrontCdn struct {

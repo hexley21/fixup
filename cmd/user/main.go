@@ -6,17 +6,17 @@ import (
 	"net/http"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/hexley21/handy/cmd/util/shutdown"
-	"github.com/hexley21/handy/internal/user/app"
-	"github.com/hexley21/handy/pkg/config"
-	"github.com/hexley21/handy/pkg/encryption/aes"
-	"github.com/hexley21/handy/pkg/hasher/argon2"
-	"github.com/hexley21/handy/pkg/infra/cdn"
-	"github.com/hexley21/handy/pkg/infra/postgres"
-	"github.com/hexley21/handy/pkg/infra/s3"
-	"github.com/hexley21/handy/pkg/logger"
-	"github.com/hexley21/handy/pkg/mailer/gomail"
-	"github.com/hexley21/handy/pkg/validator"
+	"github.com/hexley21/fixup/cmd/util/shutdown"
+	"github.com/hexley21/fixup/internal/user/app"
+	"github.com/hexley21/fixup/pkg/config"
+	"github.com/hexley21/fixup/pkg/encryption/aes"
+	"github.com/hexley21/fixup/pkg/hasher/argon2"
+	"github.com/hexley21/fixup/pkg/infra/cdn"
+	"github.com/hexley21/fixup/pkg/infra/postgres"
+	"github.com/hexley21/fixup/pkg/infra/s3"
+	"github.com/hexley21/fixup/pkg/logger"
+	"github.com/hexley21/fixup/pkg/mailer/gomail"
+	"github.com/hexley21/fixup/pkg/validator"
 )
 
 func main() {

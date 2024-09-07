@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/feature/cloudfront/sign"
-	"github.com/hexley21/handy/pkg/config"
+	"github.com/hexley21/fixup/pkg/config"
 )
 
 type URLSigner interface {

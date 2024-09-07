@@ -1,4 +1,4 @@
-module github.com/hexley21/handy
+module github.com/hexley21/fixup
 
 go 1.22.5
 

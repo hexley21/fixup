@@ -10,17 +10,17 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	v1_http "github.com/hexley21/handy/internal/user/delivery/http/v1"
-	"github.com/hexley21/handy/internal/user/repository"
-	"github.com/hexley21/handy/internal/user/service"
-	"github.com/hexley21/handy/pkg/config"
-	"github.com/hexley21/handy/pkg/encryption"
-	"github.com/hexley21/handy/pkg/hasher"
-	"github.com/hexley21/handy/pkg/infra/cdn"
-	"github.com/hexley21/handy/pkg/infra/postgres"
-	"github.com/hexley21/handy/pkg/infra/s3"
-	"github.com/hexley21/handy/pkg/mailer"
-	"github.com/hexley21/handy/pkg/rest"
+	v1_http "github.com/hexley21/fixup/internal/user/delivery/http/v1"
+	"github.com/hexley21/fixup/internal/user/repository"
+	"github.com/hexley21/fixup/internal/user/service"
+	"github.com/hexley21/fixup/pkg/config"
+	"github.com/hexley21/fixup/pkg/encryption"
+	"github.com/hexley21/fixup/pkg/hasher"
+	"github.com/hexley21/fixup/pkg/infra/cdn"
+	"github.com/hexley21/fixup/pkg/infra/postgres"
+	"github.com/hexley21/fixup/pkg/infra/s3"
+	"github.com/hexley21/fixup/pkg/mailer"
+	"github.com/hexley21/fixup/pkg/rest"
 )
 
 type services struct {

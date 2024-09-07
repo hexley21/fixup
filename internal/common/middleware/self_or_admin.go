@@ -3,9 +3,9 @@ package middleware
 import (
 	"github.com/labstack/echo/v4"
 
-	"github.com/hexley21/handy/internal/common/jwt"
-	"github.com/hexley21/handy/internal/user/enum"
-	"github.com/hexley21/handy/pkg/rest"
+	"github.com/hexley21/fixup/internal/common/jwt"
+	"github.com/hexley21/fixup/internal/user/enum"
+	"github.com/hexley21/fixup/pkg/rest"
 )
 
 func EchoIsSelfOrAdminMiddleware() echo.MiddlewareFunc {

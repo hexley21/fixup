@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"html/template"
 
-	"github.com/hexley21/handy/pkg/config"
+	"github.com/hexley21/fixup/pkg/config"
 	"gopkg.in/gomail.v2"
 )
 

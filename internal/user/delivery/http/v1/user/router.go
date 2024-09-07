@@ -1,7 +1,7 @@
 package user
 
 import (
-	"github.com/hexley21/handy/internal/common/middleware"
+	"github.com/hexley21/fixup/internal/common/middleware"
 	"github.com/labstack/echo/v4"
 )
 

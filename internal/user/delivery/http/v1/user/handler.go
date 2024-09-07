@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/hexley21/handy/internal/common/jwt"
-	"github.com/hexley21/handy/internal/user/service"
-	"github.com/hexley21/handy/pkg/rest"
+	"github.com/hexley21/fixup/internal/common/jwt"
+	"github.com/hexley21/fixup/internal/user/service"
+	"github.com/hexley21/fixup/pkg/rest"
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
 )

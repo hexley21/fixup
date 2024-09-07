@@ -3,9 +3,9 @@ package mapper
 import (
 	"strconv"
 
-	"github.com/hexley21/handy/internal/user/delivery/http/v1/dto"
-	"github.com/hexley21/handy/internal/user/entity"
-	"github.com/hexley21/handy/pkg/infra/cdn"
+	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
+	"github.com/hexley21/fixup/internal/user/entity"
+	"github.com/hexley21/fixup/pkg/infra/cdn"
 )
 
 func MapUserToDto(entity entity.User, urlSigner cdn.URLSigner) (dto.User, error) {

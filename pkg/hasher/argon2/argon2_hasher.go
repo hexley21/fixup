@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/hexley21/handy/pkg/config"
+	"github.com/hexley21/fixup/pkg/config"
 	"golang.org/x/crypto/argon2"
 )
 

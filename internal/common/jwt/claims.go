@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/hexley21/handy/internal/user/enum"
+	"github.com/hexley21/fixup/internal/user/enum"
 )
 
 type UserClaims struct {

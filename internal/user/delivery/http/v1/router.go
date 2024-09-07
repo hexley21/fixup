@@ -1,11 +1,11 @@
 package v1
 
 import (
-	"github.com/hexley21/handy/internal/common/jwt"
-	"github.com/hexley21/handy/internal/user/delivery/http/v1/auth"
-	"github.com/hexley21/handy/internal/user/delivery/http/v1/user"
-	"github.com/hexley21/handy/internal/user/service"
-	"github.com/hexley21/handy/pkg/config"
+	"github.com/hexley21/fixup/internal/common/jwt"
+	"github.com/hexley21/fixup/internal/user/delivery/http/v1/auth"
+	"github.com/hexley21/fixup/internal/user/delivery/http/v1/user"
+	"github.com/hexley21/fixup/internal/user/service"
+	"github.com/hexley21/fixup/pkg/config"
 	"github.com/labstack/echo/v4"
 )
 

@@ -5,11 +5,11 @@ import (
 	"io"
 	"strings"
 
-	"github.com/hexley21/handy/internal/user/delivery/http/v1/dto"
-	"github.com/hexley21/handy/internal/user/delivery/http/v1/dto/mapper"
-	"github.com/hexley21/handy/internal/user/repository"
-	"github.com/hexley21/handy/pkg/infra/cdn"
-	"github.com/hexley21/handy/pkg/infra/s3"
+	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
+	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto/mapper"
+	"github.com/hexley21/fixup/internal/user/repository"
+	"github.com/hexley21/fixup/pkg/infra/cdn"
+	"github.com/hexley21/fixup/pkg/infra/s3"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 

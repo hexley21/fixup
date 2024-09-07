@@ -5,9 +5,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	authjwt "github.com/hexley21/handy/internal/common/jwt"
-	"github.com/hexley21/handy/pkg/jwt"
-	"github.com/hexley21/handy/pkg/rest"
+	authjwt "github.com/hexley21/fixup/internal/common/jwt"
+	"github.com/hexley21/fixup/pkg/jwt"
+	"github.com/hexley21/fixup/pkg/rest"
 )
 
 func EchoJWTMiddleware(secretKey string) echo.MiddlewareFunc {

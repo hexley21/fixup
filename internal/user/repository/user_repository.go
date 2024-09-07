@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/hexley21/handy/internal/user/entity"
-	"github.com/hexley21/handy/internal/user/enum"
-	"github.com/hexley21/handy/pkg/infra/postgres"
+	"github.com/hexley21/fixup/internal/user/entity"
+	"github.com/hexley21/fixup/internal/user/enum"
+	"github.com/hexley21/fixup/pkg/infra/postgres"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 

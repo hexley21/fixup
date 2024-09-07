@@ -5,9 +5,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/hexley21/handy/pkg/config"
-	"github.com/hexley21/handy/pkg/logger"
-	"github.com/hexley21/handy/pkg/rest"
+	"github.com/hexley21/fixup/pkg/config"
+	"github.com/hexley21/fixup/pkg/logger"
+	"github.com/hexley21/fixup/pkg/rest"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )

@@ -3,7 +3,7 @@ package jwt
 import (
 	"time"
 
-	"github.com/hexley21/handy/pkg/jwt"
+	"github.com/hexley21/fixup/pkg/jwt"
 )
 
 type AuthJwtGenerator interface {

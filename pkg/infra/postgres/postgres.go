@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hexley21/handy/pkg/config"
+	"github.com/hexley21/fixup/pkg/config"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

@@ -9,10 +9,10 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/labstack/echo/v4"
 
-	"github.com/hexley21/handy/internal/common/jwt"
-	"github.com/hexley21/handy/internal/user/delivery/http/v1/dto"
-	"github.com/hexley21/handy/internal/user/service"
-	"github.com/hexley21/handy/pkg/rest"
+	"github.com/hexley21/fixup/internal/common/jwt"
+	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
+	"github.com/hexley21/fixup/internal/user/service"
+	"github.com/hexley21/fixup/pkg/rest"
 )
 
 type authHandler struct {
