@@ -16,6 +16,8 @@ import (
 	"github.com/hexley21/fixup/pkg/rest"
 )
 
+// TODO: refactor binding error ersponses
+// TODO: check error types from service responses
 var (
 	access_token_cookie  = "access_token"
 	refresh_token_cookie = "refresh_token"
@@ -116,10 +118,10 @@ func (h *authHandler) registerProvider(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *authHandler) Login(c echo.Context) error {
+func (h *authHandler) login(c echo.Context) error {
 	dto := new(dto.Login)
 	if err := c.Bind(dto); err != nil {
-		return err
+		return rest.NewInvalidArgumentsError(err)
 	}
 
 	user, err := h.service.AuthenticateUser(context.Background(), *dto)
@@ -132,14 +134,14 @@ func (h *authHandler) Login(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *authHandler) Logout(c echo.Context) error {
+func (h *authHandler) logout(c echo.Context) error {
 	eraseCookie(c, access_token_cookie)
 	eraseCookie(c, refresh_token_cookie)
 
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *authHandler) Refresh(c echo.Context) error {
+func (h *authHandler) refresh(c echo.Context) error {
 	user, ok := c.Get("user").(jwt.UserClaims)
 	if !ok {
 		return rest.ErrJwtNotImplemented

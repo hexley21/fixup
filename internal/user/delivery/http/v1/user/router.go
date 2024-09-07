@@ -12,6 +12,7 @@ func (h *userHandler) MapRoutes(e *echo.Group, accessSecretKey string) *echo.Gro
 	usersGroup.Use(middleware.EchoIsSelfOrAdminMiddleware())
 	
 	usersGroup.GET("/:id", h.findUserById)
+	usersGroup.PATCH("/:id", h.updateUserData)
 	usersGroup.POST("/:id/pfp", h.uploadProfilePicture)
 
 	return usersGroup

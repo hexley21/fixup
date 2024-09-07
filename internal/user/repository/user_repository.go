@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"strconv"
+	"strings"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/hexley21/fixup/internal/user/entity"
@@ -18,6 +20,7 @@ type UserRepository interface {
 	GetUserCredentialsByEmail(ctx context.Context, email string) (GetUserCredentialsByEmailRow, error)
 	UpdateUserPicture(ctx context.Context, arg UpdateUserPictureParams) error
 	UpdateUserStatus(ctx context.Context, arg UpdateUserStatusParams) error
+	UpdateUserData(ctx context.Context, arg UpdateUserDataParams) (entity.User, error)
 }
 
 type userRepositoryImpl struct {
@@ -153,4 +156,58 @@ type UpdateUserStatusParams struct {
 func (r *userRepositoryImpl) UpdateUserStatus(ctx context.Context, arg UpdateUserStatusParams) error {
 	_, err := r.db.Exec(ctx, updateUserStatus, arg.ID, arg.UserStatus)
 	return err
+}
+
+const baseUpdateUserData = `
+UPDATE users
+SET 
+`
+
+type UpdateUserDataParams struct {
+	ID          int64
+	FirstName   *string
+	LastName    *string
+	PhoneNumber *string
+	Email       *string
+}
+
+func (r *userRepositoryImpl) UpdateUserData(ctx context.Context, arg UpdateUserDataParams) (entity.User, error) {
+    query := baseUpdateUserData
+    params := []interface{}{arg.ID}
+    setClauses := []string{}
+
+    if arg.FirstName != nil {
+        setClauses = append(setClauses, "first_name = $"+strconv.Itoa(len(params)+1))
+        params = append(params, *arg.FirstName)
+    }
+    if arg.LastName != nil {
+        setClauses = append(setClauses, "last_name = $"+strconv.Itoa(len(params)+1))
+        params = append(params, *arg.LastName)
+    }
+    if arg.PhoneNumber != nil {
+        setClauses = append(setClauses, "phone_number = $"+strconv.Itoa(len(params)+1))
+        params = append(params, *arg.PhoneNumber)
+    }
+    if arg.Email != nil {
+        setClauses = append(setClauses, "email = $"+strconv.Itoa(len(params)+1))
+        params = append(params, *arg.Email)
+    }
+
+    query += strings.Join(setClauses, ", ")
+    query += " WHERE id = $1 RETURNING id, first_name, last_name, phone_number, email, picture_name, role, user_status, created_at"
+
+    row := r.db.QueryRow(ctx, query, params...)
+    var i entity.User
+    err := row.Scan(
+        &i.ID,
+        &i.FirstName,
+        &i.LastName,
+        &i.PhoneNumber,
+        &i.Email,
+        &i.PictureName,
+        &i.Role,
+        &i.UserStatus,
+        &i.CreatedAt,
+    )
+    return i, err
 }

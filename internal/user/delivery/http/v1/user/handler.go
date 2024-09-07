@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/hexley21/fixup/internal/common/jwt"
+	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/service"
 	"github.com/hexley21/fixup/pkg/rest"
 	"github.com/jackc/pgx/v5"
@@ -54,9 +55,19 @@ func (h *userHandler) findUserById(c echo.Context) error {
 }
 
 func (h *userHandler) uploadProfilePicture(c echo.Context) error {
-	userClaims, ok := c.Get("user").(jwt.UserClaims)
-	if !ok {
-		return rest.ErrJwtNotImplemented
+	idParam := c.Param("id")
+
+	if idParam == "me" {
+		user, ok := c.Get("user").(jwt.UserClaims)
+		if !ok {
+			return rest.ErrJwtNotImplemented
+		}
+		idParam = user.ID
+	}
+
+	userId, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		return rest.NewInternalServerError(err)
 	}
 
 	form, err := c.MultipartForm()
@@ -87,15 +98,44 @@ func (h *userHandler) uploadProfilePicture(c echo.Context) error {
 		return rest.ErrInvalidFileType
 	}
 
-	userId, err := strconv.ParseInt(userClaims.ID, 10, 64)
-	if err != nil {
-		return rest.NewInternalServerError(err)
-	}
-
 	err = h.service.SetProfilePicture(context.Background(), userId, src, "", imageFile.Size, contentType)
 	if err != nil {
 		return rest.NewInternalServerError(err)
 	}
 
 	return c.NoContent(http.StatusOK)
+}
+
+func (h *userHandler) updateUserData(c echo.Context) error {
+	idParam := c.Param("id")
+
+	if idParam == "me" {
+		user, ok := c.Get("user").(jwt.UserClaims)
+		if !ok {
+			return rest.ErrJwtNotImplemented
+		}
+		idParam = user.ID
+	}
+	
+	userId, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		return rest.NewInternalServerError(err)
+	}
+
+	dto := new(dto.UpdateUser)
+	if err := c.Bind(dto); err != nil {
+		return rest.NewInvalidArgumentsError(err)
+	}
+
+	if err := c.Validate(dto); err != nil {
+		return rest.NewInvalidArgumentsError(err)
+	}
+
+	user, err := h.service.UpdateUserDataById(context.Background(), userId, *dto)
+	if err != nil {
+		return rest.NewInternalServerError(err)
+	}
+
+	return c.JSON(http.StatusOK, rest.NewApiResponse(user))
+
 }

@@ -17,6 +17,8 @@ var directory = "pfp/"
 
 type UserService interface {
 	FindUserById(ctx context.Context, userId int64) (dto.User, error)
+	DeleteUserByid(ctx context.Context, userId int64) error
+	UpdateUserDataById(ctx context.Context, id int64, updateDto dto.UpdateUser) (dto.User, error)
 	SetProfilePicture(ctx context.Context, userId int64, file io.Reader, fileName string, fileSize int64, fileType string) error
 }
 
@@ -52,8 +54,28 @@ func (s *userServiceImpl) FindUserById(ctx context.Context, userId int64) (dto.U
 	return dto, nil
 }
 
-func (s *userServiceImpl) SetProfilePicture(ctx context.Context, userId int64, file io.Reader, fileName string, fileSize int64, fileType string) error {
+func (s *userServiceImpl) DeleteUserByid(ctx context.Context, userId int64) error {
+	return nil
+}
 
+func (s *userServiceImpl) UpdateUserDataById(ctx context.Context, id int64, updateDto dto.UpdateUser) (dto.User, error) {
+	var dto dto.User
+
+	entity, err := s.userRepository.UpdateUserData(ctx, repository.UpdateUserDataParams{
+		ID:          id,
+		FirstName:   updateDto.FirstName,
+		LastName:    updateDto.LastName,
+		Email:       updateDto.Email,
+		PhoneNumber: updateDto.PhoneNumber,
+	})
+	if err != nil {
+		return dto, err
+	}
+
+	return mapper.MapUserToDto(entity, s.cdnUrlSigner)
+}
+
+func (s *userServiceImpl) SetProfilePicture(ctx context.Context, userId int64, file io.Reader, fileName string, fileSize int64, fileType string) error {
 	entity, err := s.userRepository.GetById(ctx, userId)
 	if err != nil {
 		return err
@@ -91,5 +113,4 @@ func (s *userServiceImpl) SetProfilePicture(ctx context.Context, userId int64, f
 	}
 
 	return s.cdnFileInvalidator.InvalidateFile(ctx, entity.PictureName.String)
-
 }
