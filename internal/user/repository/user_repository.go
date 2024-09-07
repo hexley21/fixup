@@ -15,12 +15,12 @@ import (
 type UserRepository interface {
 	postgres.Repository[UserRepository]
 	CreateUser(ctx context.Context, arg CreateUserParams) (entity.User, error)
-	DeleteUser(ctx context.Context, id int64) error
 	GetById(ctx context.Context, id int64) (entity.User, error)
 	GetUserCredentialsByEmail(ctx context.Context, email string) (GetUserCredentialsByEmailRow, error)
 	UpdateUserPicture(ctx context.Context, arg UpdateUserPictureParams) error
 	UpdateUserStatus(ctx context.Context, arg UpdateUserStatusParams) error
 	UpdateUserData(ctx context.Context, arg UpdateUserDataParams) (entity.User, error)
+	DeleteUserById(ctx context.Context, id int64) error
 }
 
 type userRepositoryImpl struct {
@@ -87,7 +87,7 @@ DELETE FROM users
 WHERE id = $1
 `
 
-func (r *userRepositoryImpl) DeleteUser(ctx context.Context, id int64) error {
+func (r *userRepositoryImpl) DeleteUserById(ctx context.Context, id int64) error {
 	_, err := r.db.Exec(ctx, deleteUser, id)
 	return err
 }

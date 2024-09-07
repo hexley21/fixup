@@ -14,6 +14,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// TODO: manage contextes
+// TODO: restrict deletion on `me`
+
 type userHandler struct {
 	service      service.UserService
 }
@@ -137,5 +140,27 @@ func (h *userHandler) updateUserData(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, rest.NewApiResponse(user))
+}
 
+func (h *userHandler) deleteUser(c echo.Context) error {
+	idParam := c.Param("id")
+
+	if idParam == "me" {
+		user, ok := c.Get("user").(jwt.UserClaims)
+		if !ok {
+			return rest.ErrJwtNotImplemented
+		}
+		idParam = user.ID
+	}
+	
+	userId, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		return rest.NewInternalServerError(err)
+	}
+
+	if err := h.service.DeleteUserById(context.Background(), userId); err != nil {
+		return rest.NewInternalServerError(err)
+	}
+
+	return c.NoContent(http.StatusNoContent)
 }

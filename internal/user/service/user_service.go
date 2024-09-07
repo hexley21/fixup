@@ -17,9 +17,9 @@ var directory = "pfp/"
 
 type UserService interface {
 	FindUserById(ctx context.Context, userId int64) (dto.User, error)
-	DeleteUserByid(ctx context.Context, userId int64) error
 	UpdateUserDataById(ctx context.Context, id int64, updateDto dto.UpdateUser) (dto.User, error)
 	SetProfilePicture(ctx context.Context, userId int64, file io.Reader, fileName string, fileSize int64, fileType string) error
+	DeleteUserById(ctx context.Context, userId int64) error
 }
 
 type userServiceImpl struct {
@@ -52,10 +52,6 @@ func (s *userServiceImpl) FindUserById(ctx context.Context, userId int64) (dto.U
 	}
 
 	return dto, nil
-}
-
-func (s *userServiceImpl) DeleteUserByid(ctx context.Context, userId int64) error {
-	return nil
 }
 
 func (s *userServiceImpl) UpdateUserDataById(ctx context.Context, id int64, updateDto dto.UpdateUser) (dto.User, error) {
@@ -113,4 +109,8 @@ func (s *userServiceImpl) SetProfilePicture(ctx context.Context, userId int64, f
 	}
 
 	return s.cdnFileInvalidator.InvalidateFile(ctx, entity.PictureName.String)
+}
+
+func (s *userServiceImpl) DeleteUserById(ctx context.Context, userId int64) error {
+	return s.userRepository.DeleteUserById(ctx, userId)
 }

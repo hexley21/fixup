@@ -13,6 +13,7 @@ func (h *userHandler) MapRoutes(e *echo.Group, accessSecretKey string) *echo.Gro
 	
 	usersGroup.GET("/:id", h.findUserById)
 	usersGroup.PATCH("/:id", h.updateUserData)
+	usersGroup.DELETE("/:id", h.deleteUser)
 	usersGroup.POST("/:id/pfp", h.uploadProfilePicture)
 
 	return usersGroup
