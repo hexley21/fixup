@@ -15,6 +15,7 @@ type (
 		Server       Server
 		Postgres     Postgres
 		Redis        Redis
+		S3           S3
 		JWT          JWT
 		Argon2       Argon2
 		AesEncryptor AesEncryptor
@@ -52,6 +53,13 @@ type (
 		Password    string
 		SslMode     bool
 		DialTimeout time.Duration
+	}
+
+	S3 struct {
+		Region          string `yaml:"region"`
+		Bucket          string `yaml:"bucket"`
+		AccessKeyID     string
+		SecretAccessKey string
 	}
 
 	JWT struct {
@@ -129,6 +137,9 @@ func parseEnv(cfg *Config) error {
 	cfg.Redis.Password = os.Getenv("REDIS_PASSWORD")
 	cfg.Redis.SslMode = os.Getenv("REDIS_SSL_MODE") == "true"
 
+	cfg.S3.AccessKeyID = os.Getenv("S3_AC_ID")
+	cfg.S3.SecretAccessKey = os.Getenv("S3_SECRET_AC")
+
 	cfg.Server.IsProd = os.Getenv("IS_PROD") == "true"
 
 	cfg.Mailer.Host = os.Getenv("SMTP_HOST")
@@ -140,7 +151,8 @@ func parseEnv(cfg *Config) error {
 	cfg.Mailer.User = os.Getenv("SMTP_USER")
 	cfg.Mailer.Password = os.Getenv("SMTP_PASSWORD")
 
-	cfg.AesEncryptor.Key = os.Getenv("ENCRYPTION_KEY")
+	cfg.AesEncryptor.Key = os.Getenv("DATA_ENCRYPTION_KEY")
 
 	return nil
 }
+

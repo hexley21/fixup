@@ -12,7 +12,7 @@ import (
 
 var ErrNoConnection = errors.New("no connection")
 
-func InitPool(cfg *config.Postgres) (*pgxpool.Pool, error) {
+func NewPool(cfg *config.Postgres) (*pgxpool.Pool, error) {
 	var dataSourceName string
 	dataSourceName = fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s",
 		cfg.Host,

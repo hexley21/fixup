@@ -12,6 +12,7 @@ import (
 	"github.com/hexley21/handy/pkg/encryption/aes"
 	"github.com/hexley21/handy/pkg/hasher/argon2"
 	"github.com/hexley21/handy/pkg/infra/postgres"
+	"github.com/hexley21/handy/pkg/infra/s3"
 	"github.com/hexley21/handy/pkg/logger"
 	"github.com/hexley21/handy/pkg/mailer/gomail"
 	"github.com/hexley21/handy/pkg/validator"
@@ -26,7 +27,12 @@ func main() {
 	zapLogger := logger.NewZapLogger(cfg.Logging, cfg.Server.IsProd)
 	playgroundValidator := validator.NewValidator()
 
-	pgPool, err := postgres.InitPool(&cfg.Postgres)
+	pgPool, err := postgres.NewPool(&cfg.Postgres)
+	if err != nil {
+		zapLogger.Fatal(err)
+	}
+
+	_, err = s3.NewClient(cfg.S3)
 	if err != nil {
 		zapLogger.Fatal(err)
 	}

@@ -19,6 +19,10 @@ redis:
     db_name: 0
     dial_timeout: 30s
 
+s3:
+    endpoint: eu-north-1
+    bucket: fixup.com
+
 jwt:
     access_ttl: 2h
     refresh_ttl: 168h
