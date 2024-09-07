@@ -5,10 +5,10 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (h *userHandler) MapRoutes(e *echo.Group, secretKey string) *echo.Group {
+func (h *userHandler) MapRoutes(e *echo.Group, accessSecretKey string) *echo.Group {
 	usersGroup := e.Group("/users")
 
-	usersGroup.Use(middleware.EchoJWTMiddleware(secretKey))
+	usersGroup.Use(middleware.EchoJWTMiddleware(accessSecretKey))
 	usersGroup.Use(middleware.EchoIsSelfOrAdminMiddleware())
 	
 	usersGroup.GET("/:id", h.findUserById)
