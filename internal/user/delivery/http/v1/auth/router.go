@@ -11,7 +11,7 @@ func (h *authHandler) MapRoutes(e *echo.Group, refreshSecretKey string) *echo.Gr
 	registerGroup.POST("/customer", h.registerCustomer)
 	registerGroup.POST("/provider", h.registerProvider)
 
-	e.POST("/refresh", h.refresh, middleware.EchoJWTMiddleware(refreshSecretKey))
+	e.POST("/refresh", h.refresh, middleware.JWT(refreshSecretKey))
 	e.POST("/login", h.login)
 	e.POST("/logout", h.logout)
 

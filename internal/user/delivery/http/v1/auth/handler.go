@@ -11,9 +11,10 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/hexley21/fixup/internal/common/jwt"
+	"github.com/hexley21/fixup/internal/common/rest"
+	"github.com/hexley21/fixup/internal/common/util/ctxutil"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/service"
-	"github.com/hexley21/fixup/pkg/rest"
 )
 
 // TODO: refactor binding error ersponses
@@ -40,7 +41,7 @@ func NewAuthHandler(service service.AuthService, accessGenerator jwt.AuthJwtGene
 func setCookies(c echo.Context, jwtGenerator jwt.AuthJwtGenerator, cookieName string, userId string, role string) error {
 	token, err := jwtGenerator.GenerateToken(userId, role)
 	if err != nil {
-		return rest.NewInvalidArgumentsError(err)
+		return err
 	}
 
 	cookie := http.Cookie{
@@ -142,11 +143,15 @@ func (h *authHandler) logout(c echo.Context) error {
 }
 
 func (h *authHandler) refresh(c echo.Context) error {
-	user, ok := c.Get("user").(jwt.UserClaims)
-	if !ok {
-		return rest.ErrJwtNotImplemented
+	id, err := ctxutil.GetJwtId(c)
+	if err != nil {
+		return err
 	}
 
-	setCookies(c, h.accessGenerator, access_token_cookie, user.ID, string(user.Role))
-	return nil
+	role, err := ctxutil.GetJwtId(c)
+	if err != nil {
+		return err
+	}
+	
+	return setCookies(c, h.accessGenerator, access_token_cookie, id, role)
 }

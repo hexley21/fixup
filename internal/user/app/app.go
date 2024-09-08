@@ -20,7 +20,7 @@ import (
 	"github.com/hexley21/fixup/pkg/infra/postgres"
 	"github.com/hexley21/fixup/pkg/infra/s3"
 	"github.com/hexley21/fixup/pkg/mailer"
-	"github.com/hexley21/fixup/pkg/rest"
+	"github.com/hexley21/fixup/internal/common/rest"
 )
 
 type services struct {

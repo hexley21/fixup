@@ -6,44 +6,33 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/hexley21/fixup/internal/common/jwt"
+	"github.com/hexley21/fixup/internal/common/rest"
+	"github.com/hexley21/fixup/internal/common/util/ctxutil"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/service"
-	"github.com/hexley21/fixup/pkg/rest"
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
 )
 
 // TODO: manage contextes
-// TODO: restrict deletion on `me`
 
 type userHandler struct {
-	service      service.UserService
+	service service.UserService
 }
 
 func NewUserHandler(service service.UserService) *userHandler {
 	return &userHandler{
-		service:      service,
+		service: service,
 	}
 }
 
 func (h *userHandler) findUserById(c echo.Context) error {
-	idParam := c.Param("id")
-
-	if idParam == "me" {
-		user, ok := c.Get("user").(jwt.UserClaims)
-		if !ok {
-			return rest.ErrJwtNotImplemented
-		}
-		idParam = user.ID
-	}
-
-	userId, err := strconv.ParseInt(idParam, 10, 64)
+	id, err := ctxutil.GetParamId(c)
 	if err != nil {
-		return rest.NewInternalServerError(err)
+		return err
 	}
 
-	user, err := h.service.FindUserById(context.Background(), userId)
+	user, err := h.service.FindUserById(context.Background(), id)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return rest.NewNotFoundError(err, "User not found")
 	}
@@ -58,19 +47,9 @@ func (h *userHandler) findUserById(c echo.Context) error {
 }
 
 func (h *userHandler) uploadProfilePicture(c echo.Context) error {
-	idParam := c.Param("id")
-
-	if idParam == "me" {
-		user, ok := c.Get("user").(jwt.UserClaims)
-		if !ok {
-			return rest.ErrJwtNotImplemented
-		}
-		idParam = user.ID
-	}
-
-	userId, err := strconv.ParseInt(idParam, 10, 64)
+	id, err := ctxutil.GetParamId(c)
 	if err != nil {
-		return rest.NewInternalServerError(err)
+		return err
 	}
 
 	form, err := c.MultipartForm()
@@ -78,16 +57,7 @@ func (h *userHandler) uploadProfilePicture(c echo.Context) error {
 		return rest.NewReadFileError(err)
 	}
 
-	files := form.File["image"]
-
-	if len(files) > 1 {
-		return rest.ErrTooManyFiles
-	}
-	if len(files) < 1 {
-		return rest.ErrNoFile
-	}
-
-	imageFile := files[0]
+	imageFile := form.File["image"][0]
 
 	src, err := imageFile.Open()
 	if err != nil {
@@ -96,12 +66,7 @@ func (h *userHandler) uploadProfilePicture(c echo.Context) error {
 
 	defer src.Close()
 
-	contentType := imageFile.Header.Get("Content-Type")
-	if contentType != "image/jpeg" && contentType != "image/png" {
-		return rest.ErrInvalidFileType
-	}
-
-	err = h.service.SetProfilePicture(context.Background(), userId, src, "", imageFile.Size, contentType)
+	err = h.service.SetProfilePicture(context.Background(), id, src, "", imageFile.Size, imageFile.Header.Get("Content-Type"))
 	if err != nil {
 		return rest.NewInternalServerError(err)
 	}
@@ -110,19 +75,9 @@ func (h *userHandler) uploadProfilePicture(c echo.Context) error {
 }
 
 func (h *userHandler) updateUserData(c echo.Context) error {
-	idParam := c.Param("id")
-
-	if idParam == "me" {
-		user, ok := c.Get("user").(jwt.UserClaims)
-		if !ok {
-			return rest.ErrJwtNotImplemented
-		}
-		idParam = user.ID
-	}
-	
-	userId, err := strconv.ParseInt(idParam, 10, 64)
+	id, err := ctxutil.GetParamId(c)
 	if err != nil {
-		return rest.NewInternalServerError(err)
+		return err
 	}
 
 	dto := new(dto.UpdateUser)
@@ -134,7 +89,7 @@ func (h *userHandler) updateUserData(c echo.Context) error {
 		return rest.NewInvalidArgumentsError(err)
 	}
 
-	user, err := h.service.UpdateUserDataById(context.Background(), userId, *dto)
+	user, err := h.service.UpdateUserDataById(context.Background(), id, *dto)
 	if err != nil {
 		return rest.NewInternalServerError(err)
 	}
@@ -142,17 +97,29 @@ func (h *userHandler) updateUserData(c echo.Context) error {
 	return c.JSON(http.StatusOK, rest.NewApiResponse(user))
 }
 
+// deleteUser godoc
+// @Summary Delete a user
+// @Description Delete a user by ID or the currently authenticated user if "me" is provided
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID or 'me'"
+// @Success 204 {object} nil "No Content"
+// @Failure 400 {object} rest.ErrorResponse "Bad Request"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /users/{id} [delete]
 func (h *userHandler) deleteUser(c echo.Context) error {
 	idParam := c.Param("id")
 
 	if idParam == "me" {
-		user, ok := c.Get("user").(jwt.UserClaims)
-		if !ok {
-			return rest.ErrJwtNotImplemented
+		id, err := ctxutil.GetJwtId(c)
+		if err != nil {
+			return err
 		}
-		idParam = user.ID
+		idParam = id
 	}
-	
+
 	userId, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
 		return rest.NewInternalServerError(err)

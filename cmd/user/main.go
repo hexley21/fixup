@@ -28,8 +28,6 @@ func main() {
 	zapLogger := logger.NewZapLogger(cfg.Logging, cfg.Server.IsProd)
 	playgroundValidator := validator.NewValidator()
 
-
-	zapLogger.Print(cfg)
 	pgPool, err := postgres.NewPool(&cfg.Postgres)
 	if err != nil {
 		zapLogger.Fatal(err)

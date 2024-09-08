@@ -6,11 +6,12 @@ import (
 	"github.com/labstack/echo/v4"
 
 	authjwt "github.com/hexley21/fixup/internal/common/jwt"
+	"github.com/hexley21/fixup/internal/common/rest"
+	"github.com/hexley21/fixup/internal/common/util/ctxutil"
 	"github.com/hexley21/fixup/pkg/jwt"
-	"github.com/hexley21/fixup/pkg/rest"
 )
 
-func EchoJWTMiddleware(secretKey string) echo.MiddlewareFunc {
+func JWT(secretKey string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			authHeader := c.Request().Header.Get("Authorization")
@@ -23,12 +24,19 @@ func EchoJWTMiddleware(secretKey string) echo.MiddlewareFunc {
 				return rest.NewUnauthorizedError(nil, "Bearer token is missing")
 			}
 
-			claims, err := jwt.VerifyJWT(tokenString, secretKey)
+			mapClaims, err := jwt.VerifyJWT(tokenString, secretKey)
 			if err != nil {
-				return rest.NewUnauthorizedError(err, "invalid token")
+				return rest.NewUnauthorizedError(err, "Invalid token")
 			}
 
-			c.Set("user", authjwt.MapToClaim(claims))
+			claims := authjwt.MapToClaim(mapClaims)
+
+			if !claims.Role.Valid() {
+				return rest.NewUnauthorizedError(nil, "Invalid token")
+			}
+
+			ctxutil.SetJwtId(c, claims.ID)
+			ctxutil.SetJwtRole(c, claims.Role)
 
 			return next(c)
 		}

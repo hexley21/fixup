@@ -1,8 +1,10 @@
 package jwt
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/hexley21/fixup/internal/common/rest"
 	"github.com/hexley21/fixup/pkg/jwt"
 )
 
@@ -24,5 +26,10 @@ func NewAuthJwtImpl(secretKey string, ttl time.Duration) *authJwtImpl {
 }
 
 func (j *authJwtImpl) GenerateToken(id string, role string) (string, error) {
-	return jwt.GenerateJWT(newUserClaims(id, role, j.ttl), j.secretKey)
+	token, err := jwt.GenerateJWT(newUserClaims(id, role, j.ttl), j.secretKey)
+	if err != nil {
+		return "", rest.NewInternalServerError(fmt.Errorf("error generating jwt: %w", err))
+	}
+	
+	return token, nil
 }
