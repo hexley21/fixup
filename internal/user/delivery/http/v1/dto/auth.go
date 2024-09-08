@@ -6,14 +6,15 @@ type RegisterUser struct {
 	FirstName   string `json:"first_name" validate:"required,alphaunicode,min=2,max=50"`
 	LastName    string `json:"last_name" validate:"required,alphaunicode,min=2,max=50"`
 	Password    string `json:"password" validate:"required,min=8"`
-}
+} // @name RegisterUserInput
 
 type RegisterProvider struct {
 	RegisterUser
 	PersonalIDNumber string `json:"personal_id_number" validate:"required,number"`
-}
+} // @name RegisterProviderInput
+
 
 type Login struct {
 	Email    string `json:"email" validate:"required,email,max=40"`
 	Password string `json:"password" validate:"required,min=8"`
-}
+} // @name LoginInput

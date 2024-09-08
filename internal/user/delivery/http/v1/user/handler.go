@@ -25,6 +25,20 @@ func NewUserHandler(service service.UserService) *userHandler {
 	}
 }
 
+// findUserById godoc
+// @Summary Find user by ID
+// @Description Retrieve user details by user ID
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} rest.apiResponse[dto.User] "OK"
+// @Failure 400 {object} rest.ErrorResponse "Bad Request"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized"
+// @Failure 403 {object} rest.ErrorResponse "Forbidden"
+// @Failure 404 {object} rest.ErrorResponse "Not Found"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /users/{id} [get]
 func (h *userHandler) findUserById(c echo.Context) error {
 	id, err := ctxutil.GetParamId(c)
 	if err != nil {
@@ -42,6 +56,21 @@ func (h *userHandler) findUserById(c echo.Context) error {
 	return c.JSON(http.StatusOK, rest.NewApiResponse(user))
 }
 
+// uploadProfilePicture godoc
+// @Summary Upload profile picture
+// @Description Upload a profile picture for the user by ID
+// @Tags users
+// @Accept multipart/form-data
+// @Produce json
+// @Param id path string true "User ID"
+// @Param image formData file true "Profile picture file"
+// @Success 204 "No Content"
+// @Failure 400 {object} rest.ErrorResponse "Bad Request"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized"
+// @Failure 403 {object} rest.ErrorResponse "Forbidden"
+// @Failure 404 {object} rest.ErrorResponse "Not Found"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /users/{id}/pfp [put]
 func (h *userHandler) uploadProfilePicture(c echo.Context) error {
 	id, err := ctxutil.GetParamId(c)
 	if err != nil {
@@ -72,6 +101,21 @@ func (h *userHandler) uploadProfilePicture(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+// updateUserData godoc
+// @Summary Update user data
+// @Description Update user data by ID
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Param user body dto.UpdateUser true "User data"
+// @Success 200 {object} rest.apiResponse[dto.User] "OK"
+// @Failure 400 {object} rest.ErrorResponse "Bad Request"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized"
+// @Failure 403 {object} rest.ErrorResponse "Forbidden"
+// @Failure 404 {object} rest.ErrorResponse "Not Found"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /users/{id} [patch]
 func (h *userHandler) updateUserData(c echo.Context) error {
 	id, err := ctxutil.GetParamId(c)
 	if err != nil {
@@ -108,6 +152,8 @@ func (h *userHandler) updateUserData(c echo.Context) error {
 // @Success 204 {object} nil "No Content"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"
+// @Failure 403 {object} rest.ErrorResponse "Forbidden"
+// @Failure 404 {object} rest.ErrorResponse "NotFound"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /users/{id} [delete]
 func (h *userHandler) deleteUser(c echo.Context) error {

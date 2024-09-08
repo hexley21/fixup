@@ -18,7 +18,7 @@ func (h *userHandler) MapRoutes(e *echo.Group, accessSecretKey string) *echo.Gro
 	usersGroup.PATCH("/:id", h.updateUserData)
 	usersGroup.DELETE("/:id", h.deleteUser)
 
-	usersGroup.POST("/:id/pfp", h.uploadProfilePicture,
+	usersGroup.PUT("/:id/pfp", h.uploadProfilePicture,
 		middleware.AllowFilesAmount("image", 1),
 		middleware.AllowContentType("image", "image/jpeg", "image/png"),
 	)

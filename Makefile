@@ -15,12 +15,15 @@ else
 endif
 
 
-swag:
+swagg:
 ifeq ($(OS),Windows_NT) 
-	@$(MAKE) swag/batch
+	@$(MAKE) swagg/batch
 else
-	@$(MAKE) swag/bash
+	@$(MAKE) swagg/bash
 endif
+
+swagg-gen:
+	swag init --dir cmd/user/,internal/user/delivery/http,internal/common/rest --parseDependency
 
 
 compose: build
@@ -57,14 +60,14 @@ build/bash:
 	done
 
 
-swag/batch:
+swagg/batch:
 	@echo urls: > $(SWAGGER_CONF)
 	@for %%s in ($(SRVCS)) do ( \
 		echo   - url: "./%%s.swagger.yaml" >> $(SWAGGER_CONF) && \
 		echo     name: "%%s" >> $(SWAGGER_CONF) \
 	)
 
-swag/bash:
+swagg/bash:
 	@echo "urls:" > $(SWAGGER_CONF)
 	@for svc in $(SRVCS); do \
 		echo "  - url: "./$$svc.swagger.yaml"" >> $(SWAGGER_CONF); \
