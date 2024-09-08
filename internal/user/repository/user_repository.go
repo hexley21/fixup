@@ -9,6 +9,7 @@ import (
 	"github.com/hexley21/fixup/internal/user/entity"
 	"github.com/hexley21/fixup/internal/user/enum"
 	"github.com/hexley21/fixup/pkg/infra/postgres"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -88,8 +89,16 @@ WHERE id = $1
 `
 
 func (r *userRepositoryImpl) DeleteUserById(ctx context.Context, id int64) error {
-	_, err := r.db.Exec(ctx, deleteUser, id)
-	return err
+	result, err := r.db.Exec(ctx, deleteUser, id)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+
+	return nil
 }
 
 const getById = `-- name: GetById :one
@@ -140,8 +149,16 @@ type UpdateUserPictureParams struct {
 }
 
 func (r *userRepositoryImpl) UpdateUserPicture(ctx context.Context, arg UpdateUserPictureParams) error {
-	_, err := r.db.Exec(ctx, updateUserPicture, arg.ID, arg.PictureName)
-	return err
+	result, err := r.db.Exec(ctx, updateUserPicture, arg.ID, arg.PictureName)
+	if err != nil {
+		return err
+	}
+	
+	if result.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+
+	return nil
 }
 
 const updateUserStatus = `-- name: UpdateUserStatus :exec
@@ -154,8 +171,16 @@ type UpdateUserStatusParams struct {
 }
 
 func (r *userRepositoryImpl) UpdateUserStatus(ctx context.Context, arg UpdateUserStatusParams) error {
-	_, err := r.db.Exec(ctx, updateUserStatus, arg.ID, arg.UserStatus)
-	return err
+	result, err := r.db.Exec(ctx, updateUserStatus, arg.ID, arg.UserStatus)
+	if err != nil {
+		return err
+	}
+	
+	if result.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+
+	return nil
 }
 
 const baseUpdateUserData = `

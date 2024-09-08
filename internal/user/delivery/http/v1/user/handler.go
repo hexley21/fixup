@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/hexley21/fixup/internal/common/rest"
 	"github.com/hexley21/fixup/internal/common/util/ctxutil"
@@ -33,14 +32,11 @@ func (h *userHandler) findUserById(c echo.Context) error {
 	}
 
 	user, err := h.service.FindUserById(context.Background(), id)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return rest.NewNotFoundError(err, "User not found")
-	}
-	if errors.Is(err, strconv.ErrSyntax) {
-		return rest.NewInvalidArgumentsError(err)
-	}
 	if err != nil {
-		return err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return rest.NewNotFoundError(err, "User not found")
+		}
+		return rest.NewInternalServerError(err)
 	}
 
 	return c.JSON(http.StatusOK, rest.NewApiResponse(user))
@@ -63,11 +59,13 @@ func (h *userHandler) uploadProfilePicture(c echo.Context) error {
 	if err != nil {
 		return rest.NewReadFileError(err)
 	}
-
 	defer src.Close()
 
 	err = h.service.SetProfilePicture(context.Background(), id, src, "", imageFile.Size, imageFile.Header.Get("Content-Type"))
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return rest.NewNotFoundError(err, "User not found")
+		}
 		return rest.NewInternalServerError(err)
 	}
 
@@ -91,6 +89,9 @@ func (h *userHandler) updateUserData(c echo.Context) error {
 
 	user, err := h.service.UpdateUserDataById(context.Background(), id, *dto)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return rest.NewNotFoundError(err, "User not found")
+		}
 		return rest.NewInternalServerError(err)
 	}
 
@@ -110,22 +111,15 @@ func (h *userHandler) updateUserData(c echo.Context) error {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /users/{id} [delete]
 func (h *userHandler) deleteUser(c echo.Context) error {
-	idParam := c.Param("id")
-
-	if idParam == "me" {
-		id, err := ctxutil.GetJwtId(c)
-		if err != nil {
-			return err
-		}
-		idParam = id
-	}
-
-	userId, err := strconv.ParseInt(idParam, 10, 64)
+	id, err := ctxutil.GetParamId(c)
 	if err != nil {
-		return rest.NewInternalServerError(err)
+		return err
 	}
 
-	if err := h.service.DeleteUserById(context.Background(), userId); err != nil {
+	if err := h.service.DeleteUserById(context.Background(), id); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return rest.NewNotFoundError(err, "User was not found")
+		}
 		return rest.NewInternalServerError(err)
 	}
 

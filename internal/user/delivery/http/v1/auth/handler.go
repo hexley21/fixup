@@ -17,8 +17,6 @@ import (
 	"github.com/hexley21/fixup/internal/user/service"
 )
 
-// TODO: refactor binding error ersponses
-// TODO: check error types from service responses
 var (
 	access_token_cookie  = "access_token"
 	refresh_token_cookie = "refresh_token"
@@ -70,7 +68,7 @@ func eraseCookie(c echo.Context, cookieName string) {
 func (h *authHandler) registerCustomer(c echo.Context) error {
 	dto := new(dto.RegisterUser)
 	if err := c.Bind(dto); err != nil {
-		return err
+		return rest.NewInternalServerError(err)
 	}
 
 	if err := c.Validate(dto); err != nil {
@@ -78,12 +76,14 @@ func (h *authHandler) registerCustomer(c echo.Context) error {
 	}
 
 	user, err := h.service.RegisterCustomer(context.Background(), *dto)
-
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-		return rest.NewConflictError(err, "User already exists")
-	}
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			switch pgErr.Code {
+			case pgerrcode.UniqueViolation:
+				return rest.NewConflictError(err, "User already exists")
+			}
+		}
 		return rest.NewInternalServerError(err)
 	}
 
@@ -96,7 +96,7 @@ func (h *authHandler) registerCustomer(c echo.Context) error {
 func (h *authHandler) registerProvider(c echo.Context) error {
 	dto := new(dto.RegisterProvider)
 	if err := c.Bind(dto); err != nil {
-		return err
+		return rest.NewInternalServerError(err)
 	}
 
 	if err := c.Validate(dto); err != nil {
@@ -104,12 +104,14 @@ func (h *authHandler) registerProvider(c echo.Context) error {
 	}
 
 	user, err := h.service.RegisterProvider(context.Background(), *dto)
-
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-		return rest.NewConflictError(err, "User already exists")
-	}
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			switch pgErr.Code {
+			case pgerrcode.UniqueViolation:
+				return rest.NewConflictError(err, "User already exists")
+			}
+		}
 		return rest.NewInternalServerError(err)
 	}
 
@@ -152,6 +154,6 @@ func (h *authHandler) refresh(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	
+
 	return setCookies(c, h.accessGenerator, access_token_cookie, id, role)
 }
