@@ -8,9 +8,10 @@ import (
 type UserRole string
 
 const (
-	UserRoleCUSTOMER UserRole = "CUSTOMER"
-	UserRolePROVIDER UserRole = "PROVIDER"
-	UserRoleADMIN    UserRole = "ADMIN"
+	UserRoleCUSTOMER  UserRole = "CUSTOMER"
+	UserRolePROVIDER  UserRole = "PROVIDER"
+	UserRoleMODERATOR UserRole = "MODERATOR"
+	UserRoleADMIN     UserRole = "ADMIN"
 )
 
 func (e *UserRole) Scan(src any) error {
@@ -52,6 +53,7 @@ func (e UserRole) Valid() bool {
 	switch e {
 	case UserRoleCUSTOMER,
 		UserRolePROVIDER,
+		UserRoleMODERATOR,
 		UserRoleADMIN:
 		return true
 	}
@@ -62,6 +64,7 @@ func AllUserRoleValues() []UserRole {
 	return []UserRole{
 		UserRoleCUSTOMER,
 		UserRolePROVIDER,
+		UserRoleMODERATOR,
 		UserRoleADMIN,
 	}
 }
