@@ -6,14 +6,14 @@ import (
 )
 
 func (h *authHandler) MapRoutes(e *echo.Group, refreshSecretKey string) *echo.Group {
-	registerGroup := e.Group("/register")
+	authGroup := e.Group("auth")
 
-	registerGroup.POST("/customer", h.registerCustomer)
-	registerGroup.POST("/provider", h.registerProvider)
+	authGroup.POST("/register/customer", h.registerCustomer)
+	authGroup.POST("/register/provider", h.registerProvider)
 
-	e.POST("/refresh", h.refresh, middleware.JWT(refreshSecretKey))
-	e.POST("/login", h.login)
-	e.POST("/logout", h.logout)
+	authGroup.POST("/refresh", h.refresh, middleware.JWT(refreshSecretKey))
+	authGroup.POST("/login", h.login)
+	authGroup.POST("/logout", h.logout)
 
-	return registerGroup
+	return authGroup
 }
