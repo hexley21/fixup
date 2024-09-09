@@ -65,6 +65,18 @@ func eraseCookie(c echo.Context, cookieName string) {
 	c.SetCookie(&cookie)
 }
 
+// registerCustomer godoc
+// @Summary Register a new customer
+// @Description Register a new customer with the provided details
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param user body dto.RegisterUser true "User registration details"
+// @Success 200 {string} string "Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token; HttpOnly"
+// @Failure 400 {object} rest.ErrorResponse "Bad Request"
+// @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /auth/register/customer [post]
 func (h *authHandler) registerCustomer(c echo.Context) error {
 	dto := new(dto.RegisterUser)
 	if err := c.Bind(dto); err != nil {
@@ -93,6 +105,18 @@ func (h *authHandler) registerCustomer(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+// registerProvider godoc
+// @Summary Register a new provider
+// @Description Register a new provider with the provided details
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param user body dto.RegisterProvider true "User registration details"
+// @Success 200 {string} string "Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token; HttpOnly"
+// @Failure 400 {object} rest.ErrorResponse "Bad Request"
+// @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /auth/register/provider [post]
 func (h *authHandler) registerProvider(c echo.Context) error {
 	dto := new(dto.RegisterProvider)
 	if err := c.Bind(dto); err != nil {
@@ -121,6 +145,18 @@ func (h *authHandler) registerProvider(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+// login godoc
+// @Summary Login a user
+// @Description Authenticate a user and set access and refresh tokens
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param user body dto.Login true "User login details"
+// @Success 200 {string} string "Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token; HttpOnly"
+// @Failure 400 {object} rest.ErrorResponse "Bad Request"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized - Incorrect email or password"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /auth/login [post]
 func (h *authHandler) login(c echo.Context) error {
 	dto := new(dto.Login)
 	if err := c.Bind(dto); err != nil {
@@ -137,6 +173,12 @@ func (h *authHandler) login(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+// logout godoc
+// @Summary Logout a user
+// @Description Erase access and refresh tokens
+// @Tags auth
+// @Success 200 {string} string "Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token; HttpOnly"
+// @Router /auth/logout [post]
 func (h *authHandler) logout(c echo.Context) error {
 	eraseCookie(c, access_token_cookie)
 	eraseCookie(c, refresh_token_cookie)
@@ -144,6 +186,14 @@ func (h *authHandler) logout(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+// refresh godoc
+// @Summary Refresh access token
+// @Description Refresh the access token using the refresh token
+// @Tags auth
+// @Success 200 {string} string "Set-Cookie: access_token; HttpOnly"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /auth/refresh [post]
 func (h *authHandler) refresh(c echo.Context) error {
 	id, err := ctxutil.GetJwtId(c)
 	if err != nil {

@@ -1,4 +1,69 @@
 definitions:
+  LoginInput:
+    properties:
+      email:
+        maxLength: 40
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  RegisterProviderInput:
+    properties:
+      email:
+        maxLength: 40
+        type: string
+      first_name:
+        maxLength: 50
+        minLength: 2
+        type: string
+      last_name:
+        maxLength: 50
+        minLength: 2
+        type: string
+      password:
+        minLength: 8
+        type: string
+      personal_id_number:
+        type: string
+      phone_number:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - personal_id_number
+    - phone_number
+    type: object
+  RegisterUserInput:
+    properties:
+      email:
+        maxLength: 40
+        type: string
+      first_name:
+        maxLength: 50
+        minLength: 2
+        type: string
+      last_name:
+        maxLength: 50
+        minLength: 2
+        type: string
+      password:
+        minLength: 8
+        type: string
+      phone_number:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - phone_number
+    type: object
   UpdateUserInput:
     properties:
       email:
@@ -51,6 +116,142 @@ definitions:
 info:
   contact: {}
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user and set access and refresh tokens
+      parameters:
+      - description: User login details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/LoginInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token;
+            HttpOnly'
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized - Incorrect email or password
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Login a user
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      description: Erase access and refresh tokens
+      responses:
+        "200":
+          description: 'Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token;
+            HttpOnly'
+          schema:
+            type: string
+      summary: Logout a user
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      description: Refresh the access token using the refresh token
+      responses:
+        "200":
+          description: 'Set-Cookie: access_token; HttpOnly'
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Refresh access token
+      tags:
+      - auth
+  /auth/register/customer:
+    post:
+      consumes:
+      - application/json
+      description: Register a new customer with the provided details
+      parameters:
+      - description: User registration details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/RegisterUserInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token;
+            HttpOnly'
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "409":
+          description: Conflict - User already exists
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Register a new customer
+      tags:
+      - auth
+  /auth/register/provider:
+    post:
+      consumes:
+      - application/json
+      description: Register a new provider with the provided details
+      parameters:
+      - description: User registration details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/RegisterProviderInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token;
+            HttpOnly'
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "409":
+          description: Conflict - User already exists
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Register a new provider
+      tags:
+      - auth
   /users/{id}:
     delete:
       consumes:
