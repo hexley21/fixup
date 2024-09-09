@@ -6,7 +6,7 @@ import (
 )
 
 func (h *authHandler) MapRoutes(e *echo.Group, refreshSecretKey string) *echo.Group {
-	authGroup := e.Group("auth")
+	authGroup := e.Group("/auth")
 
 	authGroup.POST("/register/customer", h.registerCustomer)
 	authGroup.POST("/register/provider", h.registerProvider)

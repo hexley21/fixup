@@ -19,6 +19,21 @@ import (
 	"github.com/hexley21/fixup/pkg/validator"
 )
 
+// @title User Microservice
+// @version 1.0.0-alpha0
+// @description Handles user and authentication operations
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @host localhost:8080
+// @BasePath /v1
+// @schemes http
+//
+// @securityDefinitions.apikey access_token
+// @in header
+// @name Authorization
+// @securityDefinitions.apikey refresh_token
+// @in header
+// @name Authorization
 func main() {
 	cfg, err := config.LoadConfig("./config/config.yml")
 	if err != nil {

@@ -38,6 +38,7 @@ func NewUserHandler(service service.UserService) *userHandler {
 // @Failure 403 {object} rest.ErrorResponse "Forbidden"
 // @Failure 404 {object} rest.ErrorResponse "Not Found"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Security access_token
 // @Router /users/{id} [get]
 func (h *userHandler) findUserById(c echo.Context) error {
 	id, err := ctxutil.GetParamId(c)
@@ -70,6 +71,7 @@ func (h *userHandler) findUserById(c echo.Context) error {
 // @Failure 403 {object} rest.ErrorResponse "Forbidden"
 // @Failure 404 {object} rest.ErrorResponse "Not Found"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Security access_token
 // @Router /users/{id}/pfp [put]
 func (h *userHandler) uploadProfilePicture(c echo.Context) error {
 	id, err := ctxutil.GetParamId(c)
@@ -115,6 +117,7 @@ func (h *userHandler) uploadProfilePicture(c echo.Context) error {
 // @Failure 403 {object} rest.ErrorResponse "Forbidden"
 // @Failure 404 {object} rest.ErrorResponse "Not Found"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Security access_token
 // @Router /users/{id} [patch]
 func (h *userHandler) updateUserData(c echo.Context) error {
 	id, err := ctxutil.GetParamId(c)
@@ -155,6 +158,7 @@ func (h *userHandler) updateUserData(c echo.Context) error {
 // @Failure 403 {object} rest.ErrorResponse "Forbidden"
 // @Failure 404 {object} rest.ErrorResponse "NotFound"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Security access_token
 // @Router /users/{id} [delete]
 func (h *userHandler) deleteUser(c echo.Context) error {
 	id, err := ctxutil.GetParamId(c)

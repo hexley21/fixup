@@ -10,6 +10,10 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "contact": {},
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -86,6 +90,11 @@ const docTemplate = `{
         },
         "/auth/refresh": {
             "post": {
+                "security": [
+                    {
+                        "refresh_token": []
+                    }
+                ],
                 "description": "Refresh the access token using the refresh token",
                 "tags": [
                     "auth"
@@ -219,6 +228,11 @@ const docTemplate = `{
         },
         "/users/{id}": {
             "get": {
+                "security": [
+                    {
+                        "access_token": []
+                    }
+                ],
                 "description": "Retrieve user details by user ID",
                 "consumes": [
                     "application/json"
@@ -279,6 +293,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "access_token": []
+                    }
+                ],
                 "description": "Delete a user by ID or the currently authenticated user if \"me\" is provided",
                 "consumes": [
                     "application/json"
@@ -336,6 +355,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "access_token": []
+                    }
+                ],
                 "description": "Update user data by ID",
                 "consumes": [
                     "application/json"
@@ -407,6 +431,11 @@ const docTemplate = `{
         },
         "/users/{id}/pfp": {
             "put": {
+                "security": [
+                    {
+                        "access_token": []
+                    }
+                ],
                 "description": "Upload a profile picture for the user by ID",
                 "consumes": [
                     "multipart/form-data"
@@ -633,17 +662,29 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "access_token": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        },
+        "refresh_token": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
-	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Version:          "1.0.0-alpha0",
+	Host:             "localhost:8080",
+	BasePath:         "/v1",
+	Schemes:          []string{"http"},
+	Title:            "User Microservice",
+	Description:      "Handles user and authentication operations",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

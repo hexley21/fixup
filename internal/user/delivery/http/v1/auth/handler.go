@@ -193,6 +193,7 @@ func (h *authHandler) logout(c echo.Context) error {
 // @Success 200 {string} string "Set-Cookie: access_token; HttpOnly"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Security refresh_token
 // @Router /auth/refresh [post]
 func (h *authHandler) refresh(c echo.Context) error {
 	id, err := ctxutil.GetJwtId(c)
