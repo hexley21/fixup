@@ -79,6 +79,7 @@ func NewServer(
 		s3Bucket,
 		cdnFileInvalidator,
 		cloudFrontURLSigner,
+		hasher,
 	)
 
 	e := echo.New()

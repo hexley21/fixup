@@ -20,3 +20,8 @@ type UpdateUser struct {
 	FirstName   *string `json:"first_name,omitempty" validate:"omitempty,alphaunicode,min=2,max=50"`
 	LastName    *string `json:"last_name,omitempty" validate:"omitempty,alphaunicode,min=2,max=50"`
 } // @name UpdateUserInput
+
+type UpdatePassword struct {
+	OldPassword string `json:"old_password" validate:"required,min=8"`
+	NewPassword string `json:"new_password" validate:"required,min=8"`
+} // @name UpdatePasswordInput

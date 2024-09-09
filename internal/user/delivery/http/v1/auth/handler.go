@@ -7,17 +7,16 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/labstack/echo/v4"
-
 	authjwt "github.com/hexley21/fixup/internal/common/jwt"
 	"github.com/hexley21/fixup/internal/common/rest"
 	"github.com/hexley21/fixup/internal/common/util/ctxutil"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/service"
 	"github.com/hexley21/fixup/internal/user/service/verifier"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/labstack/echo/v4"
 )
 
 var (
@@ -255,9 +254,9 @@ func (h *authHandler) verifyEmail(
 
 		id, err := strconv.ParseInt(claims.ID, 10, 64)
 		if err != nil {
-			return rest.NewBadRequestError(err, "Invalid id parameter")
+			return rest.NewInternalServerError(err)
 		}
-		
+
 		if err := h.service.VerifyUser(context.Background(), id, claims.Email); err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return rest.NewNotFoundError(err, "User was not found")

@@ -15,13 +15,15 @@ import (
 
 type UserRepository interface {
 	postgres.Repository[UserRepository]
-	CreateUser(ctx context.Context, arg CreateUserParams) (entity.User, error)
+	Create(ctx context.Context, arg CreateParams) (entity.User, error)
 	GetById(ctx context.Context, id int64) (entity.User, error)
-	GetUserCredentialsByEmail(ctx context.Context, email string) (GetUserCredentialsByEmailRow, error)
-	UpdateUserPicture(ctx context.Context, arg UpdateUserPictureParams) error
-	UpdateUserStatus(ctx context.Context, arg UpdateUserStatusParams) error
-	UpdateUserData(ctx context.Context, arg UpdateUserDataParams) (entity.User, error)
-	DeleteUserById(ctx context.Context, id int64) error
+	GetCredentialsByEmail(ctx context.Context, email string) (GetCredentialsByEmailRow, error)
+	GetPasswordHashById(ctx context.Context, id int64) (string, error)
+	Update(ctx context.Context, arg UpdateParams) (entity.User, error)
+	UpdatePicture(ctx context.Context, arg UpdatePictureParams) error
+	UpdateStatus(ctx context.Context, arg UpdateStatusParams) error
+	UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error
+	DeleteById(ctx context.Context, id int64) error
 }
 
 type userRepositoryImpl struct {
@@ -49,7 +51,7 @@ INSERT INTO users (
 RETURNING id, first_name, last_name, phone_number, email, role, user_status, created_at
 `
 
-type CreateUserParams struct {
+type CreateParams struct {
 	FirstName   string
 	LastName    string
 	PhoneNumber string
@@ -59,7 +61,7 @@ type CreateUserParams struct {
 	Role        enum.UserRole
 }
 
-func (r *userRepositoryImpl) CreateUser(ctx context.Context, arg CreateUserParams) (entity.User, error) {
+func (r *userRepositoryImpl) Create(ctx context.Context, arg CreateParams) (entity.User, error) {
 	row := r.db.QueryRow(ctx, createUser,
 		r.snowflake.Generate(),
 		arg.FirstName,
@@ -81,24 +83,6 @@ func (r *userRepositoryImpl) CreateUser(ctx context.Context, arg CreateUserParam
 		&i.CreatedAt,
 	)
 	return i, err
-}
-
-const deleteUser = `-- name: DeleteUser :exec
-DELETE FROM users
-WHERE id = $1
-`
-
-func (r *userRepositoryImpl) DeleteUserById(ctx context.Context, id int64) error {
-	result, err := r.db.Exec(ctx, deleteUser, id)
-	if err != nil {
-		return err
-	}
-
-	if result.RowsAffected() == 0 {
-		return pgx.ErrNoRows
-	}
-
-	return nil
 }
 
 const getById = `-- name: GetById :one
@@ -126,16 +110,81 @@ const getUserCredentialsByEmail = `-- name: GetUserCredentialsByEmail :one
 SELECT id, role, hash FROM users WHERE email = $1
 `
 
-type GetUserCredentialsByEmailRow struct {
+type GetCredentialsByEmailRow struct {
 	ID   int64
 	Role enum.UserRole
 	Hash string
 }
 
-func (r *userRepositoryImpl) GetUserCredentialsByEmail(ctx context.Context, email string) (GetUserCredentialsByEmailRow, error) {
+func (r *userRepositoryImpl) GetCredentialsByEmail(ctx context.Context, email string) (GetCredentialsByEmailRow, error) {
 	row := r.db.QueryRow(ctx, getUserCredentialsByEmail, email)
-	var i GetUserCredentialsByEmailRow
+	var i GetCredentialsByEmailRow
 	err := row.Scan(&i.ID, &i.Role, &i.Hash)
+	return i, err
+}
+
+const getPasswordHashById = `-- name: GetPasswordHashById :one
+SELECT hash FROM users WHERE id = $1
+`
+
+func (r *userRepositoryImpl) GetPasswordHashById(ctx context.Context, id int64) (string, error) {
+	row := r.db.QueryRow(ctx, getPasswordHashById, id)
+	var hash string
+	err := row.Scan(&hash)
+	return hash, err
+}
+
+const baseUpdateUserData = `
+UPDATE users
+SET 
+`
+
+type UpdateParams struct {
+	ID          int64
+	FirstName   *string
+	LastName    *string
+	PhoneNumber *string
+	Email       *string
+}
+
+func (r *userRepositoryImpl) Update(ctx context.Context, arg UpdateParams) (entity.User, error) {
+	query := baseUpdateUserData
+	params := []interface{}{arg.ID}
+	setClauses := []string{}
+
+	if arg.FirstName != nil {
+		setClauses = append(setClauses, "first_name = $"+strconv.Itoa(len(params)+1))
+		params = append(params, *arg.FirstName)
+	}
+	if arg.LastName != nil {
+		setClauses = append(setClauses, "last_name = $"+strconv.Itoa(len(params)+1))
+		params = append(params, *arg.LastName)
+	}
+	if arg.PhoneNumber != nil {
+		setClauses = append(setClauses, "phone_number = $"+strconv.Itoa(len(params)+1))
+		params = append(params, *arg.PhoneNumber)
+	}
+	if arg.Email != nil {
+		setClauses = append(setClauses, "email = $"+strconv.Itoa(len(params)+1))
+		params = append(params, *arg.Email)
+	}
+
+	query += strings.Join(setClauses, ", ")
+	query += " WHERE id = $1 RETURNING id, first_name, last_name, phone_number, email, picture_name, role, user_status, created_at"
+
+	row := r.db.QueryRow(ctx, query, params...)
+	var i entity.User
+	err := row.Scan(
+		&i.ID,
+		&i.FirstName,
+		&i.LastName,
+		&i.PhoneNumber,
+		&i.Email,
+		&i.PictureName,
+		&i.Role,
+		&i.UserStatus,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
@@ -143,17 +192,17 @@ const updateUserPicture = `-- name: UpdateUserPicture :exec
 UPDATE users SET picture_name = $2 WHERE id = $1
 `
 
-type UpdateUserPictureParams struct {
+type UpdatePictureParams struct {
 	ID          int64
 	PictureName pgtype.Text
 }
 
-func (r *userRepositoryImpl) UpdateUserPicture(ctx context.Context, arg UpdateUserPictureParams) error {
+func (r *userRepositoryImpl) UpdatePicture(ctx context.Context, arg UpdatePictureParams) error {
 	result, err := r.db.Exec(ctx, updateUserPicture, arg.ID, arg.PictureName)
 	if err != nil {
 		return err
 	}
-	
+
 	if result.RowsAffected() == 0 {
 		return pgx.ErrNoRows
 	}
@@ -165,17 +214,17 @@ const updateUserStatus = `-- name: UpdateUserStatus :exec
 UPDATE users SET user_status = $2 WHERE id = $1
 `
 
-type UpdateUserStatusParams struct {
-	ID         int64       `json:"id"`
-	UserStatus pgtype.Bool `json:"user_status"`
+type UpdateStatusParams struct {
+	ID         int64
+	UserStatus pgtype.Bool
 }
 
-func (r *userRepositoryImpl) UpdateUserStatus(ctx context.Context, arg UpdateUserStatusParams) error {
+func (r *userRepositoryImpl) UpdateStatus(ctx context.Context, arg UpdateStatusParams) error {
 	result, err := r.db.Exec(ctx, updateUserStatus, arg.ID, arg.UserStatus)
 	if err != nil {
 		return err
 	}
-	
+
 	if result.RowsAffected() == 0 {
 		return pgx.ErrNoRows
 	}
@@ -183,56 +232,42 @@ func (r *userRepositoryImpl) UpdateUserStatus(ctx context.Context, arg UpdateUse
 	return nil
 }
 
-const baseUpdateUserData = `
-UPDATE users
-SET 
+const updateUserPassword = `-- name: UpdateUserPassword :exec
+UPDATE users SET hash = $2 where id = $1
 `
 
-type UpdateUserDataParams struct {
-	ID          int64
-	FirstName   *string
-	LastName    *string
-	PhoneNumber *string
-	Email       *string
+type UpdatePasswordParams struct {
+	ID   int64
+	Hash string
 }
 
-func (r *userRepositoryImpl) UpdateUserData(ctx context.Context, arg UpdateUserDataParams) (entity.User, error) {
-    query := baseUpdateUserData
-    params := []interface{}{arg.ID}
-    setClauses := []string{}
+func (r *userRepositoryImpl) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error {
+	result, err := r.db.Exec(ctx, updateUserPassword, arg.ID, arg.Hash)
+	if err != nil {
+		return err
+	}
 
-    if arg.FirstName != nil {
-        setClauses = append(setClauses, "first_name = $"+strconv.Itoa(len(params)+1))
-        params = append(params, *arg.FirstName)
-    }
-    if arg.LastName != nil {
-        setClauses = append(setClauses, "last_name = $"+strconv.Itoa(len(params)+1))
-        params = append(params, *arg.LastName)
-    }
-    if arg.PhoneNumber != nil {
-        setClauses = append(setClauses, "phone_number = $"+strconv.Itoa(len(params)+1))
-        params = append(params, *arg.PhoneNumber)
-    }
-    if arg.Email != nil {
-        setClauses = append(setClauses, "email = $"+strconv.Itoa(len(params)+1))
-        params = append(params, *arg.Email)
-    }
+	if result.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+	
+	return nil
+}
 
-    query += strings.Join(setClauses, ", ")
-    query += " WHERE id = $1 RETURNING id, first_name, last_name, phone_number, email, picture_name, role, user_status, created_at"
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users
+WHERE id = $1
+`
 
-    row := r.db.QueryRow(ctx, query, params...)
-    var i entity.User
-    err := row.Scan(
-        &i.ID,
-        &i.FirstName,
-        &i.LastName,
-        &i.PhoneNumber,
-        &i.Email,
-        &i.PictureName,
-        &i.Role,
-        &i.UserStatus,
-        &i.CreatedAt,
-    )
-    return i, err
+func (r *userRepositoryImpl) DeleteById(ctx context.Context, id int64) error {
+	result, err := r.db.Exec(ctx, deleteUser, id)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+
+	return nil
 }

@@ -3,15 +3,14 @@ package argon2
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
 
 	"github.com/hexley21/fixup/pkg/config"
+	"github.com/hexley21/fixup/pkg/hasher"
 	"golang.org/x/crypto/argon2"
 )
 
-var ErrPasswordMismatch = errors.New("password does not match")
 
 type argon2Hasher struct {
 	config.Argon2
@@ -52,7 +51,7 @@ func (h *argon2Hasher) VerifyPassword(password string, hash string) error {
 		return nil
 	}
 
-	return ErrPasswordMismatch
+	return hasher.ErrPasswordMismatch
 }
 
 func (h *argon2Hasher) GetSalt() []byte {

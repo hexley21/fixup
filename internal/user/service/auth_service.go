@@ -129,14 +129,15 @@ func (s *authServiceImpl) sendVerifiedLetter(email string) error {
 
 func (s *authServiceImpl) registerUser(ctx context.Context, dto dto.RegisterUser, tx pgx.Tx) (entity.User, error) {
 	var user entity.User
-	user, err := s.userRepository.WithTx(tx).CreateUser(ctx, repository.CreateUserParams{
-		FirstName:   dto.FirstName,
-		LastName:    dto.LastName,
-		PhoneNumber: dto.PhoneNumber,
-		Email:       dto.Email,
-		Hash:        s.hasher.HashPassword(dto.Password),
-		Role:        enum.UserRoleCUSTOMER,
-	})
+	user, err := s.userRepository.WithTx(tx).Create(ctx,
+		repository.CreateParams{
+			FirstName:   dto.FirstName,
+			LastName:    dto.LastName,
+			PhoneNumber: dto.PhoneNumber,
+			Email:       dto.Email,
+			Hash:        s.hasher.HashPassword(dto.Password),
+			Role:        enum.UserRoleCUSTOMER,
+		})
 	if err != nil {
 		if err := tx.Rollback(ctx); err != nil {
 			return user, err
@@ -233,7 +234,7 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 
 func (s *authServiceImpl) AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.User, error) {
 	var dto dto.User
-	creds, err := s.userRepository.GetUserCredentialsByEmail(ctx, loginDto.Email)
+	creds, err := s.userRepository.GetCredentialsByEmail(ctx, loginDto.Email)
 	if err != nil {
 		return dto, err
 	}
@@ -253,7 +254,7 @@ func (s *authServiceImpl) VerifyUser(ctx context.Context, id int64, email string
 	var status pgtype.Bool
 	status.Scan(true)
 
-	err := s.userRepository.UpdateUserStatus(ctx, repository.UpdateUserStatusParams{
+	err := s.userRepository.UpdateStatus(ctx, repository.UpdateStatusParams{
 		ID:         id,
 		UserStatus: status,
 	})

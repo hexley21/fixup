@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/hexley21/fixup/internal/common/rest"
 	"github.com/hexley21/fixup/internal/common/util/ctxutil"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/service"
+	"github.com/hexley21/fixup/pkg/hasher"
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
 )
@@ -72,7 +74,7 @@ func (h *userHandler) findUserById(c echo.Context) error {
 // @Failure 404 {object} rest.ErrorResponse "Not Found"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security access_token
-// @Router /users/{id}/pfp [put]
+// @Router /users/{id}/pfp [patch]
 func (h *userHandler) uploadProfilePicture(c echo.Context) error {
 	id, err := ctxutil.GetParamId(c)
 	if err != nil {
@@ -100,7 +102,7 @@ func (h *userHandler) uploadProfilePicture(c echo.Context) error {
 		return rest.NewInternalServerError(err)
 	}
 
-	return c.NoContent(http.StatusOK)
+	return c.NoContent(http.StatusNoContent)
 }
 
 // updateUserData godoc
@@ -169,6 +171,53 @@ func (h *userHandler) deleteUser(c echo.Context) error {
 	if err := h.service.DeleteUserById(context.Background(), id); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return rest.NewNotFoundError(err, "User was not found")
+		}
+		return rest.NewInternalServerError(err)
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}
+
+// updatePassword godoc
+// @Summary Update user password
+// @Description Update the password of an existing user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Param body body dto.UpdatePassword true "Update Password DTO"
+// @Success 204 "No Content"
+// @Failure 400 {object} rest.ErrorResponse "Invalid arguments"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized"
+// @Failure 404 {object} rest.ErrorResponse "User not found"
+// @Failure 500 {object} rest.ErrorResponse "Internal server error"
+// @Router /v1/user/{id}/change-password [patch]
+func (h *userHandler) updatePassword(c echo.Context) error {
+	id, err := ctxutil.GetJwtId(c)
+	if err != nil {
+		return err
+	}
+
+	userId, err := strconv.ParseInt(id,  10, 64)
+	if err != nil {
+		return rest.NewInternalServerError(err)
+	}
+
+	dto := new(dto.UpdatePassword)
+	if err := c.Bind(dto); err != nil {
+		return rest.NewInvalidArgumentsError(err)
+	}
+
+	if err := c.Validate(dto); err != nil {
+		return rest.NewInvalidArgumentsError(err)
+	}
+
+	if err := h.service.ChangePassword(context.Background(), userId, *dto); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return rest.NewNotFoundError(err, "User was not found")
+		}
+		if errors.Is(err, hasher.ErrPasswordMismatch) {
+			return rest.NewUnauthorizedError(err, "Old password is not correct")
 		}
 		return rest.NewInternalServerError(err)
 	}

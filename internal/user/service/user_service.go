@@ -8,6 +8,7 @@ import (
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto/mapper"
 	"github.com/hexley21/fixup/internal/user/repository"
+	"github.com/hexley21/fixup/pkg/hasher"
 	"github.com/hexley21/fixup/pkg/infra/cdn"
 	"github.com/hexley21/fixup/pkg/infra/s3"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -19,6 +20,7 @@ type UserService interface {
 	FindUserById(ctx context.Context, userId int64) (dto.User, error)
 	UpdateUserDataById(ctx context.Context, id int64, updateDto dto.UpdateUser) (dto.User, error)
 	SetProfilePicture(ctx context.Context, userId int64, file io.Reader, fileName string, fileSize int64, fileType string) error
+	ChangePassword(ctx context.Context, id int64, updateDto dto.UpdatePassword) error
 	DeleteUserById(ctx context.Context, userId int64) error
 }
 
@@ -27,14 +29,22 @@ type userServiceImpl struct {
 	s3Bucket           s3.Bucket
 	cdnFileInvalidator cdn.FileInvalidator
 	cdnUrlSigner       cdn.URLSigner
+	hasher             hasher.Hasher
 }
 
-func NewUserService(userRepository repository.UserRepository, s3Bucket s3.Bucket, cdnFileInvalidator cdn.FileInvalidator, cdnUrlSigner cdn.URLSigner) UserService {
+func NewUserService(
+	userRepository repository.UserRepository,
+	s3Bucket s3.Bucket,
+	cdnFileInvalidator cdn.FileInvalidator,
+	cdnUrlSigner cdn.URLSigner,
+	hasher hasher.Hasher,
+) UserService {
 	return &userServiceImpl{
-		userRepository:     userRepository,
-		s3Bucket:           s3Bucket,
-		cdnFileInvalidator: cdnFileInvalidator,
-		cdnUrlSigner:       cdnUrlSigner,
+		userRepository,
+		s3Bucket,
+		cdnFileInvalidator,
+		cdnUrlSigner,
+		hasher,
 	}
 }
 
@@ -57,7 +67,7 @@ func (s *userServiceImpl) FindUserById(ctx context.Context, userId int64) (dto.U
 func (s *userServiceImpl) UpdateUserDataById(ctx context.Context, id int64, updateDto dto.UpdateUser) (dto.User, error) {
 	var dto dto.User
 
-	entity, err := s.userRepository.UpdateUserData(ctx, repository.UpdateUserDataParams{
+	entity, err := s.userRepository.Update(ctx, repository.UpdateParams{
 		ID:          id,
 		FirstName:   updateDto.FirstName,
 		LastName:    updateDto.LastName,
@@ -91,7 +101,7 @@ func (s *userServiceImpl) SetProfilePicture(ctx context.Context, userId int64, f
 		return err
 	}
 
-	err = s.userRepository.UpdateUserPicture(ctx, repository.UpdateUserPictureParams{
+	err = s.userRepository.UpdatePicture(ctx, repository.UpdatePictureParams{
 		ID:          userId,
 		PictureName: pictureName,
 	})
@@ -112,5 +122,22 @@ func (s *userServiceImpl) SetProfilePicture(ctx context.Context, userId int64, f
 }
 
 func (s *userServiceImpl) DeleteUserById(ctx context.Context, userId int64) error {
-	return s.userRepository.DeleteUserById(ctx, userId)
+	return s.userRepository.DeleteById(ctx, userId)
+}
+
+func (s *userServiceImpl) ChangePassword(ctx context.Context, id int64, updateDto dto.UpdatePassword) error {
+	oldHash, err := s.userRepository.GetPasswordHashById(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	err = s.hasher.VerifyPassword(updateDto.OldPassword, oldHash)
+	if err != nil {
+		return err
+	}
+
+	return s.userRepository.UpdatePassword(ctx, repository.UpdatePasswordParams{
+		ID:   id,
+		Hash: s.hasher.HashPassword(updateDto.NewPassword),
+	})
 }

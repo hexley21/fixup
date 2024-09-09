@@ -22,10 +22,12 @@ func (h *userHandler) MapRoutes(
 	usersGroup.PATCH("/:id", h.updateUserData, onlyVerifiedMiddleware)
 	usersGroup.DELETE("/:id", h.deleteUser, onlyVerifiedMiddleware)
 
-	usersGroup.PUT("/:id/pfp", h.uploadProfilePicture,
+	usersGroup.PATCH("/:id/pfp", h.uploadProfilePicture,
 		middleware.AllowFilesAmount("image", 1),
 		middleware.AllowContentType("image", "image/jpeg", "image/png"),
 	)
+
+	usersGroup.PATCH("/:id/change-password", h.updatePassword)
 
 	return usersGroup
 }

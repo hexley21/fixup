@@ -1,10 +1,13 @@
 -- name: GetById :one
 SELECT * FROM users WHERE id = $1;
 
--- name: GetUserCredentialsByEmail :one
+-- name: GetCredentialsByEmail :one
 SELECT id, role, hash FROM users WHERE email = $1;
 
--- name: CreateUser :one
+-- name: GetPasswordHashById :one
+SELECT hash FROM users WHERE id = $1;
+
+-- name: Create :one
 INSERT INTO users (
   id, first_name, last_name, phone_number, email, hash, role
 ) VALUES (
@@ -12,13 +15,7 @@ INSERT INTO users (
 )
 RETURNING *;
 
--- name: UpdateUserStatus :exec
-UPDATE users SET user_status = $2 WHERE id = $1;
-
--- name: UpdateUserPicture :exec
-UPDATE users SET picture_name = $2 WHERE id = $1;
-
--- name: UpdateUserData :one
+-- name: Update :one
 UPDATE users
 SET 
     first_name = $2,
@@ -29,6 +26,15 @@ WHERE
     id = $1
 Returning *;
 
--- name: DeleteUser :exec
+-- name: UpdateStatus :exec
+UPDATE users SET user_status = $2 WHERE id = $1;
+
+-- name: UpdatePicture :exec
+UPDATE users SET picture_name = $2 WHERE id = $1;
+
+-- name: UpdatePassword :exec
+UPDATE users SET hash = $2 where id = $1;
+
+-- name: Delete :exec
 DELETE FROM users
 WHERE id = $1;
