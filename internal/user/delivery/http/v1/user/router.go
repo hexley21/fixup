@@ -6,7 +6,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (h *userHandler) MapRoutes(e *echo.Group, jwtAccessMiddleware echo.MiddlewareFunc) *echo.Group {
+func (h *userHandler) MapRoutes(
+	e *echo.Group,
+	jwtAccessMiddleware echo.MiddlewareFunc,
+	onlyVerifiedMiddleware echo.MiddlewareFunc,
+) *echo.Group {
 	usersGroup := e.Group("/users")
 
 	usersGroup.Use(
@@ -14,9 +18,9 @@ func (h *userHandler) MapRoutes(e *echo.Group, jwtAccessMiddleware echo.Middlewa
 		middleware.AllowSelfOrRole(enum.UserRoleADMIN, enum.UserRoleMODERATOR),
 	)
 
-	usersGroup.GET("/:id", h.findUserById)
-	usersGroup.PATCH("/:id", h.updateUserData)
-	usersGroup.DELETE("/:id", h.deleteUser)
+	usersGroup.GET("/:id", h.findUserById, onlyVerifiedMiddleware)
+	usersGroup.PATCH("/:id", h.updateUserData, onlyVerifiedMiddleware)
+	usersGroup.DELETE("/:id", h.deleteUser, onlyVerifiedMiddleware)
 
 	usersGroup.PUT("/:id/pfp", h.uploadProfilePicture,
 		middleware.AllowFilesAmount("image", 1),

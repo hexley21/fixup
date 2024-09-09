@@ -11,6 +11,8 @@ import (
 
 var (
 	errInsufficientRights = rest.NewForbiddenError(nil, "Not enough permissions")
+	errUserVerified       = rest.NewForbiddenError(nil, "User has to be not-verified")
+	errUserNotVerified    = rest.NewForbiddenError(nil, "User has to be verified")
 )
 
 func AllowRoles(roles ...enum.UserRole) echo.MiddlewareFunc {
@@ -60,6 +62,27 @@ func AllowSelfOrRole(roles ...enum.UserRole) echo.MiddlewareFunc {
 			}
 
 			return next(c)
+		}
+	}
+}
+
+func AllowVerified(status bool) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			verified, err := ctxutil.GetJwtVerification(c)
+			if err != nil {
+				return err
+			}
+
+			if verified == status {
+				return next(c)
+			}
+
+			if status {
+				return errUserNotVerified
+			}
+
+			return errUserVerified
 		}
 	}
 }

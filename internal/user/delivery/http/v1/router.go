@@ -32,11 +32,12 @@ func (v1r *v1Router) MapV1Routes(echo *echo.Echo) *echo.Group {
 	refreshAuthJwt := jwt.NewAuthJwtImpl(v1r.cfgJwt.RefreshSecret, v1r.cfgJwt.RefreshTTL)
 
 	accessJwtMiddleware := middleware.JWT(accessAuthJwt)
+	onlyVerifiedMiddleware := middleware.AllowVerified(true)
 
 	v1Group := echo.Group("/v1")
 
 	auth.NewAuthHandler(v1r.authService).MapRoutes(v1Group, accessAuthJwt, refreshAuthJwt, v1r.verifierJwt)
-	user.NewUserHandler(v1r.userService).MapRoutes(v1Group, accessJwtMiddleware)
+	user.NewUserHandler(v1r.userService).MapRoutes(v1Group, accessJwtMiddleware, onlyVerifiedMiddleware)
 
 	return v1Group
 }
