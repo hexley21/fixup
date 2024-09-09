@@ -66,8 +66,8 @@ type (
 
 	AWS struct {
 		AWSCfg AWSCfg
-		S3      S3
-		CDN     CDN
+		S3     S3
+		CDN    CDN
 	}
 
 	AWSCfg struct {
@@ -94,6 +94,8 @@ type (
 		AccessTTL     time.Duration `yaml:"access_ttl"`
 		RefreshSecret string
 		RefreshTTL    time.Duration `yaml:"refresh_ttl"`
+		VerificationSecret string
+		VerificationTTL    time.Duration `yaml:"verification_ttl"`
 	}
 
 	Mailer struct {
@@ -172,7 +174,8 @@ func parseEnv(cfg *Config) error {
 
 	cfg.JWT.AccessSecret = os.Getenv("JWT_ACCESS_SECRET")
 	cfg.JWT.RefreshSecret = os.Getenv("JWT_REFRESH_SECRET")
-
+	cfg.JWT.VerificationSecret = os.Getenv("JWT_VERIFICATION_SECRET")
+	
 	cfg.Postgres.User = os.Getenv("POSTGRES_USER")
 	cfg.Postgres.Password = os.Getenv("POSTGRES_PASSWORD")
 	cfg.Postgres.SslMode = os.Getenv("POSTGRES_SSL_MODE")

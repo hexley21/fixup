@@ -9,6 +9,6 @@
 <body>
     <h1>Welcome {{ .Name }}</h1>
     <h3>Please confirm your email by clicking</h3>
-    <a href="www.google.com/search?q={{ .Link }}">here</a>
+    <a href="http://localhost:8080/v1/auth/verify?token={{ .Token }}">here</a>
 </body>
 </html>

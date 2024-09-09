@@ -10,9 +10,11 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
+	"github.com/hexley21/fixup/internal/common/rest"
 	v1_http "github.com/hexley21/fixup/internal/user/delivery/http/v1"
 	"github.com/hexley21/fixup/internal/user/repository"
 	"github.com/hexley21/fixup/internal/user/service"
+	"github.com/hexley21/fixup/internal/user/service/verifier"
 	"github.com/hexley21/fixup/pkg/config"
 	"github.com/hexley21/fixup/pkg/encryption"
 	"github.com/hexley21/fixup/pkg/hasher"
@@ -20,7 +22,6 @@ import (
 	"github.com/hexley21/fixup/pkg/infra/postgres"
 	"github.com/hexley21/fixup/pkg/infra/s3"
 	"github.com/hexley21/fixup/pkg/mailer"
-	"github.com/hexley21/fixup/internal/common/rest"
 )
 
 type services struct {
@@ -36,6 +37,7 @@ type server struct {
 	hasher        hasher.Hasher
 	encryptor     encryption.Encryptor
 	services      services
+	verifierJwt   verifier.Jwt
 }
 
 func NewServer(
@@ -52,11 +54,12 @@ func NewServer(
 	emailAddress string,
 ) *server {
 	cloudFrontURLSigner := cdn.NewCloudFrontURLSigner(cfg.AWS.CDN)
+	verificationJwt := verifier.NewVerificationJwt(cfg.JWT.VerificationSecret, cfg.JWT.VerificationTTL)
 
 	userRepository := repository.NewUserRepository(dbPool, snowflakeNode)
 	providerRepository := repository.NewProviderRepository(dbPool)
 
-	authService := service.NewAuthService(
+	authService, err := service.NewAuthService(
 		userRepository,
 		providerRepository,
 		dbPool,
@@ -65,7 +68,11 @@ func NewServer(
 		mailer,
 		emailAddress,
 		cloudFrontURLSigner,
+		verificationJwt,
 	)
+	if err != nil {
+		logger.Fatalf("error starting server %w", err)
+	}
 
 	userService := service.NewUserService(
 		userRepository,
@@ -91,6 +98,7 @@ func NewServer(
 			authService: authService,
 			userService: userService,
 		},
+		verificationJwt,
 	}
 }
 
@@ -101,6 +109,7 @@ func (s *server) Run() error {
 
 	v1_http.NewRouter(
 		s.cfg.JWT,
+		s.verifierJwt,
 		s.services.authService,
 		s.services.userService,
 	).MapV1Routes(s.echo)

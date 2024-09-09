@@ -33,6 +33,7 @@ aws:
 jwt:
     access_ttl: 2h
     refresh_ttl: 168h
+    verification_ttl: 168h
 
 argon2:
     salt_len: 16

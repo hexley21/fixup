@@ -10,18 +10,44 @@ import (
 	"github.com/hexley21/fixup/internal/user/entity"
 	"github.com/hexley21/fixup/internal/user/enum"
 	"github.com/hexley21/fixup/internal/user/repository"
+	"github.com/hexley21/fixup/internal/user/service/verifier"
 	"github.com/hexley21/fixup/pkg/encryption"
 	"github.com/hexley21/fixup/pkg/hasher"
 	"github.com/hexley21/fixup/pkg/infra/cdn"
 	"github.com/hexley21/fixup/pkg/mailer"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+type templates struct {
+	confirmation *template.Template
+	verified     *template.Template
+}
+
+func newTemplates(
+	confirmationPath string,
+	verifiedPath string,
+) (*templates, error) {
+	confirmationTemplate, err := template.ParseFiles(confirmationPath)
+	if err != nil {
+		return nil, err
+	}
+	verifiedTemplate, err := template.ParseFiles(verifiedPath)
+	if err != nil {
+		return nil, err
+	}
+	return &templates{
+		confirmation: confirmationTemplate,
+		verified:     verifiedTemplate,
+	}, nil
+}
 
 type AuthService interface {
 	RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error)
 	RegisterProvider(ctx context.Context, registerDto dto.RegisterProvider) (dto.User, error)
 	AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.User, error)
+	VerifyUser(ctx context.Context, id int64, email string) error
 }
 
 type authServiceImpl struct {
@@ -33,6 +59,8 @@ type authServiceImpl struct {
 	mailer             mailer.Mailer
 	cdnUrlSigner       cdn.URLSigner
 	emailAddres        string
+	templates          *templates
+	jwtGenerator       verifier.JwtGenerator
 }
 
 func NewAuthService(
@@ -44,7 +72,16 @@ func NewAuthService(
 	mailer mailer.Mailer,
 	emailAddres string,
 	cdnUrlSigner cdn.URLSigner,
-) AuthService {
+	jwtGenerator verifier.JwtGenerator,
+) (AuthService, error) {
+	templates, err := newTemplates(
+		"./templates/register_confirm.html",
+		"./templates/verified_letter.html",
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &authServiceImpl{
 		userRepository:     userRepository,
 		providerRepository: providerRepository,
@@ -54,11 +91,13 @@ func NewAuthService(
 		mailer:             mailer,
 		emailAddres:        emailAddres,
 		cdnUrlSigner:       cdnUrlSigner,
-	}
+		templates:          templates,
+		jwtGenerator:       jwtGenerator,
+	}, nil
 }
 
-func (s *authServiceImpl) sendConfirmationEmail(email string, name string, link string) error {
-	t, err := template.ParseFiles("./templates/register_confirm.html")
+func (s *authServiceImpl) sendConfirmationEmail(id int64, email string, name string) error {
+	verificationJwt, err := s.jwtGenerator.GenerateToken(strconv.FormatInt(id, 10), email)
 	if err != nil {
 		return err
 	}
@@ -67,11 +106,24 @@ func (s *authServiceImpl) sendConfirmationEmail(email string, name string, link 
 		s.emailAddres,
 		email,
 		"Account Confirmation",
-		t,
+		s.templates.confirmation,
 		struct {
-			Name string
-			Link string
-		}{Name: name, Link: link},
+			Name  string
+			Token string
+		}{
+			Name:  name,
+			Token: verificationJwt,
+		},
+	)
+}
+
+func (s *authServiceImpl) sendVerifiedLetter(email string) error {
+	return s.mailer.SendHTML(
+		s.emailAddres,
+		email,
+		"Verification Success",
+		s.templates.verified,
+		nil,
 	)
 }
 
@@ -108,7 +160,7 @@ func (s *authServiceImpl) RegisterCustomer(ctx context.Context, registerDto dto.
 		return dto, err
 	}
 
-	if err := s.sendConfirmationEmail(user.Email, user.FirstName, user.LastName); err != nil {
+	if err := s.sendConfirmationEmail(user.ID, user.Email, user.FirstName); err != nil {
 		if err := tx.Rollback(ctx); err != nil {
 			return dto, err
 		}
@@ -160,7 +212,7 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 		return dto, err
 	}
 
-	if err := s.sendConfirmationEmail(user.Email, user.FirstName, user.LastName); err != nil {
+	if err := s.sendConfirmationEmail(user.ID, user.Email, user.FirstName); err != nil {
 		if err := tx.Rollback(ctx); err != nil {
 			return dto, err
 		}
@@ -195,4 +247,23 @@ func (s *authServiceImpl) AuthenticateUser(ctx context.Context, loginDto dto.Log
 	dto.Role = string(creds.Role)
 
 	return dto, nil
+}
+
+func (s *authServiceImpl) VerifyUser(ctx context.Context, id int64, email string) error {
+	var status pgtype.Bool
+	status.Scan(true)
+
+	err := s.userRepository.UpdateUserStatus(ctx, repository.UpdateUserStatusParams{
+		ID:         id,
+		UserStatus: status,
+	})
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		s.sendVerifiedLetter(email)
+	}()
+
+	return nil
 }

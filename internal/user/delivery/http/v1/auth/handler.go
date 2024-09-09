@@ -4,17 +4,20 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/labstack/echo/v4"
 
-	"github.com/hexley21/fixup/internal/common/jwt"
+	authjwt "github.com/hexley21/fixup/internal/common/jwt"
 	"github.com/hexley21/fixup/internal/common/rest"
 	"github.com/hexley21/fixup/internal/common/util/ctxutil"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/service"
+	"github.com/hexley21/fixup/internal/user/service/verifier"
 )
 
 var (
@@ -23,25 +26,16 @@ var (
 )
 
 type authHandler struct {
-	service          service.AuthService
-	accessGenerator  jwt.AuthJwtGenerator
-	refreshGenerator jwt.AuthJwtGenerator
+	service service.AuthService
 }
 
-func NewAuthHandler(service service.AuthService, accessGenerator jwt.AuthJwtGenerator, refreshGenerator jwt.AuthJwtGenerator) *authHandler {
+func NewAuthHandler(service service.AuthService) *authHandler {
 	return &authHandler{
 		service,
-		accessGenerator,
-		refreshGenerator,
 	}
 }
 
-func setCookies(c echo.Context, jwtGenerator jwt.AuthJwtGenerator, cookieName string, userId string, role string) error {
-	token, err := jwtGenerator.GenerateToken(userId, role)
-	if err != nil {
-		return err
-	}
-
+func setCookies(c echo.Context, token string, cookieName string) error {
 	cookie := http.Cookie{
 		Name:     cookieName,
 		Value:    token,
@@ -72,7 +66,7 @@ func eraseCookie(c echo.Context, cookieName string) {
 // @Accept json
 // @Produce json
 // @Param user body dto.RegisterUser true "User registration details"
-// @Success 200 {string} string "Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token; HttpOnly"
+// @Success 200
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
@@ -87,7 +81,7 @@ func (h *authHandler) registerCustomer(c echo.Context) error {
 		return rest.NewInvalidArgumentsError(err)
 	}
 
-	user, err := h.service.RegisterCustomer(context.Background(), *dto)
+	_, err := h.service.RegisterCustomer(context.Background(), *dto)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
@@ -99,11 +93,10 @@ func (h *authHandler) registerCustomer(c echo.Context) error {
 		return rest.NewInternalServerError(err)
 	}
 
-	setCookies(c, h.accessGenerator, access_token_cookie, user.ID, user.Role)
-	setCookies(c, h.refreshGenerator, refresh_token_cookie, user.ID, user.Role)
-
 	return c.NoContent(http.StatusOK)
 }
+
+// TODO: manage already registered actions + consider status
 
 // registerProvider godoc
 // @Summary Register a new provider
@@ -112,7 +105,7 @@ func (h *authHandler) registerCustomer(c echo.Context) error {
 // @Accept json
 // @Produce json
 // @Param user body dto.RegisterProvider true "User registration details"
-// @Success 200 {string} string "Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token; HttpOnly"
+// @Success 200
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
@@ -127,7 +120,7 @@ func (h *authHandler) registerProvider(c echo.Context) error {
 		return rest.NewInvalidArgumentsError(err)
 	}
 
-	user, err := h.service.RegisterProvider(context.Background(), *dto)
+	_, err := h.service.RegisterProvider(context.Background(), *dto)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
@@ -138,9 +131,6 @@ func (h *authHandler) registerProvider(c echo.Context) error {
 		}
 		return rest.NewInternalServerError(err)
 	}
-
-	setCookies(c, h.accessGenerator, access_token_cookie, user.ID, user.Role)
-	setCookies(c, h.refreshGenerator, refresh_token_cookie, user.ID, user.Role)
 
 	return c.NoContent(http.StatusOK)
 }
@@ -157,20 +147,34 @@ func (h *authHandler) registerProvider(c echo.Context) error {
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized - Incorrect email or password"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/login [post]
-func (h *authHandler) login(c echo.Context) error {
-	dto := new(dto.Login)
-	if err := c.Bind(dto); err != nil {
-		return rest.NewInvalidArgumentsError(err)
-	}
+func (h *authHandler) login(
+	accessGenerator authjwt.JwtGenerator,
+	refreshGenerator authjwt.JwtGenerator,
+) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		dto := new(dto.Login)
+		if err := c.Bind(dto); err != nil {
+			return rest.NewInvalidArgumentsError(err)
+		}
 
-	user, err := h.service.AuthenticateUser(context.Background(), *dto)
-	if err != nil {
-		return rest.NewUnauthorizedError(err, "Incorrect email or password")
-	}
+		user, err := h.service.AuthenticateUser(context.Background(), *dto)
+		if err != nil {
+			return rest.NewUnauthorizedError(err, "Incorrect email or password")
+		}
 
-	setCookies(c, h.accessGenerator, access_token_cookie, user.ID, user.Role)
-	setCookies(c, h.refreshGenerator, refresh_token_cookie, user.ID, user.Role)
-	return c.NoContent(http.StatusOK)
+		accessToken, err := accessGenerator.GenerateJWT(user.ID, user.Role, user.UserStatus)
+		if err != nil {
+			return err
+		}
+		refreshToken, err := refreshGenerator.GenerateJWT(user.ID, user.Role, user.UserStatus)
+		if err != nil {
+			return err
+		}
+
+		setCookies(c, accessToken, access_token_cookie)
+		setCookies(c, refreshToken, refresh_token_cookie)
+		return c.NoContent(http.StatusOK)
+	}
 }
 
 // logout godoc
@@ -195,16 +199,72 @@ func (h *authHandler) logout(c echo.Context) error {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security refresh_token
 // @Router /auth/refresh [post]
-func (h *authHandler) refresh(c echo.Context) error {
-	id, err := ctxutil.GetJwtId(c)
-	if err != nil {
-		return err
-	}
+func (h *authHandler) refresh(
+	accessGenerator authjwt.JwtGenerator,
+) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		id, err := ctxutil.GetJwtId(c)
+		if err != nil {
+			return err
+		}
 
-	role, err := ctxutil.GetJwtId(c)
-	if err != nil {
-		return err
-	}
+		role, err := ctxutil.GetJwtRole(c)
+		if err != nil {
+			return err
+		}
 
-	return setCookies(c, h.accessGenerator, access_token_cookie, id, role)
+		verification, err := ctxutil.GetJwtVerification(c)
+		if err != nil {
+			return err
+		}
+
+		accessToken, err := accessGenerator.GenerateJWT(id, string(role), verification)
+		if err != nil {
+			return err
+		}
+		err = setCookies(c, accessToken, access_token_cookie)
+		if err != nil {
+			return err
+		}
+
+		return c.NoContent(http.StatusOK)
+	}
+}
+
+// verifyEmail godoc
+// @Summary Verify email
+// @Description Verifies the email of a user using a JWT token provided as a query parameter.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param verify query string true "JWT token for email verification"
+// @Success 200
+// @Failure 400 {object} rest.ErrorResponse "Invalid id parameter"
+// @Failure 401 {object} rest.ErrorResponse "Invalid token"
+// @Failure 404 {object} rest.ErrorResponse "User was not found"
+// @Failure 500 {object} rest.ErrorResponse "Internal server error"
+// @Router /auth/verify-email [get]
+func (h *authHandler) verifyEmail(
+	jwtVerifier verifier.JwtVerifier,
+) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		claims, err := jwtVerifier.VerifyJWT(c.QueryParam("token"))
+		if err != nil {
+			return rest.NewUnauthorizedError(err, "Invalid token")
+		}
+
+		id, err := strconv.ParseInt(claims.ID, 10, 64)
+		if err != nil {
+			return rest.NewBadRequestError(err, "Invalid id parameter")
+		}
+		
+		if err := h.service.VerifyUser(context.Background(), id, claims.Email); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return rest.NewNotFoundError(err, "User was not found")
+			}
+			return rest.NewInternalServerError(err)
+		}
+
+		return c.NoContent(http.StatusOK)
+	}
 }

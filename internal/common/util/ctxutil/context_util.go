@@ -12,6 +12,7 @@ import (
 const (
 	jwtIdKey = "jwt_id"
 	jwtRoleKey = "jwt_role"
+	jwtVerificationKey = "jwt_verified"
 	paramIdKey = "param_id"
 )
 
@@ -44,6 +45,18 @@ func GetJwtRole(c echo.Context) (enum.UserRole, error) {
 
 func SetJwtRole(c echo.Context, value enum.UserRole) {
 	c.Set(jwtRoleKey, value)
+}
+
+func GetJwtVerification(c echo.Context) (bool, error) {
+	if verification, ok := c.Get(jwtVerificationKey).(bool); ok {
+		return verification, nil
+	}
+
+	return false, errJwtNotImplemented
+}
+
+func SetJwtVerification(c echo.Context, value bool) {
+	c.Set(jwtVerificationKey, value)
 }
 
 func GetParamId(c echo.Context) (int64, error) {

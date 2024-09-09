@@ -8,12 +8,17 @@ import (
 	"github.com/hexley21/fixup/pkg/jwt"
 )
 
-type AuthJwtGenerator interface {
-	GenerateToken(id string, role string) (string, error)
+type Jwt interface {
+	JwtGenerator
+	JwtVerifier
 }
 
-type AuthJwtMapper interface {
-	MapToClaim(mapClaims any) *UserClaims
+type JwtGenerator interface {
+	GenerateJWT(id string, role string, verified bool) (string, error)
+}
+
+type JwtVerifier interface {
+	VerifyJWT(tokenString string) (UserClaims, error)
 }
 
 type authJwtImpl struct {
@@ -21,15 +26,24 @@ type authJwtImpl struct {
 	ttl       time.Duration
 }
 
-func NewAuthJwtImpl(secretKey string, ttl time.Duration) *authJwtImpl {
+func NewAuthJwtImpl(secretKey string, ttl time.Duration) Jwt {
 	return &authJwtImpl{secretKey: secretKey, ttl: ttl}
 }
 
-func (j *authJwtImpl) GenerateToken(id string, role string) (string, error) {
-	token, err := jwt.GenerateJWT(newUserClaims(id, role, j.ttl), j.secretKey)
+func (j *authJwtImpl) GenerateJWT(id string, role string, verified bool) (string, error) {
+	token, err := jwt.GenerateJWT(newClaims(id, role, verified, j.ttl), j.secretKey)
 	if err != nil {
 		return "", rest.NewInternalServerError(fmt.Errorf("error generating jwt: %w", err))
 	}
 	
 	return token, nil
+}
+
+func (j *authJwtImpl) VerifyJWT(tokenString string) (UserClaims, error) {
+	mapClaims, err := jwt.VerifyJWT(tokenString, j.secretKey)
+	if err != nil {
+		return UserClaims{}, err
+	}
+
+	return mapToClaim(mapClaims), nil
 }

@@ -6,11 +6,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (h *userHandler) MapRoutes(e *echo.Group, accessSecretKey string) *echo.Group {
+func (h *userHandler) MapRoutes(e *echo.Group, jwtAccessMiddleware echo.MiddlewareFunc) *echo.Group {
 	usersGroup := e.Group("/users")
 
 	usersGroup.Use(
-		middleware.JWT(accessSecretKey),
+		jwtAccessMiddleware,
 		middleware.AllowSelfOrRole(enum.UserRoleADMIN, enum.UserRoleMODERATOR),
 	)
 
