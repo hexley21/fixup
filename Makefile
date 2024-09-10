@@ -14,25 +14,25 @@ else
 	@$(MAKE) build/bash
 endif
 
-
-swagg:
+swag-config:
 ifeq ($(OS),Windows_NT) 
-	@$(MAKE) swagg/batch
+	@$(MAKE) swag-config/batch
 else
-	@$(MAKE) swagg/bash
+	@$(MAKE) swag/bash
 endif
 
-swagg-gen:
-	swag init --dir cmd/user/,internal/user/delivery/http,internal/common/rest --parseDependency
-
+swag-gen:
+ifeq ($(OS),Windows_NT) 
+	@$(MAKE) swag-gen/batch svc=$(svc)
+else
+	@$(MAKE) swag-gen/bash svc=$(svc)
+endif
 
 compose: build
 	@docker-compose up --build --remove-orphans
 
-
 sqlc:
 	@sqlc generate -f ./sql/$(db)/sqlc.yml
-
 
 migrate-up:
 	@$(MAKE) migrate db=$(db) way=up
@@ -59,17 +59,25 @@ build/bash:
 		CGO_ENABLED=0 GOOS=linux go build -o ./bin/$$svc ./cmd/$$svc/main.go; \
 	done
 
+swag-gen/bash:
+	@swag init --dir cmd/$(svc)/,internal/$(svc)/delivery/http,internal/common/rest --parseDependency --output ./api/swagger --outputTypes yaml
+	mv ./api/swagger/swagger.yaml ./api/swagger/$(svc).swagger.yaml
 
-swagg/batch:
-	@echo urls: > $(SWAGGER_CONF)
-	@for %%s in ($(SRVCS)) do ( \
-		echo   - url: "./%%s.swagger.yaml" >> $(SWAGGER_CONF) && \
-		echo     name: "%%s" >> $(SWAGGER_CONF) \
-	)
+swag-gen/batch:
+	@swag init --dir cmd/$(svc)/,internal/$(svc)/delivery/http,internal/common/rest --parseDependency --output ./api/swagger --outputTypes yaml
+	@if exist api\swagger\$(svc).swagger.yaml del api\swagger\$(svc).swagger.yaml
+	ren api\swagger\swagger.yaml $(svc).swagger.yaml
 
-swagg/bash:
+swag-config/bash:
 	@echo "urls:" > $(SWAGGER_CONF)
 	@for svc in $(SRVCS); do \
 		echo "  - url: "./$$svc.swagger.yaml"" >> $(SWAGGER_CONF); \
 		echo "    name: "$$svc"" >> $(SWAGGER_CONF); \
 	done
+
+swag-config/batch:
+	@echo urls: > $(SWAGGER_CONF)
+	@for %%s in ($(SRVCS)) do ( \
+		echo   - url: "./%%s.swagger.yaml" >> $(SWAGGER_CONF) && \
+		echo     name: "%%s" >> $(SWAGGER_CONF) \
+	)

@@ -236,7 +236,7 @@ func (h *authHandler) refresh(
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param verify query string true "JWT token for email verification"
+// @Param token query string true "JWT token for email verification"
 // @Success 200
 // @Failure 400 {object} rest.ErrorResponse "Invalid id parameter"
 // @Failure 401 {object} rest.ErrorResponse "Invalid token"

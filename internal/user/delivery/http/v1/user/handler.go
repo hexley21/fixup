@@ -191,7 +191,7 @@ func (h *userHandler) deleteUser(c echo.Context) error {
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"
 // @Failure 404 {object} rest.ErrorResponse "User not found"
 // @Failure 500 {object} rest.ErrorResponse "Internal server error"
-// @Router /v1/user/{id}/change-password [patch]
+// @Router /user/{id}/change-password [patch]
 func (h *userHandler) updatePassword(c echo.Context) error {
 	id, err := ctxutil.GetJwtId(c)
 	if err != nil {

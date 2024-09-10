@@ -1,485 +1,537 @@
-openapi: 3.0.3
+basePath: /v1
+definitions:
+  LoginInput:
+    properties:
+      email:
+        maxLength: 40
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  RegisterProviderInput:
+    properties:
+      email:
+        maxLength: 40
+        type: string
+      first_name:
+        maxLength: 50
+        minLength: 2
+        type: string
+      last_name:
+        maxLength: 50
+        minLength: 2
+        type: string
+      password:
+        minLength: 8
+        type: string
+      personal_id_number:
+        type: string
+      phone_number:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - personal_id_number
+    - phone_number
+    type: object
+  RegisterUserInput:
+    properties:
+      email:
+        maxLength: 40
+        type: string
+      first_name:
+        maxLength: 50
+        minLength: 2
+        type: string
+      last_name:
+        maxLength: 50
+        minLength: 2
+        type: string
+      password:
+        minLength: 8
+        type: string
+      phone_number:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - phone_number
+    type: object
+  UpdatePasswordInput:
+    properties:
+      new_password:
+        minLength: 8
+        type: string
+      old_password:
+        minLength: 8
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
+  UpdateUserInput:
+    properties:
+      email:
+        maxLength: 40
+        type: string
+      first_name:
+        maxLength: 50
+        minLength: 2
+        type: string
+      last_name:
+        maxLength: 50
+        minLength: 2
+        type: string
+      phone_number:
+        type: string
+    type: object
+  User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      phone_number:
+        type: string
+      picture_url:
+        type: string
+      role:
+        type: string
+      user_status:
+        type: boolean
+    type: object
+  rest.ErrorResponse:
+    properties:
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
+  rest.apiResponse-User:
+    properties:
+      data:
+        $ref: '#/definitions/User'
+    type: object
+host: localhost:8080
 info:
-  title: User Microservice
+  contact: {}
   description: Handles user and authentication operations
-  version: 1.0.0-alpha0
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-servers:
-  - url: http://localhost:8080/v1
-tags:
-  - name: Users
-  - name: Auth
+  title: User Microservice
+  version: 1.0.0-alpha0
 paths:
-  /users/{id}:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user and set access and refresh tokens
+      parameters:
+      - description: User login details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/LoginInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token;
+            HttpOnly'
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized - Incorrect email or password
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Login a user
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      description: Erase access and refresh tokens
+      responses:
+        "200":
+          description: 'Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token;
+            HttpOnly'
+          schema:
+            type: string
+      summary: Logout a user
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      description: Refresh the access token using the refresh token
+      responses:
+        "200":
+          description: 'Set-Cookie: access_token; HttpOnly'
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - refresh_token: []
+      summary: Refresh access token
+      tags:
+      - auth
+  /auth/register/customer:
+    post:
+      consumes:
+      - application/json
+      description: Register a new customer with the provided details
+      parameters:
+      - description: User registration details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/RegisterUserInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "409":
+          description: Conflict - User already exists
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Register a new customer
+      tags:
+      - auth
+  /auth/register/provider:
+    post:
+      consumes:
+      - application/json
+      description: Register a new provider with the provided details
+      parameters:
+      - description: User registration details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/RegisterProviderInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "409":
+          description: Conflict - User already exists
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Register a new provider
+      tags:
+      - auth
+  /auth/verify-email:
     get:
-      tags:
-        - Users
-      summary: Finds user by id
-      security:
-        - access_token: []
+      consumes:
+      - application/json
+      description: Verifies the email of a user using a JWT token provided as a query
+        parameter.
       parameters:
-        - $ref: '#/components/parameters/id'
+      - description: JWT token for email verification
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
       responses:
-        '200':
-          $ref: '#/components/responses/User'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalError'
-    delete:
+        "200":
+          description: OK
+        "400":
+          description: Invalid id parameter
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Invalid token
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: User was not found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Verify email
       tags:
-        - Users
-      summary: Deletes user by id
-      security:
-        - access_token: []
-      parameters:
-        - $ref: '#/components/parameters/id'
-      responses:
-        '204':
-          description: No content, deleted successfully
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalError'
+      - auth
+  /user/{id}/change-password:
     patch:
-      tags:
-        - Users
-      summary: Updates users's details
-      security:
-        - access_token: []
+      consumes:
+      - application/json
+      description: Update the password of an existing user
       parameters:
-        - $ref: '#/components/parameters/id'
-      requestBody:
-        description: Update an existent user
+      - description: User ID
+        in: path
+        name: id
         required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserInput'
-          
+        type: integer
+      - description: Update Password DTO
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/UpdatePasswordInput'
+      produces:
+      - application/json
       responses:
-        '200':
-          $ref: '#/components/responses/User'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalError'
-  /users/me:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid arguments
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Update user password
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a user by ID or the currently authenticated user if "me"
+        is provided
+      parameters:
+      - description: User ID or 'me'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: NotFound
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Delete a user
+      tags:
+      - users
     get:
-      tags:
-        - Users
-      summary: Get self user
+      consumes:
+      - application/json
+      description: Retrieve user details by user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.apiResponse-User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
       security:
-        - access_token: []
-      responses:
-        '200':
-          $ref: '#/components/responses/User'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalError'
-  /users/me/change-password:
-    post:
+      - access_token: []
+      summary: Find user by ID
       tags:
-        - Users
-      summary: Change user password
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Update user data by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateUserInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.apiResponse-User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
       security:
-        - access_token: []
-      description: Allows a user to change their password.
-      requestBody:
+      - access_token: []
+      summary: Update user data
+      tags:
+      - users
+  /users/{id}/pfp:
+    patch:
+      consumes:
+      - multipart/form-data
+      description: Upload a profile picture for the user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
         required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ChangePasswordInput'
-          
-      responses:
-        '204':
-          description: Password changed successfully
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalError'
-  /register/customer:
-    post:
-      tags:
-        - Auth
-      summary: Creates Customer
-      requestBody:
-        description: Customer Arguments
+        type: string
+      - description: Profile picture file
+        in: formData
+        name: image
         required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CustomerInput'
-          
+        type: file
+      produces:
+      - application/json
       responses:
-        '200':
-          description: Successful customer register
-          headers:
-            access_token:
-              $ref: '#/components/headers/access_token'
-            refresh_token:
-              $ref: '#/components/headers/refresh_token'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '500':
-          $ref: '#/components/responses/InternalError'
-  /register/provider:
-    post:
-      tags:
-        - Auth
-      summary: Creates Provider
-      requestBody:
-        description: Provider Arguments
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProviderInput'
-          
-      responses:
-        '200':
-          description: Successful provider register
-          headers:
-            access_token:
-              $ref: '#/components/headers/access_token'
-            refresh_token:
-              $ref: '#/components/headers/refresh_token'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '500':
-          $ref: '#/components/responses/InternalError'
-  /login:
-    post:
-      tags:
-        - Auth
-      summary: Authenticates user
-      requestBody:
-        description: Provider Arguments
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginInput'
-          
-      responses:
-        '200':
-          description: Successful login
-          headers:
-            access_token:
-              $ref: '#/components/headers/access_token'
-            refresh_token:
-              $ref: '#/components/headers/refresh_token'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '500':
-          $ref: '#/components/responses/InternalError'
-  /logout:
-    post:
-      tags:
-        - Auth
-      summary: Logout user
-      responses:
-        '200':
-          description: Successful login
-          headers:
-            access_token:
-              $ref: '#/components/headers/delete_access_token'
-            refresh_token:
-              $ref: '#/components/headers/delete_refresh_token'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '500':
-          $ref: '#/components/responses/InternalError'
-  /refresh:
-    post:
-      tags:
-        - Auth
-      summary: Refresh Access token
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
       security:
-        - cookie_refresh_token: []
-      responses:
-        '200':
-          description: Successful refresh
-          headers:
-            access_token:
-              $ref: '#/components/headers/access_token'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '500':
-          $ref: '#/components/responses/InternalError'
-components:
-  securitySchemes:
-    access_token:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      name: access_token
-  schemas:
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-          nullable: false
-          example: "123456789012345678"
-          description: Snowflake id of the user
-        email:
-          type: string
-          maxLength: 40
-          example: example@email.com
-        phone_number:
-          type: string
-          maxLength: 15
-          example: 995555555555
-        first_name:
-          type: string
-          maxLength: 50
-          minLength: 2
-          example: John
-        last_name:
-          type: string
-          maxLength: 50
-          minLength: 2
-          example: Doe
-        hash:
-          type: string
-          description: Password hash
-        role:
-          type: string
-          enum: 
-            - CUSTOMER
-            - PROVIDER
-            - ADMIN
-        user_status:
-          type: boolean
-          default: false
-        created_at:
-          type: string
-          format: date-time
-          default: '2023-08-05T00:00:00Z'
-    UserInput:
-      type: object
-      properties:
-        email:
-          type: string
-          maxLength: 40
-          example: example@email.com
-        phone_number:
-          type: string
-          maxLength: 15
-          example: 995555555555
-        first_name:
-          type: string
-          maxLength: 50
-          minLength: 2
-          example: John
-        last_name:
-          type: string
-          maxLength: 50
-          minLength: 2
-          example: Doe
-    CustomerInput:
-      type: object
-      properties:
-        email:
-          type: string
-          maxLength: 40
-          example: example@email.com
-        phone_number:
-          type: string
-          maxLength: 15
-          example: 995555555555
-        first_name:
-          type: string
-          maxLength: 50
-          minLength: 2
-          example: John
-        last_name:
-          type: string
-          maxLength: 50
-          minLength: 2
-          example: Doe
-        password:
-          type: string
-          example: StrongPassword123
-      required:
-        - email
-        - phone_number
-        - first_name
-        - last_name
-        - password
-    ProviderInput:
-      type: object
-      properties:
-        email:
-          type: string
-          maxLength: 40
-          example: example@email.com
-        phone_number:
-          type: string
-          maxLength: 15
-          example: 995555555555
-        first_name:
-          type: string
-          maxLength: 50
-          minLength: 2
-          example: John
-        last_name:
-          type: string
-          maxLength: 50
-          minLength: 2
-          example: Doe
-        password:
-          type: string
-          example: StrongPassword123
-        personal_id_number:
-          type: string
-          example: 1001001234
-      required:
-        - email
-        - phone_number
-        - first_name
-        - last_name
-        - password
-        - personal_id_number
-    LoginInput:
-      type: object
-      properties:
-        email:
-          type: string
-          maxLength: 40
-          example: example@email.com
-        password:
-          type: string
-          format: password
-          description: The current password of the user.
-          example: StrongPassword123
-      required:
-        - password
-    ChangePasswordInput:
-      type: object
-      properties:
-        current_password:
-          type: string
-          format: password
-          description: The current password of the user.
-          example: StrongPassword123
-        new_password:
-          type: string
-          format: password
-          description: The new password for the user.
-          example: StrongPassword123
-      required:
-        - current_password
-        - new_password
-    ApiResponse:
-      type: object
-      properties:
-        data:
-          type: object
-    BasicError:
-      type: object
-      properties:
-        code:
-          type: integer
-        message:
-          type: string
-  responses:
-    BadRequest:
-      description: Bad Request
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/BasicError'
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/BasicError'
-    Forbidden:
-      description: Forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/BasicError'
-    NotFound:
-      description: Not found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/BasicError'
-    Conflict:
-      description: Conflict
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/BasicError'
-    InternalError:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/BasicError'
-    User:
-      description: Successful User operation
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: '#/components/schemas/ApiResponse'
-              - type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/User'
-  parameters:
-    id:
-      name: id
-      in: path
-      description: id of an object
-      required: true
-      schema:
-        type: string
-  headers:
-    access_token:
-      schema: 
-        type: string
-        example: access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEyMzQ1Njc4OTAxMjM0NTY3OCIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTUxNjIzOTAyMn0.jqYRtRKBbAOz0tLpO3MSLupWdyLMZPQYSlv5XeA7w4w; Path=/; HttpOnly
-    refresh_token:
-      schema: 
-        type: string
-        example: refresh_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEyMzQ1Njc4OTAxMjM0NTY3OCIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTUxNjIzOTAyMn0.jqYRtRKBbAOz0tLpO3MSLupWdyLMZPQYSlv5XeA7w4w; Path=/; HttpOnly
-    delete_access_token:
-      schema: 
-        type: string
-        example: access_token=deleted; Path=/; HttpOnly
-    delete_refresh_token:
-      schema: 
-        type: string
-        example: refresh_token=deleted; Path=/; HttpOnly
+      - access_token: []
+      summary: Upload profile picture
+      tags:
+      - users
+schemes:
+- http
+securityDefinitions:
+  access_token:
+    in: header
+    name: Authorization
+    type: apiKey
+  refresh_token:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
