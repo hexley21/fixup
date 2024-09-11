@@ -6,15 +6,17 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/golang-migrate/migrate/v4"
 	"github.com/hexley21/fixup/pkg/config"
 	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+    _ "github.com/golang-migrate/migrate/v4/database/postgres"
 )
 
-var ErrNoConnection = errors.New("no connection")
+var errNoConnection = errors.New("no connection")
 
 func NewPool(cfg *config.Postgres) (*pgxpool.Pool, error) {
-	var dataSourceName string
-	dataSourceName = fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s",
+	dataSourceName := fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s",
 		cfg.Host,
 		cfg.Port,
 		cfg.User,
@@ -45,9 +47,22 @@ func NewPool(cfg *config.Postgres) (*pgxpool.Pool, error) {
 	return pgPool, nil
 }
 
+func Migrate(url string, migrationPath string) (*migrate.Migrate, error) {
+	m, err := migrate.New(migrationPath, url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect migrator: %w", err)
+	}
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return nil, fmt.Errorf("failed to migrate up: %w", err)
+	}
+
+	return m, nil
+}
+
 func Close(pgPool *pgxpool.Pool) error {
 	if pgPool == nil {
-		return ErrNoConnection
+		return errNoConnection
 	}
 
 	pgPool.Close()
