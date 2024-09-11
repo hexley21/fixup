@@ -3,12 +3,14 @@ package repository
 import (
 	"context"
 
+	"github.com/hexley21/fixup/internal/user/entity"
 	"github.com/hexley21/fixup/pkg/infra/postgres"
 )
 
 type ProviderRepository interface {
 	postgres.Repository[ProviderRepository]
 	CreateProvider(ctx context.Context, arg CreateProviderParams) error
+	GetByUserId(ctx context.Context, userID int64) (entity.Provider, error)
 }
 
 type providerRepositoryImpl struct {
@@ -42,4 +44,22 @@ type CreateProviderParams struct {
 func (r *providerRepositoryImpl) CreateProvider(ctx context.Context, arg CreateProviderParams) error {
 	_, err := r.db.Exec(ctx, createProvider, arg.PersonalIDNumber, arg.PersonalIDPreview, arg.UserID)
 	return err
+}
+
+const getByUserId = `-- name: GetByUserId :one
+SELECT 
+  personal_id_number, 
+  personal_id_preview, 
+  user_id 
+FROM 
+  providers
+WHERE 
+  user_id = $1
+`
+
+func (r *providerRepositoryImpl) GetByUserId(ctx context.Context, userID int64) (entity.Provider, error) {
+	row := r.db.QueryRow(ctx, getByUserId, userID)
+	var i entity.Provider
+	err := row.Scan(&i.PersonalIDNumber, &i.PersonalIDPreview, &i.UserID)
+	return i, err
 }

@@ -250,7 +250,7 @@ func (r *userRepositoryImpl) UpdatePassword(ctx context.Context, arg UpdatePassw
 	if result.RowsAffected() == 0 {
 		return pgx.ErrNoRows
 	}
-	
+
 	return nil
 }
 
