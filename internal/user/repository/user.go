@@ -57,7 +57,6 @@ type CreateParams struct {
 	PhoneNumber string
 	Email       string
 	Hash        string
-	PictureName string
 	Role        enum.UserRole
 }
 
@@ -148,9 +147,15 @@ type UpdateParams struct {
 }
 
 func (r *userRepositoryImpl) Update(ctx context.Context, arg UpdateParams) (entity.User, error) {
+	var i entity.User
+	
 	query := baseUpdateUserData
 	params := []interface{}{arg.ID}
 	setClauses := []string{}
+
+	if arg.ID == 0 || (arg.FirstName == nil && arg.LastName == nil && arg.PhoneNumber == nil && arg.Email == nil) {
+		return i, pgx.ErrNoRows
+	}
 
 	if arg.FirstName != nil {
 		setClauses = append(setClauses, "first_name = $"+strconv.Itoa(len(params)+1))
@@ -173,7 +178,6 @@ func (r *userRepositoryImpl) Update(ctx context.Context, arg UpdateParams) (enti
 	query += " WHERE id = $1 RETURNING id, first_name, last_name, phone_number, email, picture_name, role, user_status, created_at"
 
 	row := r.db.QueryRow(ctx, query, params...)
-	var i entity.User
 	err := row.Scan(
 		&i.ID,
 		&i.FirstName,

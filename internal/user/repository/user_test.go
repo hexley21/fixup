@@ -3,12 +3,15 @@ package repository_test
 import (
 	"context"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/hexley21/fixup/internal/user/entity"
 	"github.com/hexley21/fixup/internal/user/enum"
 	"github.com/hexley21/fixup/internal/user/repository"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
@@ -23,6 +26,8 @@ var (
 		Hash:        "Ehx0DNg86zL6QCB8gMZxzkm0fPt3ObwhQzKAu22bnVYZvVe84GAAh8jFp5Cf47R5YncjKqQCyLakki78isy5899YTeVNjNjxK3N2EwdXGz4RB9YHkILLdfyT89DfAEtK",
 		Role:        enum.UserRoleCUSTOMER,
 	}
+
+	invalidValue = "uwox71YgdFn6SuR4x971KjxrUaSoUdax9k0DkCt1WnzEHcdG9lpqEkF7RHw0SWUL"
 )
 
 func TestCreate(t *testing.T) {
@@ -50,13 +55,37 @@ func TestCreate(t *testing.T) {
 	assert.Empty(t, entity.Hash)
 }
 
-func TestGetById(t *testing.T) {
+func TestCreateWithInvalidArguments(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	snowflakeNode := getSnowflakeNode()
 	setupDatabaseCleanup(t, ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, snowflakeNode)
+
+	entity, err := repo.Create(ctx, userCreateArgs)
+	assert.NoError(t, err)
+
+	assert.Equal(t, entity.FirstName, userCreateArgs.FirstName)
+	assert.Equal(t, entity.LastName, userCreateArgs.LastName)
+	assert.Equal(t, entity.PhoneNumber, userCreateArgs.PhoneNumber)
+	assert.Equal(t, entity.Email, userCreateArgs.Email)
+	assert.Equal(t, entity.Role, userCreateArgs.Role)
+	assert.Equal(t, entity.UserStatus.Bool, false)
+
+	assert.NotEqual(t, entity.ID, 0)
+	assert.NotEmpty(t, entity.CreatedAt)
+
+	assert.Empty(t, entity.PictureName)
+	assert.Empty(t, entity.Hash)
+}
+
+func TestGetById(t *testing.T) {
+	ctx := context.Background()
+	dbPool := getDbPool(ctx)
+	setupDatabaseCleanup(t, ctx, dbPool)
+
+	repo := repository.NewUserRepository(dbPool, nil)
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
@@ -79,7 +108,7 @@ func TestGetById(t *testing.T) {
 	assert.Empty(t, entity.Hash)
 }
 
-func TestGetCredentialsByEmail(t *testing.T) {
+func TestCreateInvalidArgs(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	snowflakeNode := getSnowflakeNode()
@@ -87,26 +116,32 @@ func TestGetCredentialsByEmail(t *testing.T) {
 
 	repo := repository.NewUserRepository(dbPool, snowflakeNode)
 
-	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
-	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+	invalidArgs := []repository.CreateParams{
+		{FirstName: invalidValue, LastName: userCreateArgs.LastName, PhoneNumber: userCreateArgs.PhoneNumber, Email: userCreateArgs.Email, Hash: userCreateArgs.Hash, Role: userCreateArgs.Role},
+		{FirstName: userCreateArgs.FirstName, LastName: invalidValue, PhoneNumber: userCreateArgs.PhoneNumber, Email: userCreateArgs.Email, Hash: userCreateArgs.Hash, Role: userCreateArgs.Role},
+		{FirstName: userCreateArgs.FirstName, LastName: userCreateArgs.LastName, PhoneNumber: invalidValue, Email: userCreateArgs.Email, Hash: userCreateArgs.Hash, Role: userCreateArgs.Role},
+		{FirstName: userCreateArgs.FirstName, LastName: userCreateArgs.LastName, PhoneNumber: userCreateArgs.PhoneNumber, Email: invalidValue, Hash: userCreateArgs.Hash, Role: userCreateArgs.Role},
+		{FirstName: userCreateArgs.FirstName, LastName: userCreateArgs.LastName, PhoneNumber: userCreateArgs.PhoneNumber, Hash: invalidValue, Role: userCreateArgs.Role},
+		{FirstName: userCreateArgs.FirstName, LastName: userCreateArgs.LastName, PhoneNumber: userCreateArgs.PhoneNumber, Hash: userCreateArgs.Hash, Role: enum.UserRole(invalidValue)},
 	}
 
-	credentials, err := repo.GetCredentialsByEmail(ctx, insert.Email)
-	assert.NoError(t, err)
-
-	assert.Equal(t, credentials.Hash, insert.Hash)
-	assert.Equal(t, credentials.ID, insert.ID)
-	assert.Equal(t, credentials.Role, insert.Role)
+	i := 0
+	for _, args := range invalidArgs {
+		entity, err := repo.Create(ctx, args)
+		if !assert.Error(t, err, i) {
+			log.Println("create user:", i)
+		}
+		assert.Empty(t, entity)
+		i++
+	}
 }
 
 func TestGetPasswordHashById(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
-	snowflakeNode := getSnowflakeNode()
 	setupDatabaseCleanup(t, ctx, dbPool)
 
-	repo := repository.NewUserRepository(dbPool, snowflakeNode)
+	repo := repository.NewUserRepository(dbPool, nil)
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
@@ -119,13 +154,24 @@ func TestGetPasswordHashById(t *testing.T) {
 	assert.Equal(t, hash, insert.Hash)
 }
 
+func TestGetPasswordHashFromNonexistentUser(t *testing.T) {
+	ctx := context.Background()
+	dbPool := getDbPool(ctx)
+	setupDatabaseCleanup(t, ctx, dbPool)
+
+	repo := repository.NewUserRepository(dbPool, nil)
+
+	hash, err := repo.GetPasswordHashById(ctx, 1)
+	assert.ErrorIs(t, err, pgx.ErrNoRows)
+	assert.Empty(t, hash)
+}
+
 func TestUpdate(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
-	snowflakeNode := getSnowflakeNode()
 	setupDatabaseCleanup(t, ctx, dbPool)
 
-	repo := repository.NewUserRepository(dbPool, snowflakeNode)
+	repo := repository.NewUserRepository(dbPool, nil)
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
@@ -154,13 +200,71 @@ func TestUpdate(t *testing.T) {
 	assert.Equal(t, update.Email, email)
 }
 
+func TestUpdateWithPartialArguments(t *testing.T) {
+	ctx := context.Background()
+	dbPool := getDbPool(ctx)
+	setupDatabaseCleanup(t, ctx, dbPool)
+
+	repo := repository.NewUserRepository(dbPool, nil)
+
+	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
+	if err != nil {
+		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+	}
+
+	firstName := "updated_firstname"
+	lastName := "updated_lastname"
+
+	updateArgs := repository.UpdateParams{
+		ID:          insert.ID,
+		FirstName:   &firstName,
+		LastName:    &lastName,
+	}
+
+	update, err := repo.Update(ctx, updateArgs)
+	assert.NoError(t, err)
+
+	assert.Equal(t, update.FirstName, firstName)
+	assert.Equal(t, update.LastName, lastName)
+	assert.Equal(t, update.PhoneNumber, userCreateArgs.PhoneNumber)
+	assert.Equal(t, update.Email, userCreateArgs.Email)
+}
+
+func TestUpdateWithNoArguments(t *testing.T) {
+	ctx := context.Background()
+	dbPool := getDbPool(ctx)
+	setupDatabaseCleanup(t, ctx, dbPool)
+
+	repo := repository.NewUserRepository(dbPool, nil)
+
+	_, err := insertUser(dbPool, ctx, userCreateArgs, 1)
+	if err != nil {
+		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+	}
+
+	update, err := repo.Update(ctx, repository.UpdateParams{ID: 1})
+	assert.ErrorIs(t, err, pgx.ErrNoRows)
+	assert.Empty(t, update)
+}
+
+func TestUpdateForNonexistentUser(t *testing.T) {
+	ctx := context.Background()
+	dbPool := getDbPool(ctx)
+	setupDatabaseCleanup(t, ctx, dbPool)
+
+	repo := repository.NewUserRepository(dbPool, nil)
+
+	update, err := repo.Update(ctx, repository.UpdateParams{ID: 1, FirstName: &userCreateArgs.FirstName})
+	assert.ErrorIs(t, err, pgx.ErrNoRows)
+	assert.Empty(t, update)
+}
+
 func TestUpdatePicture(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
-	snowflakeNode := getSnowflakeNode()
 	setupDatabaseCleanup(t, ctx, dbPool)
 
-	repo := repository.NewUserRepository(dbPool, snowflakeNode)
+	repo := repository.NewUserRepository(dbPool, nil)
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
@@ -184,13 +288,23 @@ func TestUpdatePicture(t *testing.T) {
 	assert.Equal(t, pictureArg, updatedPicture)
 }
 
+func TestUpdatePictureForNonexistentUser(t *testing.T) {
+	ctx := context.Background()
+	dbPool := getDbPool(ctx)
+	setupDatabaseCleanup(t, ctx, dbPool)
+
+	repo := repository.NewUserRepository(dbPool, nil)
+
+	err := repo.UpdatePicture(ctx, repository.UpdatePictureParams{ID: 1, PictureName: pgtype.Text{}})
+	assert.ErrorIs(t, err, pgx.ErrNoRows)
+}
+
 func TestUpdateStatus(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
-	snowflakeNode := getSnowflakeNode()
 	setupDatabaseCleanup(t, ctx, dbPool)
 
-	repo := repository.NewUserRepository(dbPool, snowflakeNode)
+	repo := repository.NewUserRepository(dbPool, nil)
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
@@ -214,13 +328,23 @@ func TestUpdateStatus(t *testing.T) {
 	assert.Equal(t, statusArg, updatedStatus)
 }
 
+func TestUpdateStatusForNonexistentUser(t *testing.T) {
+	ctx := context.Background()
+	dbPool := getDbPool(ctx)
+	setupDatabaseCleanup(t, ctx, dbPool)
+
+	repo := repository.NewUserRepository(dbPool, nil)
+
+	err := repo.UpdateStatus(ctx, repository.UpdateStatusParams{ID: 1, UserStatus: pgtype.Bool{}})
+	assert.ErrorIs(t, err, pgx.ErrNoRows)
+}
+
 func TestUpdatePassword(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
-	snowflakeNode := getSnowflakeNode()
 	setupDatabaseCleanup(t, ctx, dbPool)
 
-	repo := repository.NewUserRepository(dbPool, snowflakeNode)
+	repo := repository.NewUserRepository(dbPool, nil)
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
@@ -242,13 +366,45 @@ func TestUpdatePassword(t *testing.T) {
 	assert.Equal(t, args.Hash, updatedPassword)
 }
 
+func TestUpdatePasswordWithInvalidHash(t *testing.T) {
+	ctx := context.Background()
+	dbPool := getDbPool(ctx)
+	setupDatabaseCleanup(t, ctx, dbPool)
+
+	repo := repository.NewUserRepository(dbPool, nil)
+
+	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
+	if err != nil {
+		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+	}
+
+	err = repo.UpdatePassword(ctx, repository.UpdatePasswordParams{
+		ID:   insert.ID,
+		Hash: "abc",
+	})
+	var pgErr *pgconn.PgError
+	if assert.ErrorAs(t, err, &pgErr) {
+		assert.Equal(t, pgErr.Code, pgerrcode.CheckViolation)
+	}
+}
+
+func TestUpdatePasswordForNonexistentUser(t *testing.T) {
+	ctx := context.Background()
+	dbPool := getDbPool(ctx)
+	setupDatabaseCleanup(t, ctx, dbPool)
+
+	repo := repository.NewUserRepository(dbPool, nil)
+
+	err := repo.UpdatePassword(ctx, repository.UpdatePasswordParams{ID: 1, Hash: "abc"})
+	assert.ErrorIs(t, err, pgx.ErrNoRows)
+}
+
 func TestDeleteById(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
-	snowflakeNode := getSnowflakeNode()
 	setupDatabaseCleanup(t, ctx, dbPool)
 
-	repo := repository.NewUserRepository(dbPool, snowflakeNode)
+	repo := repository.NewUserRepository(dbPool, nil)
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
@@ -262,6 +418,17 @@ func TestDeleteById(t *testing.T) {
 	var userId int64
 	err = row.Scan(userId)
 	assert.Error(t, err, pgx.ErrNoRows)
+}
+
+func TestDeleteByIdWithNonexistendUser(t *testing.T) {
+	ctx := context.Background()
+	dbPool := getDbPool(ctx)
+	setupDatabaseCleanup(t, ctx, dbPool)
+
+	repo := repository.NewUserRepository(dbPool, nil)
+
+	err := repo.DeleteById(ctx, 1)
+	assert.ErrorIs(t, err, pgx.ErrNoRows)
 }
 
 func insertUser(dbPool *pgxpool.Pool, ctx context.Context, args repository.CreateParams, id int64) (entity.User, error) {
