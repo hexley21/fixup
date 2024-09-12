@@ -121,10 +121,6 @@ func (s *userServiceImpl) SetProfilePicture(ctx context.Context, userId int64, f
 	return s.cdnFileInvalidator.InvalidateFile(ctx, entity.PictureName.String)
 }
 
-func (s *userServiceImpl) DeleteUserById(ctx context.Context, userId int64) error {
-	return s.userRepository.DeleteById(ctx, userId)
-}
-
 func (s *userServiceImpl) ChangePassword(ctx context.Context, id int64, updateDto dto.UpdatePassword) error {
 	oldHash, err := s.userRepository.GetHashById(ctx, id)
 	if err != nil {
@@ -140,4 +136,22 @@ func (s *userServiceImpl) ChangePassword(ctx context.Context, id int64, updateDt
 		ID:   id,
 		Hash: s.hasher.HashPassword(updateDto.NewPassword),
 	})
+}
+
+func (s *userServiceImpl) DeleteUserById(ctx context.Context, userId int64) error {
+	entity, err := s.userRepository.GetById(ctx, userId)
+	if err != nil {
+		return err
+	}
+
+	if entity.PictureName.String != "" {
+		if err := s.s3Bucket.DeleteObject(ctx, entity.PictureName.String); err != nil {
+			return err
+		}
+		if err := s.cdnFileInvalidator.InvalidateFile(ctx, entity.PictureName.String); err != nil {
+			return err
+		}
+	}
+
+	return s.userRepository.DeleteById(ctx, userId)
 }
