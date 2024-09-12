@@ -136,6 +136,38 @@ func TestCreateInvalidArgs(t *testing.T) {
 	}
 }
 
+func TestGetCredentialsByEmail(t *testing.T) {
+	ctx := context.Background()
+	dbPool := getDbPool(ctx)
+	setupDatabaseCleanup(t, ctx, dbPool)
+
+	repo := repository.NewUserRepository(dbPool, nil)
+
+	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
+	if err != nil {
+		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+	}
+
+	creds, err := repo.GetCredentialsByEmail(ctx, insert.Email)
+	assert.NoError(t, err)
+
+	assert.Equal(t, creds.ID, insert.ID)
+	assert.Equal(t, creds.Role, insert.Role)
+	assert.Equal(t, creds.Hash, insert.Hash)
+}
+
+func TestGetCredentialsByEmailFromNonexistendUser(t *testing.T) {
+	ctx := context.Background()
+	dbPool := getDbPool(ctx)
+	setupDatabaseCleanup(t, ctx, dbPool)
+
+	repo := repository.NewUserRepository(dbPool, nil)
+
+	creds, err := repo.GetCredentialsByEmail(ctx, "email")
+	assert.ErrorIs(t, err, pgx.ErrNoRows)
+	assert.Empty(t, creds)
+}
+
 func TestGetHashById(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
@@ -154,7 +186,7 @@ func TestGetHashById(t *testing.T) {
 	assert.Equal(t, hash, insert.Hash)
 }
 
-func TestGetPasswordHashFromNonexistentUser(t *testing.T) {
+func TestGetHashFromNonexistentUser(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -359,11 +391,11 @@ func TestUpdateHash(t *testing.T) {
 	assert.NoError(t, err)
 
 	row := dbPool.QueryRow(ctx, "SELECT hash from users where id = $1", insert.ID)
-	var updatedPassword string
-	err = row.Scan(&updatedPassword)
+	var updatedHash string
+	err = row.Scan(&updatedHash)
 	assert.NoError(t, err)
 
-	assert.Equal(t, args.Hash, updatedPassword)
+	assert.Equal(t, args.Hash, updatedHash)
 }
 
 func TestUpdateHashWithInvalidArgs(t *testing.T) {
