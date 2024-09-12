@@ -11,6 +11,5 @@ func GetConfig() (string, []testcontainers.ContainerCustomizer) {
 		postgres.WithUsername("user"),
 		postgres.WithPassword("password"),
 		postgres.BasicWaitStrategies(),
-		postgres.WithSQLDriver("pgx"),
 	}
 }
