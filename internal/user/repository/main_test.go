@@ -50,6 +50,16 @@ func TestMain(m *testing.M) {
 	os.Exit(res)
 }
 
+func setupDatabaseCleanup(t *testing.T, ctx context.Context, dbPool *pgxpool.Pool) {
+	t.Cleanup(func() {
+		_, err := dbPool.Exec(ctx, "TRUNCATE TABLE users CASCADE")
+		dbPool.Close()
+		if err != nil {
+			log.Fatalln("failed to cleanup database:", err)
+		}
+	})
+}
+
 func getDbPool(ctx context.Context) *pgxpool.Pool {
 	pool, err := pgxpool.New(ctx, connURL)
 	if err != nil {
@@ -66,9 +76,4 @@ func getSnowflakeNode() *snowflake.Node {
 	}
 
 	return node
-}
-
-func cleanup(ctx context.Context, dbPool infra.DBTX) error {
-	_, err := dbPool.Exec(ctx, "TRUNCATE TABLE users CASCADE")
-	return err
 }

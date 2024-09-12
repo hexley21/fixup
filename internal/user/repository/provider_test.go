@@ -15,27 +15,12 @@ import (
 
 func TestCreateProvider(t *testing.T) {
 	ctx := context.Background()
-
 	dbPool := getDbPool(ctx)
-
-	defer dbPool.Close()
-	defer cleanup(ctx, dbPool)
+	setupDatabaseCleanup(t, ctx, dbPool)
 
 	repo := repository.NewProviderRepository(dbPool)
 
-	row := dbPool.QueryRow(
-		ctx,
-		"INSERT INTO users (id, first_name, last_name, phone_number, email, hash, role) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
-		1,
-		userCreateArgs.FirstName,
-		userCreateArgs.LastName,
-		userCreateArgs.PhoneNumber,
-		userCreateArgs.Email,
-		userCreateArgs.Hash,
-		userCreateArgs.Role,
-	)
-	var userId int64
-	err := row.Scan(&userId)
+	user, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
 		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
 	}
@@ -43,12 +28,12 @@ func TestCreateProvider(t *testing.T) {
 	args := repository.CreateProviderParams{
 		PersonalIDNumber:  []byte("123456789"),
 		PersonalIDPreview: "1234",
-		UserID:            userId,
+		UserID:            user.ID,
 	}
 
 	assert.NoError(t, repo.CreateProvider(ctx, args))
 
-	row = dbPool.QueryRow(ctx, "SELECT * FROM  providers WHERE user_id = $1", args.UserID)
+	row := dbPool.QueryRow(ctx, "SELECT * FROM  providers WHERE user_id = $1", args.UserID)
 	var p entity.Provider
 	err = row.Scan(&p.PersonalIDNumber, &p.PersonalIDPreview, &p.UserID)
 	assert.NoError(t, err)
@@ -60,37 +45,22 @@ func TestCreateProvider(t *testing.T) {
 
 func TestGetProvider(t *testing.T) {
 	ctx := context.Background()
-
 	dbPool := getDbPool(ctx)
-
-	defer dbPool.Close()
-	defer cleanup(ctx, dbPool)
+	setupDatabaseCleanup(t, ctx, dbPool)
 
 	repo := repository.NewProviderRepository(dbPool)
 
-	row := dbPool.QueryRow(
-		ctx,
-		"INSERT INTO users (id, first_name, last_name, phone_number, email, hash, role) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
-		1,
-		userCreateArgs.FirstName,
-		userCreateArgs.LastName,
-		userCreateArgs.PhoneNumber,
-		userCreateArgs.Email,
-		userCreateArgs.Hash,
-		userCreateArgs.Role,
-	)
-	var userId int64
-	err := row.Scan(&userId)
+	user, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
 		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
 	}
 
-	row = dbPool.QueryRow(
+	row := dbPool.QueryRow(
 		ctx,
 		"INSERT INTO providers (personal_id_number, personal_id_preview, user_id) VALUES ($1, $2, $3) RETURNING *",
 		[]byte("123456789"),
 		"1234",
-		userId,
+		user.ID,
 	)
 	var provider entity.Provider
 	err = row.Scan(
@@ -112,11 +82,8 @@ func TestGetProvider(t *testing.T) {
 
 func TestCreateProviderWithoutUser(t *testing.T) {
 	ctx := context.Background()
-
 	dbPool := getDbPool(ctx)
-
-	defer dbPool.Close()
-	defer cleanup(ctx, dbPool)
+	setupDatabaseCleanup(t, ctx, dbPool)
 
 	repo := repository.NewProviderRepository(dbPool)
 
