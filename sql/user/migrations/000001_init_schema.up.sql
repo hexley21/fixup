@@ -17,5 +17,5 @@ CREATE TABLE users (
 CREATE TABLE providers (
     personal_id_number BYTEA NOT NULL,
     personal_id_preview VARCHAR(5) NOT NULL,
-    user_id BIGINT NOT NULL REFERENCES users(id)
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE
 );
