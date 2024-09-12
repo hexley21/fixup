@@ -130,7 +130,7 @@ func (s *authServiceImpl) sendVerifiedLetter(email string) error {
 func (s *authServiceImpl) registerUser(ctx context.Context, dto dto.RegisterUser, tx pgx.Tx) (entity.User, error) {
 	var user entity.User
 	user, err := s.userRepository.WithTx(tx).Create(ctx,
-		repository.CreateParams{
+		repository.CreateUserParams{
 			FirstName:   dto.FirstName,
 			LastName:    dto.LastName,
 			PhoneNumber: dto.PhoneNumber,
@@ -201,7 +201,7 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 		return dto, err
 	}
 
-	err = s.providerRepository.WithTx(tx).CreateProvider(ctx, repository.CreateProviderParams{
+	err = s.providerRepository.WithTx(tx).Create(ctx, repository.CreateProviderParams{
 		PersonalIDNumber:  enc,
 		PersonalIDPreview: registerDto.PersonalIDNumber[len(registerDto.PersonalIDNumber)-5:],
 		UserID:            user.ID,
@@ -254,7 +254,7 @@ func (s *authServiceImpl) VerifyUser(ctx context.Context, id int64, email string
 	var status pgtype.Bool
 	status.Scan(true)
 
-	err := s.userRepository.UpdateStatus(ctx, repository.UpdateStatusParams{
+	err := s.userRepository.UpdateStatus(ctx, repository.UpdateUserStatusParams{
 		ID:         id,
 		UserStatus: status,
 	})

@@ -32,7 +32,7 @@ func TestCreateProvider(t *testing.T) {
 		UserID:            user.ID,
 	}
 
-	assert.NoError(t, repo.CreateProvider(ctx, args))
+	assert.NoError(t, repo.Create(ctx, args))
 
 	row := dbPool.QueryRow(ctx, "SELECT * FROM  providers WHERE user_id = $1", args.UserID)
 	var p entity.Provider
@@ -44,7 +44,7 @@ func TestCreateProvider(t *testing.T) {
 	assert.Equal(t, p.UserID, args.UserID)
 }
 
-func TestCreateProviderWithInvalidArguments(t *testing.T) {
+func TestCreateProviderWithInvalidArgs(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -61,10 +61,9 @@ func TestCreateProviderWithInvalidArguments(t *testing.T) {
 		{PersonalIDNumber: []byte("123456789"), PersonalIDPreview: "1234567", UserID: user.ID},
 	}
 
-
 	i := 0
 	for _, args := range invalidArgs {
-		err := repo.CreateProvider(ctx, args)
+		err := repo.Create(ctx, args)
 		if !assert.Error(t, err) {
 			log.Println("create provider:", i)
 		}
@@ -85,7 +84,7 @@ func TestCreateProviderForNonexistentUser(t *testing.T) {
 		UserID:            1,
 	}
 
-	err := repo.CreateProvider(ctx, args)
+	err := repo.Create(ctx, args)
 	var pgErr *pgconn.PgError
 	if assert.ErrorAs(t, err, &pgErr) {
 		assert.Equal(t, pgErr.Code, pgerrcode.ForeignKeyViolation)

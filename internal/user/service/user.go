@@ -67,7 +67,7 @@ func (s *userServiceImpl) FindUserById(ctx context.Context, userId int64) (dto.U
 func (s *userServiceImpl) UpdateUserDataById(ctx context.Context, id int64, updateDto dto.UpdateUser) (dto.User, error) {
 	var dto dto.User
 
-	entity, err := s.userRepository.Update(ctx, repository.UpdateParams{
+	entity, err := s.userRepository.Update(ctx, repository.UpdateUserParams{
 		ID:          id,
 		FirstName:   updateDto.FirstName,
 		LastName:    updateDto.LastName,
@@ -101,7 +101,7 @@ func (s *userServiceImpl) SetProfilePicture(ctx context.Context, userId int64, f
 		return err
 	}
 
-	err = s.userRepository.UpdatePicture(ctx, repository.UpdatePictureParams{
+	err = s.userRepository.UpdatePicture(ctx, repository.UpdateUserPictureParams{
 		ID:          userId,
 		PictureName: pictureName,
 	})
@@ -126,7 +126,7 @@ func (s *userServiceImpl) DeleteUserById(ctx context.Context, userId int64) erro
 }
 
 func (s *userServiceImpl) ChangePassword(ctx context.Context, id int64, updateDto dto.UpdatePassword) error {
-	oldHash, err := s.userRepository.GetPasswordHashById(ctx, id)
+	oldHash, err := s.userRepository.GetHashById(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func (s *userServiceImpl) ChangePassword(ctx context.Context, id int64, updateDt
 		return err
 	}
 
-	return s.userRepository.UpdatePassword(ctx, repository.UpdatePasswordParams{
+	return s.userRepository.UpdateHash(ctx, repository.UpdateUserHashParams{
 		ID:   id,
 		Hash: s.hasher.HashPassword(updateDto.NewPassword),
 	})

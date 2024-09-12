@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	userCreateArgs = repository.CreateParams{
+	userCreateArgs = repository.CreateUserParams{
 		FirstName:   "test",
 		LastName:    "test",
 		PhoneNumber: "995555555555",
@@ -55,7 +55,7 @@ func TestCreate(t *testing.T) {
 	assert.Empty(t, entity.Hash)
 }
 
-func TestCreateWithInvalidArguments(t *testing.T) {
+func TestCreateWithInvalidArgs(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	snowflakeNode := getSnowflakeNode()
@@ -116,7 +116,7 @@ func TestCreateInvalidArgs(t *testing.T) {
 
 	repo := repository.NewUserRepository(dbPool, snowflakeNode)
 
-	invalidArgs := []repository.CreateParams{
+	invalidArgs := []repository.CreateUserParams{
 		{FirstName: invalidValue, LastName: userCreateArgs.LastName, PhoneNumber: userCreateArgs.PhoneNumber, Email: userCreateArgs.Email, Hash: userCreateArgs.Hash, Role: userCreateArgs.Role},
 		{FirstName: userCreateArgs.FirstName, LastName: invalidValue, PhoneNumber: userCreateArgs.PhoneNumber, Email: userCreateArgs.Email, Hash: userCreateArgs.Hash, Role: userCreateArgs.Role},
 		{FirstName: userCreateArgs.FirstName, LastName: userCreateArgs.LastName, PhoneNumber: invalidValue, Email: userCreateArgs.Email, Hash: userCreateArgs.Hash, Role: userCreateArgs.Role},
@@ -136,7 +136,7 @@ func TestCreateInvalidArgs(t *testing.T) {
 	}
 }
 
-func TestGetPasswordHashById(t *testing.T) {
+func TestGetHashById(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -148,7 +148,7 @@ func TestGetPasswordHashById(t *testing.T) {
 		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
 	}
 
-	hash, err := repo.GetPasswordHashById(ctx, insert.ID)
+	hash, err := repo.GetHashById(ctx, insert.ID)
 	assert.NoError(t, err)
 
 	assert.Equal(t, hash, insert.Hash)
@@ -161,7 +161,7 @@ func TestGetPasswordHashFromNonexistentUser(t *testing.T) {
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
-	hash, err := repo.GetPasswordHashById(ctx, 1)
+	hash, err := repo.GetHashById(ctx, 1)
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 	assert.Empty(t, hash)
 }
@@ -183,7 +183,7 @@ func TestUpdate(t *testing.T) {
 	phoneNumber := "995111111111"
 	email := "updated@email.com"
 
-	updateArgs := repository.UpdateParams{
+	updateArgs := repository.UpdateUserParams{
 		ID:          insert.ID,
 		FirstName:   &firstName,
 		LastName:    &lastName,
@@ -215,7 +215,7 @@ func TestUpdateWithPartialArguments(t *testing.T) {
 	firstName := "updated_firstname"
 	lastName := "updated_lastname"
 
-	updateArgs := repository.UpdateParams{
+	updateArgs := repository.UpdateUserParams{
 		ID:          insert.ID,
 		FirstName:   &firstName,
 		LastName:    &lastName,
@@ -242,7 +242,7 @@ func TestUpdateWithNoArguments(t *testing.T) {
 		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
 	}
 
-	update, err := repo.Update(ctx, repository.UpdateParams{ID: 1})
+	update, err := repo.Update(ctx, repository.UpdateUserParams{ID: 1})
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 	assert.Empty(t, update)
 }
@@ -254,7 +254,7 @@ func TestUpdateForNonexistentUser(t *testing.T) {
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
-	update, err := repo.Update(ctx, repository.UpdateParams{ID: 1, FirstName: &userCreateArgs.FirstName})
+	update, err := repo.Update(ctx, repository.UpdateUserParams{ID: 1, FirstName: &userCreateArgs.FirstName})
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 	assert.Empty(t, update)
 }
@@ -273,7 +273,7 @@ func TestUpdatePicture(t *testing.T) {
 
 	var pictureArg pgtype.Text
 	pictureArg.Scan("picture.jpg")
-	args := repository.UpdatePictureParams{
+	args := repository.UpdateUserPictureParams{
 		ID:          insert.ID,
 		PictureName: pictureArg,
 	}
@@ -295,7 +295,7 @@ func TestUpdatePictureForNonexistentUser(t *testing.T) {
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
-	err := repo.UpdatePicture(ctx, repository.UpdatePictureParams{ID: 1, PictureName: pgtype.Text{}})
+	err := repo.UpdatePicture(ctx, repository.UpdateUserPictureParams{ID: 1, PictureName: pgtype.Text{}})
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 }
 
@@ -313,7 +313,7 @@ func TestUpdateStatus(t *testing.T) {
 
 	var statusArg pgtype.Bool
 	statusArg.Scan(true)
-	args := repository.UpdateStatusParams{
+	args := repository.UpdateUserStatusParams{
 		ID:         insert.ID,
 		UserStatus: statusArg,
 	}
@@ -335,11 +335,11 @@ func TestUpdateStatusForNonexistentUser(t *testing.T) {
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
-	err := repo.UpdateStatus(ctx, repository.UpdateStatusParams{ID: 1, UserStatus: pgtype.Bool{}})
+	err := repo.UpdateStatus(ctx, repository.UpdateUserStatusParams{ID: 1, UserStatus: pgtype.Bool{}})
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 }
 
-func TestUpdatePassword(t *testing.T) {
+func TestUpdateHash(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -351,11 +351,11 @@ func TestUpdatePassword(t *testing.T) {
 		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
 	}
 
-	args := repository.UpdatePasswordParams{
+	args := repository.UpdateUserHashParams{
 		ID:   insert.ID,
 		Hash: "yT89DfAEtKL6QCB8gMZxzkm0fPt3ObwhQzKAu22bnVYZvVe84GAAh8jFp5Cf47R5YncjKqQCyLakki78isy5899YTeVNjNjxK3N2EwdXGz4RB9YHkILLdfEhx0DNg86z",
 	}
-	err = repo.UpdatePassword(ctx, args)
+	err = repo.UpdateHash(ctx, args)
 	assert.NoError(t, err)
 
 	row := dbPool.QueryRow(ctx, "SELECT hash from users where id = $1", insert.ID)
@@ -366,7 +366,7 @@ func TestUpdatePassword(t *testing.T) {
 	assert.Equal(t, args.Hash, updatedPassword)
 }
 
-func TestUpdatePasswordWithInvalidHash(t *testing.T) {
+func TestUpdateHashWithInvalidArgs(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -378,7 +378,7 @@ func TestUpdatePasswordWithInvalidHash(t *testing.T) {
 		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
 	}
 
-	err = repo.UpdatePassword(ctx, repository.UpdatePasswordParams{
+	err = repo.UpdateHash(ctx, repository.UpdateUserHashParams{
 		ID:   insert.ID,
 		Hash: "abc",
 	})
@@ -388,14 +388,14 @@ func TestUpdatePasswordWithInvalidHash(t *testing.T) {
 	}
 }
 
-func TestUpdatePasswordForNonexistentUser(t *testing.T) {
+func TestUpdateHashForNonexistentUser(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
-	err := repo.UpdatePassword(ctx, repository.UpdatePasswordParams{ID: 1, Hash: "abc"})
+	err := repo.UpdateHash(ctx, repository.UpdateUserHashParams{ID: 1, Hash: "abc"})
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 }
 
@@ -431,7 +431,7 @@ func TestDeleteByIdWithNonexistendUser(t *testing.T) {
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 }
 
-func insertUser(dbPool *pgxpool.Pool, ctx context.Context, args repository.CreateParams, id int64) (entity.User, error) {
+func insertUser(dbPool *pgxpool.Pool, ctx context.Context, args repository.CreateUserParams, id int64) (entity.User, error) {
 	row := dbPool.QueryRow(
 		ctx,
 		"INSERT INTO users (id, first_name, last_name, phone_number, email, hash, role) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",

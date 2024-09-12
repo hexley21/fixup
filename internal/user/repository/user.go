@@ -15,14 +15,14 @@ import (
 
 type UserRepository interface {
 	postgres.Repository[UserRepository]
-	Create(ctx context.Context, arg CreateParams) (entity.User, error)
+	Create(ctx context.Context, arg CreateUserParams) (entity.User, error)
 	GetById(ctx context.Context, id int64) (entity.User, error)
 	GetCredentialsByEmail(ctx context.Context, email string) (GetCredentialsByEmailRow, error)
-	GetPasswordHashById(ctx context.Context, id int64) (string, error)
-	Update(ctx context.Context, arg UpdateParams) (entity.User, error)
-	UpdatePicture(ctx context.Context, arg UpdatePictureParams) error
-	UpdateStatus(ctx context.Context, arg UpdateStatusParams) error
-	UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error
+	GetHashById(ctx context.Context, id int64) (string, error)
+	Update(ctx context.Context, arg UpdateUserParams) (entity.User, error)
+	UpdatePicture(ctx context.Context, arg UpdateUserPictureParams) error
+	UpdateStatus(ctx context.Context, arg UpdateUserStatusParams) error
+	UpdateHash(ctx context.Context, arg UpdateUserHashParams) error
 	DeleteById(ctx context.Context, id int64) error
 }
 
@@ -51,7 +51,7 @@ INSERT INTO users (
 RETURNING id, first_name, last_name, phone_number, email, role, user_status, created_at
 `
 
-type CreateParams struct {
+type CreateUserParams struct {
 	FirstName   string
 	LastName    string
 	PhoneNumber string
@@ -60,7 +60,7 @@ type CreateParams struct {
 	Role        enum.UserRole
 }
 
-func (r *userRepositoryImpl) Create(ctx context.Context, arg CreateParams) (entity.User, error) {
+func (r *userRepositoryImpl) Create(ctx context.Context, arg CreateUserParams) (entity.User, error) {
 	row := r.db.QueryRow(ctx, createUser,
 		r.snowflake.Generate(),
 		arg.FirstName,
@@ -122,12 +122,12 @@ func (r *userRepositoryImpl) GetCredentialsByEmail(ctx context.Context, email st
 	return i, err
 }
 
-const getPasswordHashById = `-- name: GetPasswordHashById :one
+const getHashById = `-- name: GetHashById :one
 SELECT hash FROM users WHERE id = $1
 `
 
-func (r *userRepositoryImpl) GetPasswordHashById(ctx context.Context, id int64) (string, error) {
-	row := r.db.QueryRow(ctx, getPasswordHashById, id)
+func (r *userRepositoryImpl) GetHashById(ctx context.Context, id int64) (string, error) {
+	row := r.db.QueryRow(ctx, getHashById, id)
 	var hash string
 	err := row.Scan(&hash)
 	return hash, err
@@ -138,7 +138,7 @@ UPDATE users
 SET 
 `
 
-type UpdateParams struct {
+type UpdateUserParams struct {
 	ID          int64
 	FirstName   *string
 	LastName    *string
@@ -146,9 +146,9 @@ type UpdateParams struct {
 	Email       *string
 }
 
-func (r *userRepositoryImpl) Update(ctx context.Context, arg UpdateParams) (entity.User, error) {
+func (r *userRepositoryImpl) Update(ctx context.Context, arg UpdateUserParams) (entity.User, error) {
 	var i entity.User
-	
+
 	query := baseUpdateUserData
 	params := []interface{}{arg.ID}
 	setClauses := []string{}
@@ -196,12 +196,12 @@ const updateUserPicture = `-- name: UpdateUserPicture :exec
 UPDATE users SET picture_name = $2 WHERE id = $1
 `
 
-type UpdatePictureParams struct {
+type UpdateUserPictureParams struct {
 	ID          int64
 	PictureName pgtype.Text
 }
 
-func (r *userRepositoryImpl) UpdatePicture(ctx context.Context, arg UpdatePictureParams) error {
+func (r *userRepositoryImpl) UpdatePicture(ctx context.Context, arg UpdateUserPictureParams) error {
 	result, err := r.db.Exec(ctx, updateUserPicture, arg.ID, arg.PictureName)
 	if err != nil {
 		return err
@@ -218,12 +218,12 @@ const updateUserStatus = `-- name: UpdateUserStatus :exec
 UPDATE users SET user_status = $2 WHERE id = $1
 `
 
-type UpdateStatusParams struct {
+type UpdateUserStatusParams struct {
 	ID         int64
 	UserStatus pgtype.Bool
 }
 
-func (r *userRepositoryImpl) UpdateStatus(ctx context.Context, arg UpdateStatusParams) error {
+func (r *userRepositoryImpl) UpdateStatus(ctx context.Context, arg UpdateUserStatusParams) error {
 	result, err := r.db.Exec(ctx, updateUserStatus, arg.ID, arg.UserStatus)
 	if err != nil {
 		return err
@@ -240,12 +240,12 @@ const updateUserPassword = `-- name: UpdateUserPassword :exec
 UPDATE users SET hash = $2 where id = $1
 `
 
-type UpdatePasswordParams struct {
+type UpdateUserHashParams struct {
 	ID   int64
 	Hash string
 }
 
-func (r *userRepositoryImpl) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error {
+func (r *userRepositoryImpl) UpdateHash(ctx context.Context, arg UpdateUserHashParams) error {
 	result, err := r.db.Exec(ctx, updateUserPassword, arg.ID, arg.Hash)
 	if err != nil {
 		return err

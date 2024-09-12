@@ -4,7 +4,7 @@ SELECT * FROM users WHERE id = $1;
 -- name: GetCredentialsByEmail :one
 SELECT id, role, hash FROM users WHERE email = $1;
 
--- name: GetPasswordHashById :one
+-- name: GetHashById :one
 SELECT hash FROM users WHERE id = $1;
 
 -- name: Create :one

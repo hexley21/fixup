@@ -9,7 +9,7 @@ import (
 
 type ProviderRepository interface {
 	postgres.Repository[ProviderRepository]
-	CreateProvider(ctx context.Context, arg CreateProviderParams) error
+	Create(ctx context.Context, arg CreateProviderParams) error
 	GetByUserId(ctx context.Context, userID int64) (entity.Provider, error)
 }
 
@@ -41,7 +41,7 @@ type CreateProviderParams struct {
 	UserID            int64
 }
 
-func (r *providerRepositoryImpl) CreateProvider(ctx context.Context, arg CreateProviderParams) error {
+func (r *providerRepositoryImpl) Create(ctx context.Context, arg CreateProviderParams) error {
 	_, err := r.db.Exec(ctx, createProvider, arg.PersonalIDNumber, arg.PersonalIDPreview, arg.UserID)
 	return err
 }
