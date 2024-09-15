@@ -38,7 +38,7 @@ func NewUserService(
 	cdnFileInvalidator cdn.FileInvalidator,
 	cdnUrlSigner cdn.URLSigner,
 	hasher hasher.Hasher,
-) UserService {
+) *userServiceImpl {
 	return &userServiceImpl{
 		userRepository,
 		s3Bucket,

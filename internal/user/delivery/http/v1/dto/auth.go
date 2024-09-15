@@ -13,8 +13,13 @@ type RegisterProvider struct {
 	PersonalIDNumber string `json:"personal_id_number" validate:"required,number"`
 } // @name RegisterProviderInput
 
-
 type Login struct {
 	Email    string `json:"email" validate:"required,email,max=40"`
 	Password string `json:"password" validate:"required,min=8"`
 } // @name LoginInput
+
+type Credentials struct {
+	ID     string
+	Role   string
+	UserStatus bool
+}

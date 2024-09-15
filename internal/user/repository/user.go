@@ -27,18 +27,18 @@ type UserRepository interface {
 }
 
 type userRepositoryImpl struct {
-	db        postgres.DBTX
+	db        postgres.PGXQuerier
 	snowflake *snowflake.Node
 }
 
-func NewUserRepository(dbtx postgres.DBTX, snowflake *snowflake.Node) UserRepository {
+func NewUserRepository(q postgres.PGXQuerier, snowflake *snowflake.Node) UserRepository {
 	return &userRepositoryImpl{
-		dbtx,
+		q,
 		snowflake,
 	}
 }
 
-func (r userRepositoryImpl) WithTx(tx postgres.DBTX) UserRepository {
+func (r userRepositoryImpl) WithTx(tx postgres.PGXQuerier) UserRepository {
 	return NewUserRepository(tx, r.snowflake)
 }
 
@@ -106,19 +106,20 @@ func (r *userRepositoryImpl) GetById(ctx context.Context, id int64) (entity.User
 }
 
 const getUserCredentialsByEmail = `-- name: GetUserCredentialsByEmail :one
-SELECT id, role, hash FROM users WHERE email = $1
+SELECT id, role, hash, user_status FROM users WHERE email = $1
 `
 
 type GetCredentialsByEmailRow struct {
 	ID   int64
 	Role enum.UserRole
 	Hash string
+	UserStatus pgtype.Bool
 }
 
 func (r *userRepositoryImpl) GetCredentialsByEmail(ctx context.Context, email string) (GetCredentialsByEmailRow, error) {
 	row := r.db.QueryRow(ctx, getUserCredentialsByEmail, email)
 	var i GetCredentialsByEmailRow
-	err := row.Scan(&i.ID, &i.Role, &i.Hash)
+	err := row.Scan(&i.ID, &i.Role, &i.Hash, &i.UserStatus)
 	return i, err
 }
 

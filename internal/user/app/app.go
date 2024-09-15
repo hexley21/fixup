@@ -59,7 +59,7 @@ func NewServer(
 	userRepository := repository.NewUserRepository(dbPool, snowflakeNode)
 	providerRepository := repository.NewProviderRepository(dbPool)
 
-	authService, err := service.NewAuthService(
+	authService := service.NewAuthService(
 		userRepository,
 		providerRepository,
 		dbPool,
@@ -70,7 +70,7 @@ func NewServer(
 		cloudFrontURLSigner,
 		verificationJwt,
 	)
-	if err != nil {
+	if err := authService.ParseTemplates(); err != nil {
 		logger.Fatalf("error starting server %w", err)
 	}
 

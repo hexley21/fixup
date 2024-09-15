@@ -14,10 +14,10 @@ import (
 	"github.com/hexley21/fixup/pkg/encryption"
 	"github.com/hexley21/fixup/pkg/hasher"
 	"github.com/hexley21/fixup/pkg/infra/cdn"
+	"github.com/hexley21/fixup/pkg/infra/postgres"
 	"github.com/hexley21/fixup/pkg/mailer"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type templates struct {
@@ -25,79 +25,74 @@ type templates struct {
 	verified     *template.Template
 }
 
-func newTemplates(
-	confirmationPath string,
-	verifiedPath string,
-) (*templates, error) {
-	confirmationTemplate, err := template.ParseFiles(confirmationPath)
-	if err != nil {
-		return nil, err
-	}
-	verifiedTemplate, err := template.ParseFiles(verifiedPath)
-	if err != nil {
-		return nil, err
-	}
-	return &templates{
-		confirmation: confirmationTemplate,
-		verified:     verifiedTemplate,
-	}, nil
+func NewTemplates(confirmation *template.Template, verified *template.Template) *templates {
+	return &templates{confirmation: confirmation, verified: verified}
 }
 
 type AuthService interface {
 	RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error)
 	RegisterProvider(ctx context.Context, registerDto dto.RegisterProvider) (dto.User, error)
-	AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.User, error)
+	AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.Credentials, error)
 	VerifyUser(ctx context.Context, id int64, email string) error
 }
 
 type authServiceImpl struct {
-	userRepository     repository.UserRepository
-	providerRepository repository.ProviderRepository
-	dbPool             *pgxpool.Pool
-	hasher             hasher.Hasher
-	encryptor          encryption.Encryptor
-	mailer             mailer.Mailer
-	cdnUrlSigner       cdn.URLSigner
-	emailAddres        string
-	templates          *templates
-	jwtGenerator       verifier.JwtGenerator
+	userRepository       repository.UserRepository
+	providerRepository   repository.ProviderRepository
+	pgx                  postgres.PGX
+	hasher               hasher.Hasher
+	encryptor            encryption.Encryptor
+	mailer               mailer.Mailer
+	cdnUrlSigner         cdn.URLSigner
+	emailAddres          string
+	templates            *templates
+	verifierJwtGenerator verifier.JwtGenerator
 }
 
 func NewAuthService(
 	userRepository repository.UserRepository,
 	providerRepository repository.ProviderRepository,
-	dbPool *pgxpool.Pool,
+	pgx postgres.PGX,
 	hasher hasher.Hasher,
 	encryptor encryption.Encryptor,
 	mailer mailer.Mailer,
 	emailAddres string,
 	cdnUrlSigner cdn.URLSigner,
-	jwtGenerator verifier.JwtGenerator,
-) (AuthService, error) {
-	templates, err := newTemplates(
-		"./templates/register_confirm.html",
-		"./templates/verified_letter.html",
-	)
+	verifierJwtGenerator verifier.JwtGenerator,
+) *authServiceImpl {
+	return &authServiceImpl{
+		userRepository:       userRepository,
+		providerRepository:   providerRepository,
+		pgx:                  pgx,
+		hasher:               hasher,
+		encryptor:            encryptor,
+		mailer:               mailer,
+		emailAddres:          emailAddres,
+		cdnUrlSigner:         cdnUrlSigner,
+		verifierJwtGenerator: verifierJwtGenerator,
+	}
+}
+
+func (s *authServiceImpl) ParseTemplates() error {
+	confirmationTemplate, err := template.ParseFiles("./templates/register_confirm.html")
 	if err != nil {
-		return nil, err
+		return err
+	}
+	verifiedTemplate, err := template.ParseFiles("./templates/verified_letter.html")
+	if err != nil {
+		return err
 	}
 
-	return &authServiceImpl{
-		userRepository:     userRepository,
-		providerRepository: providerRepository,
-		dbPool:             dbPool,
-		hasher:             hasher,
-		encryptor:          encryptor,
-		mailer:             mailer,
-		emailAddres:        emailAddres,
-		cdnUrlSigner:       cdnUrlSigner,
-		templates:          templates,
-		jwtGenerator:       jwtGenerator,
-	}, nil
+	s.templates = NewTemplates(confirmationTemplate, verifiedTemplate)
+	return nil
+}
+
+func (s *authServiceImpl) SetTemplates(confirmation *template.Template, verified *template.Template) {
+	s.templates = NewTemplates(confirmation, verified)
 }
 
 func (s *authServiceImpl) sendConfirmationEmail(id int64, email string, name string) error {
-	verificationJwt, err := s.jwtGenerator.GenerateToken(strconv.FormatInt(id, 10), email)
+	token, err := s.verifierJwtGenerator.GenerateToken(strconv.FormatInt(id, 10), email)
 	if err != nil {
 		return err
 	}
@@ -112,7 +107,7 @@ func (s *authServiceImpl) sendConfirmationEmail(id int64, email string, name str
 			Token string
 		}{
 			Name:  name,
-			Token: verificationJwt,
+			Token: token,
 		},
 	)
 }
@@ -129,6 +124,7 @@ func (s *authServiceImpl) sendVerifiedLetter(email string) error {
 
 func (s *authServiceImpl) registerUser(ctx context.Context, dto dto.RegisterUser, tx pgx.Tx) (entity.User, error) {
 	var user entity.User
+
 	user, err := s.userRepository.WithTx(tx).Create(ctx,
 		repository.CreateUserParams{
 			FirstName:   dto.FirstName,
@@ -151,7 +147,7 @@ func (s *authServiceImpl) registerUser(ctx context.Context, dto dto.RegisterUser
 func (s *authServiceImpl) RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error) {
 	var dto dto.User
 
-	tx, err := s.dbPool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
+	tx, err := s.pgx.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
 	if err != nil {
 		return dto, err
 	}
@@ -161,16 +157,13 @@ func (s *authServiceImpl) RegisterCustomer(ctx context.Context, registerDto dto.
 		return dto, err
 	}
 
-	if err := s.sendConfirmationEmail(user.ID, user.Email, user.FirstName); err != nil {
-		if err := tx.Rollback(ctx); err != nil {
-			return dto, err
-		}
-		return dto, err
-	}
-
 	if err := tx.Commit(ctx); err != nil {
 		return dto, err
 	}
+
+	go func() {
+		s.sendConfirmationEmail(user.ID, user.Email, user.FirstName)
+	}()
 
 	dto, err = mapper.MapUserToDto(user, s.cdnUrlSigner)
 	if err != nil {
@@ -183,7 +176,7 @@ func (s *authServiceImpl) RegisterCustomer(ctx context.Context, registerDto dto.
 func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.RegisterProvider) (dto.User, error) {
 	var dto dto.User
 
-	tx, err := s.dbPool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
+	tx, err := s.pgx.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
 	if err != nil {
 		return dto, err
 	}
@@ -212,17 +205,14 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 		}
 		return dto, err
 	}
-
-	if err := s.sendConfirmationEmail(user.ID, user.Email, user.FirstName); err != nil {
-		if err := tx.Rollback(ctx); err != nil {
-			return dto, err
-		}
-		return dto, err
-	}
-
+		
 	if err := tx.Commit(ctx); err != nil {
 		return dto, err
 	}
+
+	go func() {
+		s.sendConfirmationEmail(user.ID, user.Email, user.FirstName)
+	}()
 
 	res, err := mapper.MapUserToDto(user, s.cdnUrlSigner)
 	if err != nil {
@@ -232,8 +222,8 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 	return res, nil
 }
 
-func (s *authServiceImpl) AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.User, error) {
-	var dto dto.User
+func (s *authServiceImpl) AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.Credentials, error) {
+	var dto dto.Credentials
 	creds, err := s.userRepository.GetCredentialsByEmail(ctx, loginDto.Email)
 	if err != nil {
 		return dto, err
@@ -246,6 +236,7 @@ func (s *authServiceImpl) AuthenticateUser(ctx context.Context, loginDto dto.Log
 
 	dto.ID = strconv.FormatInt(creds.ID, 10)
 	dto.Role = string(creds.Role)
+	dto.UserStatus = creds.UserStatus.Bool
 
 	return dto, nil
 }

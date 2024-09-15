@@ -14,16 +14,16 @@ type ProviderRepository interface {
 }
 
 type providerRepositoryImpl struct {
-	db postgres.DBTX
+	db postgres.PGXQuerier
 }
 
-func NewProviderRepository(dbtx postgres.DBTX) ProviderRepository {
+func NewProviderRepository(dbtx postgres.PGXQuerier) ProviderRepository {
 	return &providerRepositoryImpl{
 		dbtx,
 	}
 }
 
-func (r providerRepositoryImpl) WithTx(tx postgres.DBTX) ProviderRepository {
+func (r providerRepositoryImpl) WithTx(tx postgres.PGXQuerier) ProviderRepository {
 	return NewProviderRepository(tx)
 }
 
