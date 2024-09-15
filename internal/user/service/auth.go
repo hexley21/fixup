@@ -20,6 +20,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+
+// TODO: Add registration cases for created users
 type templates struct {
 	confirmation *template.Template
 	verified     *template.Template

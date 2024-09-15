@@ -154,6 +154,7 @@ func TestGetCredentialsByEmail(t *testing.T) {
 	assert.Equal(t, creds.ID, insert.ID)
 	assert.Equal(t, creds.Role, insert.Role)
 	assert.Equal(t, creds.Hash, insert.Hash)
+	assert.Equal(t, creds.UserStatus, insert.UserStatus)
 }
 
 func TestGetCredentialsByEmailFromNonexistendUser(t *testing.T) {

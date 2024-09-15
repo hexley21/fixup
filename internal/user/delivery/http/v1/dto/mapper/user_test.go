@@ -25,7 +25,7 @@ func TestMapUserToDto(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockUrlSigner := mock_cdn.NewMockURLSigner(ctrl)
-	mockUrlSigner.EXPECT().SignURL(picture).Return(signedUrl, nil)
+	mockUrlSigner.EXPECT().SignURL(gomock.Any()).Return(signedUrl, nil)
 
 	var pictureName pgtype.Text
 	pictureName.Scan(picture)
@@ -66,7 +66,7 @@ func TestMapUserToDtoError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockUrlSigner := mock_cdn.NewMockURLSigner(ctrl)
-	mockUrlSigner.EXPECT().SignURL(picture).Return("", errSigning)
+	mockUrlSigner.EXPECT().SignURL(gomock.Any()).Return("", errSigning)
 
 	var pictureName pgtype.Text
 	pictureName.Scan(picture)
