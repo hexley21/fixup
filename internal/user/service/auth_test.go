@@ -12,7 +12,6 @@ import (
 	"github.com/hexley21/fixup/internal/user/repository"
 	mock_repository "github.com/hexley21/fixup/internal/user/repository/mock"
 	"github.com/hexley21/fixup/internal/user/service"
-	mock_verifier "github.com/hexley21/fixup/internal/user/service/verifier/mock"
 	mock_encryption "github.com/hexley21/fixup/pkg/encryption/mock"
 	mock_hasher "github.com/hexley21/fixup/pkg/hasher/mock"
 	mock_cdn "github.com/hexley21/fixup/pkg/infra/cdn/mock"
@@ -73,7 +72,6 @@ func TestRegisterCustomer(t *testing.T) {
 	mockPgx := mock_postgres.NewMockPGX(ctrl)
 	mockTx := mock_postgres.NewMockTx(ctrl)
 	mockHasher := mock_hasher.NewMockHasher(ctrl)
-	mockJwtGenerator := mock_verifier.NewMockJwtGenerator(ctrl)
 	mockMailer := mock_mailer.NewMockMailer(ctrl)
 	mockUrlSigner := mock_cdn.NewMockURLSigner(ctrl)
 
@@ -84,11 +82,10 @@ func TestRegisterCustomer(t *testing.T) {
 	mockTx.EXPECT().Commit(ctx).Return(nil)
 
 	mockHasher.EXPECT().HashPassword(gomock.Any()).Return(newHash)
-	mockJwtGenerator.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).Return(newToken, nil)
 	mockMailer.EXPECT().SendHTML(mockEmailAddress, gomock.Any(), gomock.Any(), confiramtionTemplate, gomock.Any()).Return(nil)
 	mockUrlSigner.EXPECT().SignURL(gomock.Any()).Return(newUrl, nil)
 
-	service := service.NewAuthService(mockUserRepo, nil, mockPgx, mockHasher, nil, mockMailer, mockEmailAddress, mockUrlSigner, mockJwtGenerator)
+	service := service.NewAuthService(mockUserRepo, nil, mockPgx, mockHasher, nil, mockMailer, mockEmailAddress, mockUrlSigner)
 	service.SetTemplates(confiramtionTemplate, nil)
 
 	dto, err := service.RegisterCustomer(ctx, registerUserDto)
@@ -115,7 +112,6 @@ func TestRegisterProvider(t *testing.T) {
 	mockEncryptor := mock_encryption.NewMockEncryptor(ctrl)
 	mockMailer := mock_mailer.NewMockMailer(ctrl)
 	mockUrlSigner := mock_cdn.NewMockURLSigner(ctrl)
-	mockJwtGenerator := mock_verifier.NewMockJwtGenerator(ctrl)
 
 	mockUserRepo.EXPECT().WithTx(mockTx).Return(mockUserRepo)
 	mockUserRepo.EXPECT().Create(ctx, gomock.Any()).Return(userEntity, nil)
@@ -127,11 +123,10 @@ func TestRegisterProvider(t *testing.T) {
 
 	mockHasher.EXPECT().HashPassword(gomock.Any()).Return(newHash)
 	mockEncryptor.EXPECT().Encrypt(gomock.Any()).Return([]byte(registerProviderDto.PersonalIDNumber), nil)
-	mockJwtGenerator.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).Return(newToken, nil)
 	mockMailer.EXPECT().SendHTML(mockEmailAddress, gomock.Any(), gomock.Any(), confiramtionTemplate, gomock.Any()).Return(nil)
 	mockUrlSigner.EXPECT().SignURL(gomock.Any()).Return(newUrl, nil)
 
-	service := service.NewAuthService(mockUserRepo, mockProviderRepo, mockPgx, mockHasher, mockEncryptor, mockMailer, mockEmailAddress, mockUrlSigner, mockJwtGenerator)
+	service := service.NewAuthService(mockUserRepo, mockProviderRepo, mockPgx, mockHasher, mockEncryptor, mockMailer, mockEmailAddress, mockUrlSigner)
 	service.SetTemplates(confiramtionTemplate, nil)
 
 	dto, err := service.RegisterProvider(ctx, registerProviderDto)
@@ -163,7 +158,7 @@ func TestAuthenticateUser(t *testing.T) {
 	mockUserRepo.EXPECT().GetCredentialsByEmail(ctx, loginDto.Email).Return(creds, nil)
 	mockHasher.EXPECT().VerifyPassword(loginDto.Password, creds.Hash).Return(nil)
 
-	service := service.NewAuthService(mockUserRepo, nil, nil, mockHasher, nil, nil, mockEmailAddress, nil, nil)
+	service := service.NewAuthService(mockUserRepo, nil, nil, mockHasher, nil, nil, mockEmailAddress, nil)
 
 	credentialsDto, err := service.AuthenticateUser(ctx, loginDto)
 	assert.NoError(t, err)
@@ -184,7 +179,7 @@ func TestVerifyUser(t *testing.T) {
 	mockUserRepo.EXPECT().UpdateStatus(ctx, gomock.Any()).Return(nil)
 	mockMailer.EXPECT().SendHTML(mockEmailAddress, gomock.Any(), gomock.Any(), verifiedTemplate, gomock.Any()).Return(nil)
 
-	service := service.NewAuthService(mockUserRepo, nil, nil, nil, nil, mockMailer, mockEmailAddress, nil, nil)
+	service := service.NewAuthService(mockUserRepo, nil, nil, nil, nil, mockMailer, mockEmailAddress, nil)
 	service.SetTemplates(nil, verifiedTemplate)
 
 	err := service.VerifyUser(ctx, 1, "")

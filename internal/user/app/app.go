@@ -14,7 +14,6 @@ import (
 	v1_http "github.com/hexley21/fixup/internal/user/delivery/http/v1"
 	"github.com/hexley21/fixup/internal/user/repository"
 	"github.com/hexley21/fixup/internal/user/service"
-	"github.com/hexley21/fixup/internal/user/service/verifier"
 	"github.com/hexley21/fixup/pkg/config"
 	"github.com/hexley21/fixup/pkg/encryption"
 	"github.com/hexley21/fixup/pkg/hasher"
@@ -37,7 +36,6 @@ type server struct {
 	hasher        hasher.Hasher
 	encryptor     encryption.Encryptor
 	services      services
-	verifierJwt   verifier.Jwt
 }
 
 func NewServer(
@@ -54,7 +52,6 @@ func NewServer(
 	emailAddress string,
 ) *server {
 	cloudFrontURLSigner := cdn.NewCloudFrontURLSigner(cfg.AWS.CDN)
-	verificationJwt := verifier.NewVerificationJwt(cfg.JWT.VerificationSecret, cfg.JWT.VerificationTTL)
 
 	userRepository := repository.NewUserRepository(dbPool, snowflakeNode)
 	providerRepository := repository.NewProviderRepository(dbPool)
@@ -68,7 +65,6 @@ func NewServer(
 		mailer,
 		emailAddress,
 		cloudFrontURLSigner,
-		verificationJwt,
 	)
 	if err := authService.ParseTemplates(); err != nil {
 		logger.Fatalf("error starting server %w", err)
@@ -99,7 +95,6 @@ func NewServer(
 			authService: authService,
 			userService: userService,
 		},
-		verificationJwt,
 	}
 }
 
@@ -108,12 +103,11 @@ func (s *server) Run() error {
 	s.echo.Use(middleware.Recover())
 	s.echo.Use(middleware.CORS())
 
-	v1_http.NewRouter(
-		s.cfg.JWT,
-		s.verifierJwt,
-		s.services.authService,
-		s.services.userService,
-	).MapV1Routes(s.echo)
+	v1_http.MapV1Routes(s.echo, v1_http.V1RouterArgs{
+		AuthService: s.services.authService,
+		UserService: s.services.userService,
+		CfgJwt: s.cfg.JWT,
+	})
 
 	s.echo.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello World")

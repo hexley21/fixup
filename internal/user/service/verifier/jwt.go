@@ -13,7 +13,7 @@ type Jwt interface {
 }
 
 type JwtGenerator interface {
-	GenerateToken(id string, email string) (string, error)
+	GenerateJWT(id string, email string) (string, error)
 }
 
 type JwtVerifier interface {
@@ -29,7 +29,7 @@ func NewVerificationJwt(secretKey string, ttl time.Duration) *verificationJwtImp
 	return &verificationJwtImpl{secretKey, ttl}
 }
 
-func (j *verificationJwtImpl) GenerateToken(id string, email string) (string, error) {
+func (j *verificationJwtImpl) GenerateJWT(id string, email string) (string, error) {
 	token, err := jwt.GenerateJWT(newClaims(id, email, j.ttl), j.secretKey)
 	if err != nil {
 		return "", fmt.Errorf("error generating jwt: %w", err)

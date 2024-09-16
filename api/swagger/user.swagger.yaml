@@ -1,5 +1,13 @@
 basePath: /v1
 definitions:
+  EmailInput:
+    properties:
+      email:
+        maxLength: 40
+        type: string
+    required:
+    - email
+    type: object
   LoginInput:
     properties:
       email:
@@ -219,8 +227,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "204":
+          description: No Content
         "400":
           description: Bad Request
           schema:
@@ -240,32 +248,28 @@ paths:
     post:
       consumes:
       - application/json
-      description: Register a new provider with the provided details
+      description: Resends a confirmation letter to email
       parameters:
-      - description: User registration details
+      - description: User email
         in: body
         name: user
         required: true
         schema:
-          $ref: '#/definitions/RegisterProviderInput'
+          $ref: '#/definitions/EmailInput'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "204":
+          description: No Content
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "409":
-          description: Conflict - User already exists
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-      summary: Register a new provider
+      summary: Resent confirmation letter
       tags:
       - auth
   /auth/verify-email:

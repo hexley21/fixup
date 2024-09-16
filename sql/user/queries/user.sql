@@ -7,7 +7,10 @@ SELECT id, role, hash FROM users WHERE email = $1;
 -- name: GetHashById :one
 SELECT hash FROM users WHERE id = $1;
 
--- name: Create :one
+-- name: GetUserConfirmationDetails :one
+SELECT id, user_status, first_name FROM users WHERE email = $1;
+
+-- name: CreateUser :one
 INSERT INTO users (
   id, first_name, last_name, phone_number, email, hash, role
 ) VALUES (
@@ -15,7 +18,7 @@ INSERT INTO users (
 )
 RETURNING *;
 
--- name: Update :one
+-- name: UpdateUser :one
 UPDATE users
 SET 
     first_name = $2,
@@ -35,6 +38,6 @@ UPDATE users SET picture_name = $2 WHERE id = $1;
 -- name: UpdatePassword :exec
 UPDATE users SET hash = $2 where id = $1;
 
--- name: Delete :exec
+-- name: DeleteById :exec
 DELETE FROM users
 WHERE id = $1;

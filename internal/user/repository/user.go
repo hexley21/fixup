@@ -19,6 +19,7 @@ type UserRepository interface {
 	GetById(ctx context.Context, id int64) (entity.User, error)
 	GetCredentialsByEmail(ctx context.Context, email string) (GetCredentialsByEmailRow, error)
 	GetHashById(ctx context.Context, id int64) (string, error)
+	GetUserConfirmationDetails(ctx context.Context, email string) (GetUserConfirmationDetailsRow, error)
 	Update(ctx context.Context, arg UpdateUserParams) (entity.User, error)
 	UpdatePicture(ctx context.Context, arg UpdateUserPictureParams) error
 	UpdateStatus(ctx context.Context, arg UpdateUserStatusParams) error
@@ -110,9 +111,9 @@ SELECT id, role, hash, user_status FROM users WHERE email = $1
 `
 
 type GetCredentialsByEmailRow struct {
-	ID   int64
-	Role enum.UserRole
-	Hash string
+	ID         int64
+	Role       enum.UserRole
+	Hash       string
 	UserStatus pgtype.Bool
 }
 
@@ -132,6 +133,23 @@ func (r *userRepositoryImpl) GetHashById(ctx context.Context, id int64) (string,
 	var hash string
 	err := row.Scan(&hash)
 	return hash, err
+}
+
+const getUserConfirmationDetails = `-- name: GetUserConfirmationDetails :one
+SELECT id, user_status, first_name FROM users WHERE email = $1
+`
+
+type GetUserConfirmationDetailsRow struct {
+	ID         int64       `json:"id"`
+	UserStatus pgtype.Bool `json:"user_status"`
+	FirstName  string      `json:"first_name"`
+}
+
+func (r *userRepositoryImpl) GetUserConfirmationDetails(ctx context.Context, email string) (GetUserConfirmationDetailsRow, error) {
+	row := r.db.QueryRow(ctx, getUserConfirmationDetails, email)
+	var i GetUserConfirmationDetailsRow
+	err := row.Scan(&i.ID, &i.UserStatus, &i.FirstName)
+	return i, err
 }
 
 const baseUpdateUserData = `

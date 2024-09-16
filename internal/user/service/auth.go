@@ -7,10 +7,8 @@ import (
 
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto/mapper"
-	"github.com/hexley21/fixup/internal/user/entity"
 	"github.com/hexley21/fixup/internal/user/enum"
 	"github.com/hexley21/fixup/internal/user/repository"
-	"github.com/hexley21/fixup/internal/user/service/verifier"
 	"github.com/hexley21/fixup/pkg/encryption"
 	"github.com/hexley21/fixup/pkg/hasher"
 	"github.com/hexley21/fixup/pkg/infra/cdn"
@@ -20,8 +18,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-
-// TODO: Add registration cases for created users
 type templates struct {
 	confirmation *template.Template
 	verified     *template.Template
@@ -36,19 +32,21 @@ type AuthService interface {
 	RegisterProvider(ctx context.Context, registerDto dto.RegisterProvider) (dto.User, error)
 	AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.Credentials, error)
 	VerifyUser(ctx context.Context, id int64, email string) error
+	GetUserConfirmationDetails(ctx context.Context, email string) (dto.UserConfirmationDetails, error)
+	SendConfirmationLetter(token string, email string, name string) error
+	SendVerifiedLetter(email string) error
 }
 
 type authServiceImpl struct {
-	userRepository       repository.UserRepository
-	providerRepository   repository.ProviderRepository
-	pgx                  postgres.PGX
-	hasher               hasher.Hasher
-	encryptor            encryption.Encryptor
-	mailer               mailer.Mailer
-	cdnUrlSigner         cdn.URLSigner
-	emailAddres          string
-	templates            *templates
-	verifierJwtGenerator verifier.JwtGenerator
+	userRepository     repository.UserRepository
+	providerRepository repository.ProviderRepository
+	pgx                postgres.PGX
+	hasher             hasher.Hasher
+	encryptor          encryption.Encryptor
+	mailer             mailer.Mailer
+	cdnUrlSigner       cdn.URLSigner
+	emailAddres        string
+	templates          *templates
 }
 
 func NewAuthService(
@@ -60,18 +58,16 @@ func NewAuthService(
 	mailer mailer.Mailer,
 	emailAddres string,
 	cdnUrlSigner cdn.URLSigner,
-	verifierJwtGenerator verifier.JwtGenerator,
 ) *authServiceImpl {
 	return &authServiceImpl{
-		userRepository:       userRepository,
-		providerRepository:   providerRepository,
-		pgx:                  pgx,
-		hasher:               hasher,
-		encryptor:            encryptor,
-		mailer:               mailer,
-		emailAddres:          emailAddres,
-		cdnUrlSigner:         cdnUrlSigner,
-		verifierJwtGenerator: verifierJwtGenerator,
+		userRepository:     userRepository,
+		providerRepository: providerRepository,
+		pgx:                pgx,
+		hasher:             hasher,
+		encryptor:          encryptor,
+		mailer:             mailer,
+		emailAddres:        emailAddres,
+		cdnUrlSigner:       cdnUrlSigner,
 	}
 }
 
@@ -93,79 +89,21 @@ func (s *authServiceImpl) SetTemplates(confirmation *template.Template, verified
 	s.templates = NewTemplates(confirmation, verified)
 }
 
-func (s *authServiceImpl) sendConfirmationEmail(id int64, email string, name string) error {
-	token, err := s.verifierJwtGenerator.GenerateToken(strconv.FormatInt(id, 10), email)
-	if err != nil {
-		return err
-	}
+func (s *authServiceImpl) RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error) {
+	var dto dto.User
 
-	return s.mailer.SendHTML(
-		s.emailAddres,
-		email,
-		"Account Confirmation",
-		s.templates.confirmation,
-		struct {
-			Name  string
-			Token string
-		}{
-			Name:  name,
-			Token: token,
-		},
-	)
-}
-
-func (s *authServiceImpl) sendVerifiedLetter(email string) error {
-	return s.mailer.SendHTML(
-		s.emailAddres,
-		email,
-		"Verification Success",
-		s.templates.verified,
-		nil,
-	)
-}
-
-func (s *authServiceImpl) registerUser(ctx context.Context, dto dto.RegisterUser, tx pgx.Tx) (entity.User, error) {
-	var user entity.User
-
-	user, err := s.userRepository.WithTx(tx).Create(ctx,
+	user, err := s.userRepository.Create(ctx,
 		repository.CreateUserParams{
 			FirstName:   dto.FirstName,
 			LastName:    dto.LastName,
 			PhoneNumber: dto.PhoneNumber,
 			Email:       dto.Email,
-			Hash:        s.hasher.HashPassword(dto.Password),
+			Hash:        s.hasher.HashPassword(registerDto.Password),
 			Role:        enum.UserRoleCUSTOMER,
 		})
 	if err != nil {
-		if err := tx.Rollback(ctx); err != nil {
-			return user, err
-		}
-		return user, err
-	}
-
-	return user, nil
-}
-
-func (s *authServiceImpl) RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error) {
-	var dto dto.User
-
-	tx, err := s.pgx.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
-	if err != nil {
 		return dto, err
 	}
-
-	user, err := s.registerUser(ctx, registerDto, tx)
-	if err != nil {
-		return dto, err
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		return dto, err
-	}
-
-	go func() {
-		s.sendConfirmationEmail(user.ID, user.Email, user.FirstName)
-	}()
 
 	dto, err = mapper.MapUserToDto(user, s.cdnUrlSigner)
 	if err != nil {
@@ -183,8 +121,20 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 		return dto, err
 	}
 
-	user, err := s.registerUser(ctx, registerDto.RegisterUser, tx)
+	user, err := s.userRepository.Create(ctx,
+		repository.CreateUserParams{
+			FirstName:   dto.FirstName,
+			LastName:    dto.LastName,
+			PhoneNumber: dto.PhoneNumber,
+			Email:       dto.Email,
+			Hash:        s.hasher.HashPassword(registerDto.Password),
+			Role:        enum.UserRoleCUSTOMER,
+		},
+	)
 	if err != nil {
+		if err := tx.Rollback(ctx); err != nil {
+			return dto, err
+		}
 		return dto, err
 	}
 
@@ -207,14 +157,10 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 		}
 		return dto, err
 	}
-		
+
 	if err := tx.Commit(ctx); err != nil {
 		return dto, err
 	}
-
-	go func() {
-		s.sendConfirmationEmail(user.ID, user.Email, user.FirstName)
-	}()
 
 	res, err := mapper.MapUserToDto(user, s.cdnUrlSigner)
 	if err != nil {
@@ -247,17 +193,48 @@ func (s *authServiceImpl) VerifyUser(ctx context.Context, id int64, email string
 	var status pgtype.Bool
 	status.Scan(true)
 
-	err := s.userRepository.UpdateStatus(ctx, repository.UpdateUserStatusParams{
+	return s.userRepository.UpdateStatus(ctx, repository.UpdateUserStatusParams{
 		ID:         id,
 		UserStatus: status,
 	})
+}
+
+func (s *authServiceImpl) GetUserConfirmationDetails(ctx context.Context, email string) (dto.UserConfirmationDetails, error) {
+	var dto dto.UserConfirmationDetails
+	res, err := s.userRepository.GetUserConfirmationDetails(ctx, email)
 	if err != nil {
-		return err
+		return dto, err
 	}
 
-	go func() {
-		s.sendVerifiedLetter(email)
-	}()
+	dto.ID = strconv.FormatInt(res.ID, 10)
+	dto.UserStatus = res.UserStatus.Bool
+	dto.Firstname = res.FirstName
 
-	return nil
+	return dto, nil
+}
+
+func (s *authServiceImpl) SendConfirmationLetter(token string, email string, name string) error {
+	return s.mailer.SendHTML(
+		s.emailAddres,
+		email,
+		"Account Confirmation",
+		s.templates.confirmation,
+		struct {
+			Name  string
+			Token string
+		}{
+			Name:  name,
+			Token: token,
+		},
+	)
+}
+
+func (s *authServiceImpl) SendVerifiedLetter(email string) error {
+	return s.mailer.SendHTML(
+		s.emailAddres,
+		email,
+		"Verification Success",
+		s.templates.verified,
+		nil,
+	)
 }

@@ -65,34 +65,40 @@ func eraseCookie(c echo.Context, cookieName string) {
 // @Accept json
 // @Produce json
 // @Param user body dto.RegisterUser true "User registration details"
-// @Success 200
+// @Success 204
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/register/customer [post]
-func (h *authHandler) registerCustomer(c echo.Context) error {
-	dto := new(dto.RegisterUser)
-	if err := c.Bind(dto); err != nil {
-		return rest.NewInternalServerError(err)
-	}
-
-	if err := c.Validate(dto); err != nil {
-		return rest.NewInvalidArgumentsError(err)
-	}
-
-	_, err := h.service.RegisterCustomer(context.Background(), *dto)
-	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-			switch pgErr.Code {
-			case pgerrcode.UniqueViolation:
-				return rest.NewConflictError(err, "User already exists")
-			}
+func (h *authHandler) registerCustomer(
+	verGenerator verifier.JwtGenerator,
+) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		dto := new(dto.RegisterUser)
+		if err := c.Bind(dto); err != nil {
+			return rest.NewInternalServerError(err)
 		}
-		return rest.NewInternalServerError(err)
-	}
 
-	return c.NoContent(http.StatusOK)
+		if err := c.Validate(dto); err != nil {
+			return rest.NewInvalidArgumentsError(err)
+		}
+
+		user, err := h.service.RegisterCustomer(context.Background(), *dto)
+		if err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+				switch pgErr.Code {
+				case pgerrcode.UniqueViolation:
+					return rest.NewConflictError(err, "User already exists")
+				}
+			}
+			return rest.NewInternalServerError(err)
+		}
+
+		go sendConfirmationLetter(c.Logger(), h.service, verGenerator, user.ID, user.Email, user.FirstName)
+
+		return c.NoContent(http.StatusNoContent)
+	}
 }
 
 // TODO: manage already registered actions + consider status
@@ -104,34 +110,74 @@ func (h *authHandler) registerCustomer(c echo.Context) error {
 // @Accept json
 // @Produce json
 // @Param user body dto.RegisterProvider true "User registration details"
-// @Success 200
+// @Success 204
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/register/provider [post]
-func (h *authHandler) registerProvider(c echo.Context) error {
-	dto := new(dto.RegisterProvider)
-	if err := c.Bind(dto); err != nil {
-		return rest.NewInternalServerError(err)
-	}
-
-	if err := c.Validate(dto); err != nil {
-		return rest.NewInvalidArgumentsError(err)
-	}
-
-	_, err := h.service.RegisterProvider(context.Background(), *dto)
-	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-			switch pgErr.Code {
-			case pgerrcode.UniqueViolation:
-				return rest.NewConflictError(err, "User already exists")
-			}
+func (h *authHandler) registerProvider(
+	verGenerator verifier.JwtGenerator,
+) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		dto := new(dto.RegisterProvider)
+		if err := c.Bind(dto); err != nil {
+			return rest.NewInternalServerError(err)
 		}
-		return rest.NewInternalServerError(err)
-	}
 
-	return c.NoContent(http.StatusOK)
+		if err := c.Validate(dto); err != nil {
+			return rest.NewInvalidArgumentsError(err)
+		}
+
+		user, err := h.service.RegisterProvider(context.Background(), *dto)
+		if err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) {
+				switch pgErr.Code {
+				case pgerrcode.UniqueViolation:
+					return rest.NewConflictError(err, "User already exists")
+				}
+			}
+			return rest.NewInternalServerError(err)
+		}
+
+		go sendConfirmationLetter(c.Logger(), h.service, verGenerator, user.ID, user.Email, user.FirstName)
+
+		return c.NoContent(http.StatusNoContent)
+	}
+}
+
+// resendConfirmationLetter godoc
+// @Summary Resent confirmation letter
+// @Description Resends a confirmation letter to email
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param user body dto.Email true "User email"
+// @Success 204
+// @Failure 400 {object} rest.ErrorResponse "Bad Request"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /auth/register/provider [post]
+func (h *authHandler) resendConfirmationLetter(
+	verGenerator verifier.JwtGenerator,
+) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		dto := new(dto.Email)
+		if err := c.Bind(dto); err != nil {
+			return rest.NewInternalServerError(err)
+		}
+
+		details, err := h.service.GetUserConfirmationDetails(context.Background(), dto.Email)
+		if err != nil {
+			return rest.NewNotFoundError(err, "User was not found")
+		}
+
+		err = sendConfirmationLetter(c.Logger(), h.service, verGenerator, details.ID, dto.Email, details.Firstname)
+		if err != nil {
+			return rest.NewInternalServerError(err)
+		}
+
+		return c.NoContent(http.StatusNoContent)
+	}
 }
 
 // login godoc
@@ -264,6 +310,24 @@ func (h *authHandler) verifyEmail(
 			return rest.NewInternalServerError(err)
 		}
 
+		go func () {
+			if err := h.service.SendVerifiedLetter(claims.Email); err != nil {
+				c.Logger().Error(err)
+			}
+		}()
+
 		return c.NoContent(http.StatusOK)
 	}
+}
+
+func sendConfirmationLetter(logger echo.Logger, authService service.AuthService, verGenerator verifier.JwtGenerator, id string, email string, name string) error {
+	jwt, err := verGenerator.GenerateJWT(id, email)
+	if err == nil {
+		if err := authService.SendConfirmationLetter(jwt, email, name); err == nil {
+			return nil
+		}
+	}
+
+	logger.Error(err)
+	return err
 }

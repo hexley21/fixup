@@ -18,8 +18,18 @@ type Login struct {
 	Password string `json:"password" validate:"required,min=8"`
 } // @name LoginInput
 
+type Email struct {
+	Email string `json:"email" validate:"required,email,max=40"`
+} // @name EmailInput
+
+type UserConfirmationDetails struct {
+	ID         string
+	UserStatus bool
+	Firstname  string
+}
+
 type Credentials struct {
-	ID     string
-	Role   string
+	ID         string
+	Role       string
 	UserStatus bool
 }

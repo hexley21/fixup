@@ -11,33 +11,25 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type v1Router struct {
-	cfgJwt      config.JWT
-	verifierJwt verifier.Jwt
-	authService service.AuthService
-	userService service.UserService
+type V1RouterArgs struct {
+	AuthService service.AuthService
+	UserService service.UserService
+	CfgJwt config.JWT
 }
 
-func NewRouter(cfgJwt config.JWT, verifierJwt verifier.Jwt, authService service.AuthService, userService service.UserService) *v1Router {
-	return &v1Router{
-		cfgJwt:      cfgJwt,
-		verifierJwt: verifierJwt,
-		authService: authService,
-		userService: userService,
-	}
-}
+func MapV1Routes(echo *echo.Echo, args V1RouterArgs) *echo.Group {
+	accessAuthJwt := jwt.NewAuthJwtImpl(args.CfgJwt.AccessSecret, args.CfgJwt.AccessTTL)
+	refreshAuthJwt := jwt.NewAuthJwtImpl(args.CfgJwt.RefreshSecret, args.CfgJwt.RefreshTTL)
 
-func (v1r *v1Router) MapV1Routes(echo *echo.Echo) *echo.Group {
-	accessAuthJwt := jwt.NewAuthJwtImpl(v1r.cfgJwt.AccessSecret, v1r.cfgJwt.AccessTTL)
-	refreshAuthJwt := jwt.NewAuthJwtImpl(v1r.cfgJwt.RefreshSecret, v1r.cfgJwt.RefreshTTL)
+	verificationJwt := verifier.NewVerificationJwt(args.CfgJwt.VerificationSecret, args.CfgJwt.VerificationTTL)
 
 	accessJwtMiddleware := middleware.JWT(accessAuthJwt)
 	onlyVerifiedMiddleware := middleware.AllowVerified(true)
 
 	v1Group := echo.Group("/v1")
 
-	auth.NewAuthHandler(v1r.authService).MapRoutes(v1Group, accessAuthJwt, refreshAuthJwt, v1r.verifierJwt)
-	user.NewUserHandler(v1r.userService).MapRoutes(v1Group, accessJwtMiddleware, onlyVerifiedMiddleware)
+	auth.NewAuthHandler(args.AuthService).MapRoutes(v1Group, accessAuthJwt, refreshAuthJwt, verificationJwt)
+	user.NewUserHandler(args.UserService).MapRoutes(v1Group, accessJwtMiddleware, onlyVerifiedMiddleware)
 
 	return v1Group
 }
