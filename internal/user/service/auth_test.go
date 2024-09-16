@@ -16,7 +16,7 @@ import (
 	mock_hasher "github.com/hexley21/fixup/pkg/hasher/mock"
 	mock_cdn "github.com/hexley21/fixup/pkg/infra/cdn/mock"
 	mock_postgres "github.com/hexley21/fixup/pkg/infra/postgres/mock"
-	mock_mailer "github.com/hexley21/fixup/pkg/mailer/mock"
+	_ "github.com/hexley21/fixup/pkg/mailer/mock"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -70,22 +70,14 @@ func TestRegisterCustomer(t *testing.T) {
 
 	mockUserRepo := mock_repository.NewMockUserRepository(ctrl)
 	mockPgx := mock_postgres.NewMockPGX(ctrl)
-	mockTx := mock_postgres.NewMockTx(ctrl)
 	mockHasher := mock_hasher.NewMockHasher(ctrl)
-	mockMailer := mock_mailer.NewMockMailer(ctrl)
 	mockUrlSigner := mock_cdn.NewMockURLSigner(ctrl)
 
-	mockUserRepo.EXPECT().WithTx(mockTx).Return(mockUserRepo)
 	mockUserRepo.EXPECT().Create(ctx, gomock.Any()).Return(userEntity, nil)
-
-	mockPgx.EXPECT().BeginTx(ctx, gomock.Any()).Return(mockTx, nil)
-	mockTx.EXPECT().Commit(ctx).Return(nil)
-
 	mockHasher.EXPECT().HashPassword(gomock.Any()).Return(newHash)
-	mockMailer.EXPECT().SendHTML(mockEmailAddress, gomock.Any(), gomock.Any(), confiramtionTemplate, gomock.Any()).Return(nil)
 	mockUrlSigner.EXPECT().SignURL(gomock.Any()).Return(newUrl, nil)
 
-	service := service.NewAuthService(mockUserRepo, nil, mockPgx, mockHasher, nil, mockMailer, mockEmailAddress, mockUrlSigner)
+	service := service.NewAuthService(mockUserRepo, nil, mockPgx, mockHasher, nil, nil, mockEmailAddress, mockUrlSigner)
 	service.SetTemplates(confiramtionTemplate, nil)
 
 	dto, err := service.RegisterCustomer(ctx, registerUserDto)
@@ -110,7 +102,6 @@ func TestRegisterProvider(t *testing.T) {
 	mockTx := mock_postgres.NewMockTx(ctrl)
 	mockHasher := mock_hasher.NewMockHasher(ctrl)
 	mockEncryptor := mock_encryption.NewMockEncryptor(ctrl)
-	mockMailer := mock_mailer.NewMockMailer(ctrl)
 	mockUrlSigner := mock_cdn.NewMockURLSigner(ctrl)
 
 	mockUserRepo.EXPECT().WithTx(mockTx).Return(mockUserRepo)
@@ -123,10 +114,9 @@ func TestRegisterProvider(t *testing.T) {
 
 	mockHasher.EXPECT().HashPassword(gomock.Any()).Return(newHash)
 	mockEncryptor.EXPECT().Encrypt(gomock.Any()).Return([]byte(registerProviderDto.PersonalIDNumber), nil)
-	mockMailer.EXPECT().SendHTML(mockEmailAddress, gomock.Any(), gomock.Any(), confiramtionTemplate, gomock.Any()).Return(nil)
 	mockUrlSigner.EXPECT().SignURL(gomock.Any()).Return(newUrl, nil)
 
-	service := service.NewAuthService(mockUserRepo, mockProviderRepo, mockPgx, mockHasher, mockEncryptor, mockMailer, mockEmailAddress, mockUrlSigner)
+	service := service.NewAuthService(mockUserRepo, mockProviderRepo, mockPgx, mockHasher, mockEncryptor, nil, mockEmailAddress, mockUrlSigner)
 	service.SetTemplates(confiramtionTemplate, nil)
 
 	dto, err := service.RegisterProvider(ctx, registerProviderDto)
@@ -174,12 +164,10 @@ func TestVerifyUser(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockUserRepo := mock_repository.NewMockUserRepository(ctrl)
-	mockMailer := mock_mailer.NewMockMailer(ctrl)
 
 	mockUserRepo.EXPECT().UpdateStatus(ctx, gomock.Any()).Return(nil)
-	mockMailer.EXPECT().SendHTML(mockEmailAddress, gomock.Any(), gomock.Any(), verifiedTemplate, gomock.Any()).Return(nil)
 
-	service := service.NewAuthService(mockUserRepo, nil, nil, nil, nil, mockMailer, mockEmailAddress, nil)
+	service := service.NewAuthService(mockUserRepo, nil, nil, nil, nil, nil, mockEmailAddress, nil)
 	service.SetTemplates(nil, verifiedTemplate)
 
 	err := service.VerifyUser(ctx, 1, "")

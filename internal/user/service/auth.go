@@ -121,7 +121,7 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 		return dto, err
 	}
 
-	user, err := s.userRepository.Create(ctx,
+	user, err := s.userRepository.WithTx(tx).Create(ctx,
 		repository.CreateUserParams{
 			FirstName:   dto.FirstName,
 			LastName:    dto.LastName,
