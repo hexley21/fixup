@@ -17,24 +17,13 @@ import (
 	mock_cdn "github.com/hexley21/fixup/pkg/infra/cdn/mock"
 	mock_postgres "github.com/hexley21/fixup/pkg/infra/postgres/mock"
 	_ "github.com/hexley21/fixup/pkg/mailer/mock"
+	mock_mailer "github.com/hexley21/fixup/pkg/mailer/mock"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
 
 var (
-	userDto = dto.User{
-		ID:          "1",
-		FirstName:   "Larry",
-		LastName:    "Page",
-		PhoneNumber: "995111222333",
-		Email:       "larry@page.com",
-		PictureUrl:  "larrypage.png",
-		Role:        string(enum.UserRoleADMIN),
-		UserStatus:  true,
-		CreatedAt:   time.Now(),
-	}
-
 	registerUserDto = dto.RegisterUser{
 		Email:       "larry@page.com",
 		PhoneNumber: "995111222333",
@@ -164,7 +153,6 @@ func TestVerifyUser(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockUserRepo := mock_repository.NewMockUserRepository(ctrl)
-
 	mockUserRepo.EXPECT().UpdateStatus(ctx, gomock.Any()).Return(nil)
 
 	service := service.NewAuthService(mockUserRepo, nil, nil, nil, nil, nil, mockEmailAddress, nil)
@@ -174,4 +162,57 @@ func TestVerifyUser(t *testing.T) {
 	assert.NoError(t, err)
 
 	time.Sleep(100 * time.Millisecond)
+}
+
+
+func TestGetUserConfirmationDetails(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUserRepo := mock_repository.NewMockUserRepository(ctrl)
+
+	args := repository.GetUserConfirmationDetailsRow{
+		ID: 1,
+		UserStatus: pgtype.Bool{Bool: true, Valid: true},
+		FirstName: "Larry",
+	}
+
+	mockUserRepo.EXPECT().GetUserConfirmationDetails(ctx, gomock.Any()).Return(args, nil)
+
+	service := service.NewAuthService(mockUserRepo, nil, nil, nil, nil, nil, mockEmailAddress, nil)
+
+	dto, err := service.GetUserConfirmationDetails(ctx, "")
+	assert.NoError(t, err)
+	assert.Equal(t, dto.ID, strconv.FormatInt(args.ID, 10))
+	assert.Equal(t, dto.UserStatus, args.UserStatus.Bool)
+	assert.Equal(t, dto.Firstname, args.FirstName)
+
+}
+
+func TestSendConfirmationLetter(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockMailer := mock_mailer.NewMockMailer(ctrl)
+	mockMailer.EXPECT().SendHTML(mockEmailAddress, gomock.Any(), gomock.Any(), confiramtionTemplate, gomock.Any()).Return(nil)
+
+	service := service.NewAuthService(nil, nil, nil, nil, nil, mockMailer, mockEmailAddress, nil)
+	service.SetTemplates(confiramtionTemplate, nil)
+
+	assert.NoError(t, service.SendConfirmationLetter("", "", ""))
+}
+
+func TestSendVerifiedLetter(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockMailer := mock_mailer.NewMockMailer(ctrl)
+	mockMailer.EXPECT().SendHTML(mockEmailAddress, gomock.Any(), gomock.Any(), verifiedTemplate, gomock.Nil()).Return(nil)
+
+	service := service.NewAuthService(nil, nil, nil, nil, nil, mockMailer, mockEmailAddress, nil)
+	service.SetTemplates(nil, verifiedTemplate)
+
+	assert.NoError(t, service.SendVerifiedLetter(""))
 }
