@@ -153,6 +153,7 @@ func (h *authHandler) registerProvider(
 // @Param user body dto.Email true "User email"
 // @Success 204
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
+// @Failure 409 {object} rest.ErrorResponse "Conflict"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/resend-confirmation [post]
 func (h *authHandler) resendConfirmationLetter(
@@ -166,7 +167,13 @@ func (h *authHandler) resendConfirmationLetter(
 
 		details, err := h.service.GetUserConfirmationDetails(context.Background(), dto.Email)
 		if err != nil {
-			return rest.NewNotFoundError(err, "User was not found")
+			if errors.Is(err, service.ErrUserAlreadyActive) {
+				return rest.NewConflictError(err, "User is already activated")
+			}
+			if errors.Is(err, pgx.ErrNoRows) {
+				return rest.NewNotFoundError(err, "User was not found")
+			}
+			return rest.NewInternalServerError(err)
 		}
 
 		err = sendConfirmationLetter(c.Logger(), h.service, verGenerator, details.ID, dto.Email, details.Firstname)
