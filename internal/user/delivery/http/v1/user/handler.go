@@ -17,6 +17,8 @@ import (
 
 // TODO: manage contextes
 
+
+
 type userHandler struct {
 	service service.UserService
 }
@@ -51,7 +53,7 @@ func (h *userHandler) findUserById(c echo.Context) error {
 	user, err := h.service.FindUserById(context.Background(), id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return rest.NewNotFoundError(err, "User not found")
+			return rest.NewNotFoundError(err, rest.MsgUserNotFound)
 		}
 		return rest.NewInternalServerError(err)
 	}
@@ -97,7 +99,7 @@ func (h *userHandler) uploadProfilePicture(c echo.Context) error {
 	err = h.service.SetProfilePicture(context.Background(), id, src, "", imageFile.Size, imageFile.Header.Get("Content-Type"))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return rest.NewNotFoundError(err, "User not found")
+			return rest.NewNotFoundError(err, rest.MsgUserNotFound)
 		}
 		return rest.NewInternalServerError(err)
 	}
@@ -139,7 +141,7 @@ func (h *userHandler) updateUserData(c echo.Context) error {
 	user, err := h.service.UpdateUserDataById(context.Background(), id, *dto)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return rest.NewNotFoundError(err, "User not found")
+			return rest.NewNotFoundError(err, rest.MsgUserNotFound)
 		}
 		return rest.NewInternalServerError(err)
 	}
@@ -170,7 +172,7 @@ func (h *userHandler) deleteUser(c echo.Context) error {
 
 	if err := h.service.DeleteUserById(context.Background(), id); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return rest.NewNotFoundError(err, "User was not found")
+			return rest.NewNotFoundError(err, rest.MsgUserNotFound)
 		}
 		return rest.NewInternalServerError(err)
 	}
@@ -214,10 +216,10 @@ func (h *userHandler) updatePassword(c echo.Context) error {
 
 	if err := h.service.ChangePassword(context.Background(), userId, *dto); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return rest.NewNotFoundError(err, "User was not found")
+			return rest.NewNotFoundError(err, rest.MsgUserNotFound)
 		}
 		if errors.Is(err, hasher.ErrPasswordMismatch) {
-			return rest.NewUnauthorizedError(err, "Old password is not correct")
+			return rest.NewUnauthorizedError(err, rest.MsgIncorrectPassword)
 		}
 		return rest.NewInternalServerError(err)
 	}

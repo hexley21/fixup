@@ -19,10 +19,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var (
+const (
 	access_token_cookie  = "access_token"
 	refresh_token_cookie = "refresh_token"
 )
+
 
 type authHandler struct {
 	service service.AuthService
@@ -89,7 +90,7 @@ func (h *authHandler) registerCustomer(
 			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 				switch pgErr.Code {
 				case pgerrcode.UniqueViolation:
-					return rest.NewConflictError(err, "User already exists")
+					return rest.NewConflictError(err, rest.MsgUserAlreadyExists)
 				}
 			}
 			return rest.NewInternalServerError(err)
@@ -132,7 +133,7 @@ func (h *authHandler) registerProvider(
 			if errors.As(err, &pgErr) {
 				switch pgErr.Code {
 				case pgerrcode.UniqueViolation:
-					return rest.NewConflictError(err, "User already exists")
+					return rest.NewConflictError(err, rest.MsgUserAlreadyExists)
 				}
 			}
 			return rest.NewInternalServerError(err)
@@ -168,10 +169,10 @@ func (h *authHandler) resendConfirmationLetter(
 		details, err := h.service.GetUserConfirmationDetails(context.Background(), dto.Email)
 		if err != nil {
 			if errors.Is(err, service.ErrUserAlreadyActive) {
-				return rest.NewConflictError(err, "User is already activated")
+				return rest.NewConflictError(err, rest.MsgUserAlreadyExists)
 			}
 			if errors.Is(err, pgx.ErrNoRows) {
-				return rest.NewNotFoundError(err, "User was not found")
+				return rest.NewNotFoundError(err, rest.MsgUserNotFound)
 			}
 			return rest.NewInternalServerError(err)
 		}
@@ -209,7 +210,7 @@ func (h *authHandler) login(
 
 		user, err := h.service.AuthenticateUser(context.Background(), *dto)
 		if err != nil {
-			return rest.NewUnauthorizedError(err, "Incorrect email or password")
+			return rest.NewUnauthorizedError(err, rest.MsgIncorrectEmailOrPass)
 		}
 
 		accessToken, err := accessGenerator.GenerateJWT(user.ID, user.Role, user.UserStatus)
@@ -300,7 +301,7 @@ func (h *authHandler) verifyEmail(
 	return func(c echo.Context) error {
 		claims, err := jwtVerifier.VerifyJWT(c.QueryParam("token"))
 		if err != nil {
-			return rest.NewUnauthorizedError(err, "Invalid token")
+			return rest.NewUnauthorizedError(err, rest.MsgInvalidToken)
 		}
 
 		id, err := strconv.ParseInt(claims.ID, 10, 64)
@@ -310,7 +311,7 @@ func (h *authHandler) verifyEmail(
 
 		if err := h.service.VerifyUser(context.Background(), id, claims.Email); err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
-				return rest.NewNotFoundError(err, "User was not found")
+				return rest.NewNotFoundError(err, rest.MsgUserNotFound)
 			}
 			return rest.NewInternalServerError(err)
 		}
