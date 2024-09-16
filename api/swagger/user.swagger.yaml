@@ -248,6 +248,38 @@ paths:
     post:
       consumes:
       - application/json
+      description: Register a new provider with the provided details
+      parameters:
+      - description: User registration details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/RegisterProviderInput'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "409":
+          description: Conflict - User already exists
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Register a new provider
+      tags:
+      - auth
+  /auth/resend-confirmation:
+    post:
+      consumes:
+      - application/json
       description: Resends a confirmation letter to email
       parameters:
       - description: User email

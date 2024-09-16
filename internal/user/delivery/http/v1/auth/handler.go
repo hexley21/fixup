@@ -101,8 +101,6 @@ func (h *authHandler) registerCustomer(
 	}
 }
 
-// TODO: manage already registered actions + consider status
-
 // registerProvider godoc
 // @Summary Register a new provider
 // @Description Register a new provider with the provided details
@@ -156,7 +154,7 @@ func (h *authHandler) registerProvider(
 // @Success 204
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
-// @Router /auth/register/provider [post]
+// @Router /auth/resend-confirmation [post]
 func (h *authHandler) resendConfirmationLetter(
 	verGenerator verifier.JwtGenerator,
 ) echo.HandlerFunc {

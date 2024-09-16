@@ -188,7 +188,6 @@ func TestGetUserConfirmationDetails(t *testing.T) {
 	assert.Equal(t, dto.ID, strconv.FormatInt(args.ID, 10))
 	assert.Equal(t, dto.UserStatus, args.UserStatus.Bool)
 	assert.Equal(t, dto.Firstname, args.FirstName)
-
 }
 
 func TestSendConfirmationLetter(t *testing.T) {
