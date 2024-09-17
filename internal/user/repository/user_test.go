@@ -37,7 +37,7 @@ func TestCreate(t *testing.T) {
 
 	repo := repository.NewUserRepository(dbPool, snowflakeNode)
 
-	entity, err := repo.Create(ctx, userCreateArgs)
+	entity, err := repo.CreateUser(ctx, userCreateArgs)
 	assert.NoError(t, err)
 
 	assert.Equal(t, userCreateArgs.FirstName, entity.FirstName)
@@ -62,7 +62,7 @@ func TestCreateWithInvalidArgs(t *testing.T) {
 
 	repo := repository.NewUserRepository(dbPool, snowflakeNode)
 
-	entity, err := repo.Create(ctx, userCreateArgs)
+	entity, err := repo.CreateUser(ctx, userCreateArgs)
 	assert.NoError(t, err)
 
 	assert.Equal(t, userCreateArgs.FirstName, entity.FirstName)
@@ -126,7 +126,7 @@ func TestCreateInvalidArgs(t *testing.T) {
 
 	i := 0
 	for _, args := range invalidArgs {
-		entity, err := repo.Create(ctx, args)
+		entity, err := repo.CreateUser(ctx, args)
 		if !assert.Error(t, err) {
 			log.Println("create user:", i)
 		}

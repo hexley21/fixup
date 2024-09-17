@@ -17,8 +17,6 @@ import (
 
 // TODO: manage contextes
 
-
-
 type userHandler struct {
 	service service.UserService
 }
@@ -136,7 +134,7 @@ func (h *userHandler) UpdateUserData(c echo.Context) error {
 
 	dto := new(dto.UpdateUser)
 	if err := c.Bind(dto); err != nil {
-		return rest.NewInvalidArgumentsError(err)
+		return rest.NewInternalServerError(err)
 	}
 
 	if err := c.Validate(dto); err != nil {

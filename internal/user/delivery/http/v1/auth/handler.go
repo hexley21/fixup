@@ -66,7 +66,7 @@ func eraseCookie(c echo.Context, cookieName string) {
 // @Accept json
 // @Produce json
 // @Param user body dto.RegisterUser true "User registration details"
-// @Success 204
+// @Success 201
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
@@ -98,7 +98,7 @@ func (h *authHandler) registerCustomer(
 
 		go sendConfirmationLetter(c.Logger(), h.service, verGenerator, user.ID, user.Email, user.FirstName)
 
-		return c.NoContent(http.StatusNoContent)
+		return c.NoContent(http.StatusCreated)
 	}
 }
 
@@ -109,7 +109,7 @@ func (h *authHandler) registerCustomer(
 // @Accept json
 // @Produce json
 // @Param user body dto.RegisterProvider true "User registration details"
-// @Success 204
+// @Success 201
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
@@ -141,7 +141,7 @@ func (h *authHandler) registerProvider(
 
 		go sendConfirmationLetter(c.Logger(), h.service, verGenerator, user.ID, user.Email, user.FirstName)
 
-		return c.NoContent(http.StatusNoContent)
+		return c.NoContent(http.StatusCreated)
 	}
 }
 

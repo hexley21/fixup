@@ -60,7 +60,7 @@ func TestRegisterCustomer(t *testing.T) {
 	mockHasher := mock_hasher.NewMockHasher(ctrl)
 	mockUrlSigner := mock_cdn.NewMockURLSigner(ctrl)
 
-	mockUserRepo.EXPECT().Create(ctx, gomock.Any()).Return(userEntity, nil)
+	mockUserRepo.EXPECT().CreateUser(ctx, gomock.Any()).Return(userEntity, nil)
 	mockHasher.EXPECT().HashPassword(gomock.Any()).Return(newHash)
 	mockUrlSigner.EXPECT().SignURL(gomock.Any()).Return(newUrl, nil)
 
@@ -92,7 +92,7 @@ func TestRegisterProvider(t *testing.T) {
 	mockUrlSigner := mock_cdn.NewMockURLSigner(ctrl)
 
 	mockUserRepo.EXPECT().WithTx(mockTx).Return(mockUserRepo)
-	mockUserRepo.EXPECT().Create(ctx, gomock.Any()).Return(userEntity, nil)
+	mockUserRepo.EXPECT().CreateUser(ctx, gomock.Any()).Return(userEntity, nil)
 	mockProviderRepo.EXPECT().WithTx(mockTx).Return(mockProviderRepo)
 	mockProviderRepo.EXPECT().Create(ctx, gomock.Any()).Return(nil)
 

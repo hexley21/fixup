@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/user"
 	"github.com/hexley21/fixup/internal/user/enum"
 	mock_service "github.com/hexley21/fixup/internal/user/service/mock"
+	mock_validator "github.com/hexley21/fixup/pkg/validator/mock"
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -36,29 +38,32 @@ var (
 		CreatedAt:   time.Now(),
 	}
 
+	updateUserJSON = `{"email": "larry@page.com","first_name": "Larry","last_name": "Page","phone_number": "995112233"}`
+	updateUserBlankJSON = `{"email": "","first_name": "","last_name": "","phone_number": ""}`
+
 	fileContent = []byte("fake file content")
 )
 
 func createMultipartFormData(t *testing.T, fieldName, fileName string, fileContent []byte) (*bytes.Buffer, string) {
-    body := &bytes.Buffer{}
-    writer := multipart.NewWriter(body)
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
 
-    part, err := writer.CreateFormFile(fieldName, fileName)
-    if err != nil {
-        t.Fatal(err)
-    }
+	part, err := writer.CreateFormFile(fieldName, fileName)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-    _, err = part.Write(fileContent)
-    if err != nil {
-        t.Fatal(err)
-    }
+	_, err = part.Write(fileContent)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-    err = writer.Close()
-    if err != nil {
-        t.Fatal(err)
-    }
+	err = writer.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
 
-    return body, writer.FormDataContentType()
+	return body, writer.FormDataContentType()
 }
 
 func TestFindUserById(t *testing.T) {
@@ -102,7 +107,7 @@ func TestFindUserByIdOnNonexistentUser(t *testing.T) {
 	h := user.NewUserHandler(mockUserService)
 
 	var errResp *rest.ErrorResponse
-	if (assert.ErrorAs(t, h.FindUserById(c), &errResp)) {
+	if assert.ErrorAs(t, h.FindUserById(c), &errResp) {
 		assert.ErrorIs(t, pgx.ErrNoRows, errResp.Cause)
 		assert.Equal(t, rest.MsgUserNotFound, errResp.Message)
 		assert.Equal(t, http.StatusNotFound, errResp.Status)
@@ -126,9 +131,9 @@ func TestFindUserByIdWithServiceError(t *testing.T) {
 	mockUserService.EXPECT().FindUserById(ctx, int64(1)).Return(dto.User{}, errors.New(""))
 
 	h := user.NewUserHandler(mockUserService)
- 
+
 	var errResp *rest.ErrorResponse
-	if (assert.ErrorAs(t, h.FindUserById(c), &errResp)) {
+	if assert.ErrorAs(t, h.FindUserById(c), &errResp) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 	}
@@ -147,7 +152,7 @@ func TestFindUserByIdOnIdParamNotImplemented(t *testing.T) {
 	h := user.NewUserHandler(nil)
 
 	var errResp *rest.ErrorResponse
-	if (assert.ErrorAs(t, h.FindUserById(c), &errResp)) {
+	if assert.ErrorAs(t, h.FindUserById(c), &errResp) {
 		assert.ErrorIs(t, ctxutil.ErrParamIdNotImplemented, errResp.Cause)
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
@@ -166,7 +171,7 @@ func TestUploadProfilePicture(t *testing.T) {
 	body, contentType := createMultipartFormData(t, "image", "test.jpg", fileContent)
 
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodPost, "/", body)	
+	req := httptest.NewRequest(http.MethodPost, "/", body)
 	req.Header.Set(echo.HeaderContentType, contentType)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -181,7 +186,7 @@ func TestUploadProfilePicture(t *testing.T) {
 
 func TestUploadProfilePictureWithoutMultipart(t *testing.T) {
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodPost, "/", nil)	
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
@@ -201,7 +206,7 @@ func TestUploadProfilePictureWithoutFile(t *testing.T) {
 	_, contentType := createMultipartFormData(t, "image", "test.jpg", fileContent)
 
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodPost, "/", nil)	
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	req.Header.Set(echo.HeaderContentType, contentType)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -221,7 +226,7 @@ func TestUploadProfilePictureWithWrongField(t *testing.T) {
 	body, contentType := createMultipartFormData(t, "img", "test.jpg", fileContent)
 
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodPost, "/", body)	
+	req := httptest.NewRequest(http.MethodPost, "/", body)
 	req.Header.Set(echo.HeaderContentType, contentType)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -250,7 +255,7 @@ func TestUploadProfilePictureToNonexistentUser(t *testing.T) {
 	body, contentType := createMultipartFormData(t, "image", "test.jpg", fileContent)
 
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodPost, "/", body)	
+	req := httptest.NewRequest(http.MethodPost, "/", body)
 	req.Header.Set(echo.HeaderContentType, contentType)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -279,7 +284,7 @@ func TestUploadProfilePictureWithServiceError(t *testing.T) {
 	body, contentType := createMultipartFormData(t, "image", "test.jpg", fileContent)
 
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodPost, "/", body)	
+	req := httptest.NewRequest(http.MethodPost, "/", body)
 	req.Header.Set(echo.HeaderContentType, contentType)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -293,4 +298,121 @@ func TestUploadProfilePictureWithServiceError(t *testing.T) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 	}
+}
+
+func TestUpdateUserData(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUserService := mock_service.NewMockUserService(ctrl)
+	mockValidator := mock_validator.NewMockValidator(ctrl)
+
+	mockUserService.EXPECT().UpdateUserDataById(ctx, int64(1), gomock.Any()).Return(userDto, nil)
+	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+
+	e := echo.New()
+	e.Validator = mockValidator
+
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(updateUserJSON))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:id")
+	ctxutil.SetParamId(c, "1")
+
+	h := user.NewUserHandler(mockUserService)
+
+	assert.NoError(t, h.UpdateUserData(c))
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestUpdateUserDataWithInvalidValues(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockValidator := mock_validator.NewMockValidator(ctrl)
+	mockValidator.EXPECT().Validate(gomock.Any()).Return(errors.New(""))
+
+	e := echo.New()
+	e.Validator = mockValidator
+
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(updateUserJSON))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:id")
+	ctxutil.SetParamId(c, "1")
+
+	h := user.NewUserHandler(nil)
+
+	var errResp *rest.ErrorResponse
+	if assert.ErrorAs(t, h.UpdateUserData(c), &errResp) {
+		assert.Equal(t, rest.MsgInvalidArguments, errResp.Message)
+		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+	}
+}
+
+func TestUpdateUserDataForNonexistentUser(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUserService := mock_service.NewMockUserService(ctrl)
+	mockValidator := mock_validator.NewMockValidator(ctrl)
+
+	mockUserService.EXPECT().UpdateUserDataById(ctx, int64(1), gomock.Any()).Return(dto.User{}, pgx.ErrNoRows)
+	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+
+	e := echo.New()
+	e.Validator = mockValidator
+
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(updateUserJSON))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:id")
+	ctxutil.SetParamId(c, "1")
+
+	h := user.NewUserHandler(mockUserService)
+
+	var errResp *rest.ErrorResponse
+	if assert.ErrorAs(t, h.UpdateUserData(c), &errResp) {
+		assert.ErrorIs(t, errResp.Cause, pgx.ErrNoRows)
+		assert.Equal(t, rest.MsgUserNotFound, errResp.Message)
+		assert.Equal(t, http.StatusNotFound, errResp.Status)
+	}
+}
+
+func TestUpdateUserDataWithServiceError(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUserService := mock_service.NewMockUserService(ctrl)
+	mockValidator := mock_validator.NewMockValidator(ctrl)
+
+	mockUserService.EXPECT().UpdateUserDataById(ctx, int64(1), gomock.Any()).Return(dto.User{}, errors.New(""))
+	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+
+	e := echo.New()
+	e.Validator = mockValidator
+
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(updateUserJSON))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:id")
+	ctxutil.SetParamId(c, "1")
+
+	h := user.NewUserHandler(mockUserService)
+
+	var errResp *rest.ErrorResponse
+	if assert.ErrorAs(t, h.UpdateUserData(c), &errResp) {
+		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
+		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+	}	
 }

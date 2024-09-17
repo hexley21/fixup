@@ -42,19 +42,19 @@ func (m *MockUserRepository) EXPECT() *MockUserRepositoryMockRecorder {
 	return m.recorder
 }
 
-// Create mocks base method.
-func (m *MockUserRepository) Create(ctx context.Context, arg repository.CreateUserParams) (entity.User, error) {
+// CreateUser mocks base method.
+func (m *MockUserRepository) CreateUser(ctx context.Context, arg repository.CreateUserParams) (entity.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", ctx, arg)
+	ret := m.ctrl.Call(m, "CreateUser", ctx, arg)
 	ret0, _ := ret[0].(entity.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Create indicates an expected call of Create.
-func (mr *MockUserRepositoryMockRecorder) Create(ctx, arg any) *gomock.Call {
+// CreateUser indicates an expected call of CreateUser.
+func (mr *MockUserRepositoryMockRecorder) CreateUser(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockUserRepository)(nil).Create), ctx, arg)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockUserRepository)(nil).CreateUser), ctx, arg)
 }
 
 // DeleteById mocks base method.

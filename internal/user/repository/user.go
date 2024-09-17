@@ -15,7 +15,7 @@ import (
 
 type UserRepository interface {
 	postgres.Repository[UserRepository]
-	Create(ctx context.Context, arg CreateUserParams) (entity.User, error)
+	CreateUser(ctx context.Context, arg CreateUserParams) (entity.User, error)
 	GetById(ctx context.Context, id int64) (entity.User, error)
 	GetCredentialsByEmail(ctx context.Context, email string) (GetCredentialsByEmailRow, error)
 	GetHashById(ctx context.Context, id int64) (string, error)
@@ -49,21 +49,22 @@ INSERT INTO users (
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7
 )
-RETURNING id, first_name, last_name, phone_number, email, role, user_status, created_at
+RETURNING id, first_name, last_name, phone_number, email, picture_name, role, user_status, created_at
 `
 
 type CreateUserParams struct {
-	FirstName   string
-	LastName    string
-	PhoneNumber string
-	Email       string
-	Hash        string
-	Role        enum.UserRole
+	ID          int64    `json:"id"`
+	FirstName   string   `json:"first_name"`
+	LastName    string   `json:"last_name"`
+	PhoneNumber string   `json:"phone_number"`
+	Email       string   `json:"email"`
+	Hash        string   `json:"hash"`
+	Role        enum.UserRole `json:"role"`
 }
 
-func (r *userRepositoryImpl) Create(ctx context.Context, arg CreateUserParams) (entity.User, error) {
+func (r *userRepositoryImpl) CreateUser(ctx context.Context, arg CreateUserParams) (entity.User, error) {
 	row := r.db.QueryRow(ctx, createUser,
-		r.snowflake.Generate(),
+		arg.ID,
 		arg.FirstName,
 		arg.LastName,
 		arg.PhoneNumber,
@@ -78,6 +79,7 @@ func (r *userRepositoryImpl) Create(ctx context.Context, arg CreateUserParams) (
 		&i.LastName,
 		&i.PhoneNumber,
 		&i.Email,
+		&i.PictureName,
 		&i.Role,
 		&i.UserStatus,
 		&i.CreatedAt,
