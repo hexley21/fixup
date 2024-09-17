@@ -69,7 +69,7 @@ func AllowSelfOrRole(roles ...enum.UserRole) echo.MiddlewareFunc {
 func AllowVerified(status bool) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			verified, err := ctxutil.GetJwtVerification(c)
+			verified, err := ctxutil.GetJwtUserStatus(c)
 			if err != nil {
 				return err
 			}

@@ -44,10 +44,10 @@ func NewUserHandler(service service.UserService) *userHandler {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security access_token
 // @Router /users/{id} [get]
-func (h *userHandler) findUserById(c echo.Context) error {
+func (h *userHandler) FindUserById(c echo.Context) error {
 	id, err := ctxutil.GetParamId(c)
 	if err != nil {
-		return err
+		return rest.NewInternalServerError(err)
 	}
 
 	user, err := h.service.FindUserById(context.Background(), id)
@@ -77,7 +77,7 @@ func (h *userHandler) findUserById(c echo.Context) error {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security access_token
 // @Router /users/{id}/pfp [patch]
-func (h *userHandler) uploadProfilePicture(c echo.Context) error {
+func (h *userHandler) UploadProfilePicture(c echo.Context) error {
 	id, err := ctxutil.GetParamId(c)
 	if err != nil {
 		return err
@@ -123,7 +123,7 @@ func (h *userHandler) uploadProfilePicture(c echo.Context) error {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security access_token
 // @Router /users/{id} [patch]
-func (h *userHandler) updateUserData(c echo.Context) error {
+func (h *userHandler) UpdateUserData(c echo.Context) error {
 	id, err := ctxutil.GetParamId(c)
 	if err != nil {
 		return err
@@ -164,7 +164,7 @@ func (h *userHandler) updateUserData(c echo.Context) error {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security access_token
 // @Router /users/{id} [delete]
-func (h *userHandler) deleteUser(c echo.Context) error {
+func (h *userHandler) DeleteUser(c echo.Context) error {
 	id, err := ctxutil.GetParamId(c)
 	if err != nil {
 		return err
@@ -194,7 +194,7 @@ func (h *userHandler) deleteUser(c echo.Context) error {
 // @Failure 404 {object} rest.ErrorResponse "User not found"
 // @Failure 500 {object} rest.ErrorResponse "Internal server error"
 // @Router /user/{id}/change-password [patch]
-func (h *userHandler) updatePassword(c echo.Context) error {
+func (h *userHandler) UpdatePassword(c echo.Context) error {
 	id, err := ctxutil.GetJwtId(c)
 	if err != nil {
 		return err

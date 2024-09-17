@@ -12,15 +12,14 @@ import (
 const (
 	jwtIdKey = "jwt_id"
 	jwtRoleKey = "jwt_role"
-	jwtVerificationKey = "jwt_verified"
+	jwtUserStatusKey = "jwt_user_status"
 	paramIdKey = "param_id"
 )
 
 var (
-	errJwtNotImplemented = rest.NewInternalServerError(errors.New("jwt middleware not implemented"))
-	errParamIdNotImplemented = rest.NewInternalServerError(errors.New("param id middleware not implemented"))
+	ErrJwtNotImplemented = rest.NewInternalServerError(errors.New("jwt middleware not implemented"))
+	ErrParamIdNotImplemented = rest.NewInternalServerError(errors.New("param id middleware not implemented"))
 )
-
 
 
 func GetJwtId(c echo.Context) (string, error) {
@@ -28,7 +27,7 @@ func GetJwtId(c echo.Context) (string, error) {
 		return id, nil
 	}
 
-	return "", errJwtNotImplemented
+	return "", ErrJwtNotImplemented
 }
 
 func SetJwtId(c echo.Context, value string) {
@@ -40,23 +39,23 @@ func GetJwtRole(c echo.Context) (enum.UserRole, error) {
 		return role, nil
 	}
 
-	return "", errJwtNotImplemented
+	return "", ErrJwtNotImplemented
 }
 
 func SetJwtRole(c echo.Context, value enum.UserRole) {
 	c.Set(jwtRoleKey, value)
 }
 
-func GetJwtVerification(c echo.Context) (bool, error) {
-	if verification, ok := c.Get(jwtVerificationKey).(bool); ok {
-		return verification, nil
+func GetJwtUserStatus(c echo.Context) (bool, error) {
+	if userStatus, ok := c.Get(jwtUserStatusKey).(bool); ok {
+		return userStatus, nil
 	}
 
-	return false, errJwtNotImplemented
+	return false, ErrJwtNotImplemented
 }
 
-func SetJwtVerification(c echo.Context, value bool) {
-	c.Set(jwtVerificationKey, value)
+func SetJwtUserStatus(c echo.Context, value bool) {
+	c.Set(jwtUserStatusKey, value)
 }
 
 func GetParamId(c echo.Context) (int64, error) {
@@ -64,7 +63,7 @@ func GetParamId(c echo.Context) (int64, error) {
 		return paramId, nil
 	}
 
-	return 0, errParamIdNotImplemented
+	return 0, ErrParamIdNotImplemented
 }
 
 func SetParamId(c echo.Context, value string) error {

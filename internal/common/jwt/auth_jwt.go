@@ -31,7 +31,7 @@ func NewAuthJwtImpl(secretKey string, ttl time.Duration) Jwt {
 }
 
 func (j *authJwtImpl) GenerateJWT(id string, role string, verified bool) (string, error) {
-	token, err := jwt.GenerateJWT(newClaims(id, role, verified, j.ttl), j.secretKey)
+	token, err := jwt.GenerateJWT(NewClaims(id, role, verified, j.ttl), j.secretKey)
 	if err != nil {
 		return "", rest.NewInternalServerError(fmt.Errorf("error generating jwt: %w", err))
 	}
@@ -42,7 +42,7 @@ func (j *authJwtImpl) GenerateJWT(id string, role string, verified bool) (string
 func (j *authJwtImpl) VerifyJWT(tokenString string) (UserClaims, error) {
 	mapClaims, err := jwt.VerifyJWT(tokenString, j.secretKey)
 	if err != nil {
-		return UserClaims{}, err
+		return UserClaims{}, rest.NewUnauthorizedError(err, rest.MsgInvalidToken)
 	}
 
 	return mapToClaim(mapClaims), nil

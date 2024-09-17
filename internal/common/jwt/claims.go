@@ -14,7 +14,7 @@ type UserClaims struct {
 	jwt.RegisteredClaims
 }
 
-func newClaims(id string, role string, Verified bool, expiry time.Duration) UserClaims {
+func NewClaims(id string, role string, Verified bool, expiry time.Duration) UserClaims {
 	var userRole enum.UserRole
 	userRole.Scan(role)
 
@@ -34,5 +34,5 @@ func mapToClaim(mapClaims any) UserClaims {
 		return UserClaims{}
 	}
 
-	return newClaims(claims["id"].(string), claims["role"].(string), claims["verified"].(bool), time.Duration(claims["exp"].(float64)))
+	return NewClaims(claims["id"].(string), claims["role"].(string), claims["verified"].(bool), time.Duration(claims["exp"].(float64)))
 }

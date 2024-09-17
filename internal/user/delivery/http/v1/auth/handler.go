@@ -264,12 +264,12 @@ func (h *authHandler) refresh(
 			return err
 		}
 
-		verification, err := ctxutil.GetJwtVerification(c)
+		userStatus, err := ctxutil.GetJwtUserStatus(c)
 		if err != nil {
 			return err
 		}
 
-		accessToken, err := accessGenerator.GenerateJWT(id, string(role), verification)
+		accessToken, err := accessGenerator.GenerateJWT(id, string(role), userStatus)
 		if err != nil {
 			return err
 		}

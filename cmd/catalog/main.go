@@ -30,7 +30,7 @@ func main() {
 	})
 
 	e.HTTPErrorHandler = func(err error, c echo.Context) {
-		if apiErr, ok := err.(rest.ErrorResponse); ok {
+		if apiErr, ok := err.(*rest.ErrorResponse); ok {
 			c.JSON(apiErr.Status, apiErr)
 			c.Logger().Error(err)
 			return

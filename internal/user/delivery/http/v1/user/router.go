@@ -18,16 +18,16 @@ func (h *userHandler) MapRoutes(
 		middleware.AllowSelfOrRole(enum.UserRoleADMIN, enum.UserRoleMODERATOR),
 	)
 
-	usersGroup.GET("/:id", h.findUserById, onlyVerifiedMiddleware)
-	usersGroup.PATCH("/:id", h.updateUserData, onlyVerifiedMiddleware)
-	usersGroup.DELETE("/:id", h.deleteUser, onlyVerifiedMiddleware)
+	usersGroup.GET("/:id", h.FindUserById, onlyVerifiedMiddleware)
+	usersGroup.PATCH("/:id", h.UpdateUserData, onlyVerifiedMiddleware)
+	usersGroup.DELETE("/:id", h.DeleteUser, onlyVerifiedMiddleware)
 
-	usersGroup.PATCH("/:id/pfp", h.uploadProfilePicture,
+	usersGroup.PATCH("/:id/pfp", h.UploadProfilePicture,
 		middleware.AllowFilesAmount("image", 1),
 		middleware.AllowContentType("image", "image/jpeg", "image/png"),
 	)
 
-	usersGroup.PATCH("/:id/change-password", h.updatePassword)
+	usersGroup.PATCH("/:id/change-password", h.UpdatePassword)
 
 	return usersGroup
 }

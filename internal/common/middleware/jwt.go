@@ -15,22 +15,21 @@ func JWT(jwtVerifier authjwt.JwtVerifier) echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			authHeader := c.Request().Header.Get("Authorization")
 			if authHeader == "" {
-				return rest.NewUnauthorizedError(nil, "Authorization header is missing")
+				return rest.NewUnauthorizedError(nil, rest.MsgMissingAuthorizationHeader)
 			}
 
 			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 			if tokenString == authHeader {
-				return rest.NewUnauthorizedError(nil, "Bearer token is missing")
+				return rest.NewUnauthorizedError(nil, rest.MsgMissingBearerToken)
 			}
 
 			claims, err := jwtVerifier.VerifyJWT(tokenString)
 			if err != nil {
-				return rest.NewUnauthorizedError(err, "Invalid token")
+				return err
 			}
 
-
 			if !claims.Role.Valid() {
-				return rest.NewUnauthorizedError(nil, "Invalid token")
+				return rest.NewUnauthorizedError(nil, rest.MsgInvalidToken)
 			}
 
 			ctxutil.SetJwtId(c, claims.ID)
