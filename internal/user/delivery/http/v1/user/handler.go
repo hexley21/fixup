@@ -88,7 +88,12 @@ func (h *userHandler) UploadProfilePicture(c echo.Context) error {
 		return rest.NewReadFileError(err)
 	}
 
-	imageFile := form.File["image"][0]
+	formFile := form.File["image"]
+	if len(formFile) < 1 {
+		return rest.NewBadRequestError(nil, rest.MsgNoFile)
+	}
+
+	imageFile := formFile[0]
 
 	src, err := imageFile.Open()
 	if err != nil {
