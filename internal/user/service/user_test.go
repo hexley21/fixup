@@ -82,15 +82,15 @@ func TestFindUserById(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, dto.ID, strconv.FormatInt(userEntity.ID, 10))
-	assert.Equal(t, dto.FirstName, userEntity.FirstName)
-	assert.Equal(t, dto.LastName, userEntity.LastName)
-	assert.Equal(t, dto.PhoneNumber, userEntity.PhoneNumber)
-	assert.Equal(t, dto.Email, userEntity.Email)
-	assert.Equal(t, dto.PictureUrl, signedPicture)
-	assert.Equal(t, dto.Role, string(userEntity.Role))
-	assert.Equal(t, dto.UserStatus, userEntity.UserStatus.Bool)
-	assert.Equal(t, dto.CreatedAt, userEntity.CreatedAt.Time)
+	assert.Equal(t, strconv.FormatInt(userEntity.ID, 10), dto.ID)
+	assert.Equal(t, userEntity.FirstName, dto.FirstName)
+	assert.Equal(t, userEntity.LastName, dto.LastName)
+	assert.Equal(t, userEntity.PhoneNumber, dto.PhoneNumber)
+	assert.Equal(t, userEntity.Email, dto.Email)
+	assert.Equal(t, signedPicture, dto.PictureUrl)
+	assert.Equal(t, string(userEntity.Role), dto.Role)
+	assert.Equal(t, userEntity.UserStatus.Bool, dto.UserStatus)
+	assert.Equal(t, userEntity.CreatedAt.Time, dto.CreatedAt)
 }
 
 func TestFindUserByIdOnNonexistendUser(t *testing.T) {
@@ -148,11 +148,11 @@ func TestUpdateUserDataById(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, dto.ID, strconv.FormatInt(userEntity.ID, 10))
-	assert.Equal(t, dto.Email, userEntity.Email)
-	assert.Equal(t, dto.PhoneNumber, userEntity.PhoneNumber)
-	assert.Equal(t, dto.FirstName, userEntity.FirstName)
-	assert.Equal(t, dto.LastName, userEntity.LastName)
+	assert.Equal(t, strconv.FormatInt(userEntity.ID, 10), dto.ID)
+	assert.Equal(t, userEntity.Email, dto.Email)
+	assert.Equal(t, userEntity.PhoneNumber, dto.PhoneNumber)
+	assert.Equal(t, userEntity.FirstName, dto.FirstName)
+	assert.Equal(t, userEntity.LastName, dto.LastName)
 }
 
 func TestUpdateUserDataByIdOnNonexistendUser(t *testing.T) {

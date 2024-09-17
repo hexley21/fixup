@@ -52,14 +52,14 @@ func TestMapUserToDto(t *testing.T) {
 	dto, err := mapper.MapUserToDto(entity, mockUrlSigner)
 	assert.NoError(t, err)
 
-	assert.Equal(t, dto.ID, strconv.FormatInt(entity.ID, 10))
-	assert.Equal(t, dto.FirstName, entity.FirstName)
-	assert.Equal(t, dto.PhoneNumber, entity.PhoneNumber)
-	assert.Equal(t, dto.Email, entity.Email)
-	assert.Equal(t, dto.PictureUrl, signedUrl)
-	assert.Equal(t, dto.Role, string(entity.Role))
-	assert.Equal(t, dto.UserStatus, entity.UserStatus.Bool)
-	assert.Equal(t, dto.CreatedAt, entity.CreatedAt.Time)
+	assert.Equal(t, strconv.FormatInt(entity.ID, 10), dto.ID)
+	assert.Equal(t, entity.FirstName, dto.FirstName)
+	assert.Equal(t, entity.PhoneNumber, dto.PhoneNumber)
+	assert.Equal(t, entity.Email, dto.Email)
+	assert.Equal(t, signedUrl, dto.PictureUrl)
+	assert.Equal(t, string(entity.Role), dto.Role)
+	assert.Equal(t, entity.UserStatus.Bool, dto.UserStatus)
+	assert.Equal(t, entity.CreatedAt.Time, dto.CreatedAt)
 }
 
 func TestMapUserToDtoError(t *testing.T) {

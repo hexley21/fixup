@@ -2,7 +2,6 @@ package repository_test
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"testing"
 
@@ -23,7 +22,7 @@ func TestCreateProvider(t *testing.T) {
 
 	user, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+		t.Fatalf("failed to insert user: %v", err)
 	}
 
 	args := repository.CreateProviderParams{
@@ -39,9 +38,9 @@ func TestCreateProvider(t *testing.T) {
 	err = row.Scan(&p.PersonalIDNumber, &p.PersonalIDPreview, &p.UserID)
 	assert.NoError(t, err)
 
-	assert.Equal(t, p.PersonalIDNumber, args.PersonalIDNumber)
-	assert.Equal(t, p.PersonalIDPreview, args.PersonalIDPreview)
-	assert.Equal(t, p.UserID, args.UserID)
+	assert.Equal(t, args.PersonalIDNumber, p.PersonalIDNumber)
+	assert.Equal(t, args.PersonalIDPreview, p.PersonalIDPreview)
+	assert.Equal(t, args.UserID, p.UserID)
 }
 
 func TestCreateProviderWithInvalidArgs(t *testing.T) {
@@ -53,7 +52,7 @@ func TestCreateProviderWithInvalidArgs(t *testing.T) {
 
 	user, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+		t.Fatalf("failed to insert user: %v", err)
 	}
 
 	invalidArgs := []repository.CreateProviderParams{
@@ -87,7 +86,7 @@ func TestCreateProviderForNonexistentUser(t *testing.T) {
 	err := repo.Create(ctx, args)
 	var pgErr *pgconn.PgError
 	if assert.ErrorAs(t, err, &pgErr) {
-		assert.Equal(t, pgErr.Code, pgerrcode.ForeignKeyViolation)
+		assert.Equal(t, pgerrcode.ForeignKeyViolation, pgErr.Code)
 	}
 
 	row := dbPool.QueryRow(ctx, "SELECT * FROM  providers WHERE user_id = $1", args.UserID)
@@ -105,7 +104,7 @@ func TestGetByUserId(t *testing.T) {
 
 	user, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+		t.Fatalf("failed to insert user: %v", err)
 	}
 
 	row := dbPool.QueryRow(
@@ -115,22 +114,22 @@ func TestGetByUserId(t *testing.T) {
 		"12345",
 		user.ID,
 	)
-	var provider entity.Provider
+	var selection entity.Provider
 	err = row.Scan(
-		&provider.PersonalIDNumber,
-		&provider.PersonalIDPreview,
-		&provider.UserID,
+		&selection.PersonalIDNumber,
+		&selection.PersonalIDPreview,
+		&selection.UserID,
 	)
 	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert provider: %v", err))
+		t.Fatalf("failed to insert provider: %v", err)
 	}
 
-	res, err := repo.GetByUserId(ctx, provider.UserID)
+	provider, err := repo.GetByUserId(ctx, selection.UserID)
 	assert.NoError(t, err)
 
-	assert.Equal(t, res.PersonalIDNumber, provider.PersonalIDNumber)
-	assert.Equal(t, res.PersonalIDPreview, provider.PersonalIDPreview)
-	assert.Equal(t, res.UserID, provider.UserID)
+	assert.Equal(t, selection.PersonalIDNumber, provider.PersonalIDNumber)
+	assert.Equal(t, selection.PersonalIDPreview, provider.PersonalIDPreview)
+	assert.Equal(t, selection.UserID, provider.UserID)
 }
 
 func TestGetByUserIdWithNonexistentProvider(t *testing.T) {
@@ -142,10 +141,10 @@ func TestGetByUserIdWithNonexistentProvider(t *testing.T) {
 
 	user, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+		t.Fatalf("failed to insert user: %v", err)
 	}
 
-	res, err := repo.GetByUserId(ctx, user.ID)
+	provider, err := repo.GetByUserId(ctx, user.ID)
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
-	assert.Empty(t, res)
+	assert.Empty(t, provider)
 }

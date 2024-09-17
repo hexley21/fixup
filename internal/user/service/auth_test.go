@@ -16,7 +16,6 @@ import (
 	mock_hasher "github.com/hexley21/fixup/pkg/hasher/mock"
 	mock_cdn "github.com/hexley21/fixup/pkg/infra/cdn/mock"
 	mock_postgres "github.com/hexley21/fixup/pkg/infra/postgres/mock"
-	_ "github.com/hexley21/fixup/pkg/mailer/mock"
 	mock_mailer "github.com/hexley21/fixup/pkg/mailer/mock"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/assert"
@@ -44,7 +43,6 @@ var (
 
 	mockEmailAddress = "fixup@gmail.com"
 	newHash          = "hash"
-	newToken         = "VerificationToken"
 	newUrl           = "picture.png?signed=true"
 
 	confiramtionTemplate = template.New("confirmation")
@@ -71,10 +69,10 @@ func TestRegisterCustomer(t *testing.T) {
 
 	dto, err := service.RegisterCustomer(ctx, registerUserDto)
 	assert.NoError(t, err)
-	assert.Equal(t, dto.Email, registerUserDto.Email)
-	assert.Equal(t, dto.PhoneNumber, registerUserDto.PhoneNumber)
-	assert.Equal(t, dto.FirstName, registerUserDto.FirstName)
-	assert.Equal(t, dto.LastName, registerUserDto.LastName)
+	assert.Equal(t, registerUserDto.Email, dto.Email)
+	assert.Equal(t, registerUserDto.PhoneNumber, dto.PhoneNumber)
+	assert.Equal(t, registerUserDto.FirstName, dto.FirstName)
+	assert.Equal(t, registerUserDto.LastName, dto.LastName)
 
 	time.Sleep(100 * time.Millisecond)
 }
@@ -110,10 +108,10 @@ func TestRegisterProvider(t *testing.T) {
 
 	dto, err := service.RegisterProvider(ctx, registerProviderDto)
 	assert.NoError(t, err)
-	assert.Equal(t, dto.Email, registerUserDto.Email)
-	assert.Equal(t, dto.PhoneNumber, registerUserDto.PhoneNumber)
-	assert.Equal(t, dto.FirstName, registerUserDto.FirstName)
-	assert.Equal(t, dto.LastName, registerUserDto.LastName)
+	assert.Equal(t, registerUserDto.Email, dto.Email)
+	assert.Equal(t, registerUserDto.PhoneNumber, dto.PhoneNumber)
+	assert.Equal(t, registerUserDto.FirstName, dto.FirstName)
+	assert.Equal(t, registerUserDto.LastName, dto.LastName)
 
 	time.Sleep(100 * time.Millisecond)
 }
@@ -141,9 +139,9 @@ func TestAuthenticateUser(t *testing.T) {
 
 	credentialsDto, err := service.AuthenticateUser(ctx, loginDto)
 	assert.NoError(t, err)
-	assert.Equal(t, credentialsDto.ID, strconv.FormatInt(creds.ID, 10))
-	assert.Equal(t, credentialsDto.Role, string(credentialsDto.Role))
-	assert.Equal(t, credentialsDto.UserStatus, creds.UserStatus.Bool)
+	assert.Equal(t, strconv.FormatInt(creds.ID, 10), credentialsDto.ID)
+	assert.Equal(t, string(credentialsDto.Role), credentialsDto.Role)
+	assert.Equal(t, creds.UserStatus.Bool, credentialsDto.UserStatus)
 }
 
 func TestVerifyUser(t *testing.T) {
@@ -185,9 +183,9 @@ func TestGetUserConfirmationDetails(t *testing.T) {
 
 	dto, err := service.GetUserConfirmationDetails(ctx, "")
 	assert.NoError(t, err)
-	assert.Equal(t, dto.ID, strconv.FormatInt(args.ID, 10))
-	assert.Equal(t, dto.UserStatus, args.UserStatus.Bool)
-	assert.Equal(t, dto.Firstname, args.FirstName)
+	assert.Equal(t, strconv.FormatInt(args.ID, 10), dto.ID)
+	assert.Equal(t, args.UserStatus.Bool, dto.UserStatus)
+	assert.Equal(t, args.FirstName, dto.Firstname)
 }
 
 func TestSendConfirmationLetter(t *testing.T) {

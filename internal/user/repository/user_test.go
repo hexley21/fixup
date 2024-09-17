@@ -2,7 +2,6 @@ package repository_test
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"testing"
 
@@ -41,14 +40,14 @@ func TestCreate(t *testing.T) {
 	entity, err := repo.Create(ctx, userCreateArgs)
 	assert.NoError(t, err)
 
-	assert.Equal(t, entity.FirstName, userCreateArgs.FirstName)
-	assert.Equal(t, entity.LastName, userCreateArgs.LastName)
-	assert.Equal(t, entity.PhoneNumber, userCreateArgs.PhoneNumber)
-	assert.Equal(t, entity.Email, userCreateArgs.Email)
-	assert.Equal(t, entity.Role, userCreateArgs.Role)
-	assert.Equal(t, entity.UserStatus.Bool, false)
+	assert.Equal(t, userCreateArgs.FirstName, entity.FirstName)
+	assert.Equal(t, userCreateArgs.LastName, entity.LastName)
+	assert.Equal(t, userCreateArgs.PhoneNumber, entity.PhoneNumber)
+	assert.Equal(t, userCreateArgs.Email, entity.Email)
+	assert.Equal(t, userCreateArgs.Role, entity.Role)
+	assert.Equal(t, false, entity.UserStatus.Bool)
 
-	assert.NotEqual(t, entity.ID, 0)
+	assert.NotEqual(t, 0, entity.ID)
 	assert.NotEmpty(t, entity.CreatedAt)
 
 	assert.Empty(t, entity.PictureName)
@@ -66,14 +65,14 @@ func TestCreateWithInvalidArgs(t *testing.T) {
 	entity, err := repo.Create(ctx, userCreateArgs)
 	assert.NoError(t, err)
 
-	assert.Equal(t, entity.FirstName, userCreateArgs.FirstName)
-	assert.Equal(t, entity.LastName, userCreateArgs.LastName)
-	assert.Equal(t, entity.PhoneNumber, userCreateArgs.PhoneNumber)
-	assert.Equal(t, entity.Email, userCreateArgs.Email)
-	assert.Equal(t, entity.Role, userCreateArgs.Role)
-	assert.Equal(t, entity.UserStatus.Bool, false)
+	assert.Equal(t, userCreateArgs.FirstName, entity.FirstName)
+	assert.Equal(t, userCreateArgs.LastName, entity.LastName)
+	assert.Equal(t, userCreateArgs.PhoneNumber, entity.PhoneNumber)
+	assert.Equal(t, userCreateArgs.Email, entity.Email)
+	assert.Equal(t, userCreateArgs.Role, entity.Role)
+	assert.Equal(t, false, entity.UserStatus.Bool)
 
-	assert.NotEqual(t, entity.ID, 0)
+	assert.NotEqual(t, 0, entity.ID)
 	assert.NotEmpty(t, entity.CreatedAt)
 
 	assert.Empty(t, entity.PictureName)
@@ -89,21 +88,21 @@ func TestGetById(t *testing.T) {
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+		t.Fatalf("failed to insert user: %v", err)
 	}
 
 	entity, err := repo.GetById(ctx, insert.ID)
 	assert.NoError(t, err)
 
-	assert.Equal(t, entity.ID, insert.ID)
-	assert.Equal(t, entity.FirstName, insert.FirstName)
-	assert.Equal(t, entity.LastName, insert.LastName)
-	assert.Equal(t, entity.PhoneNumber, insert.PhoneNumber)
-	assert.Equal(t, entity.Email, insert.Email)
-	assert.Equal(t, entity.Role, insert.Role)
-	assert.Equal(t, entity.UserStatus, insert.UserStatus)
-	assert.Equal(t, entity.CreatedAt, insert.CreatedAt)
-	assert.Equal(t, entity.PictureName, insert.PictureName)
+	assert.Equal(t, insert.ID, entity.ID)
+	assert.Equal(t, insert.FirstName, entity.FirstName)
+	assert.Equal(t, insert.LastName, entity.LastName)
+	assert.Equal(t, insert.PhoneNumber, entity.PhoneNumber)
+	assert.Equal(t, insert.Email, entity.Email)
+	assert.Equal(t, insert.Role, entity.Role)
+	assert.Equal(t, insert.UserStatus, entity.UserStatus)
+	assert.Equal(t, insert.CreatedAt, entity.CreatedAt)
+	assert.Equal(t, insert.PictureName, entity.PictureName)
 
 	assert.Empty(t, entity.Hash)
 }
@@ -128,7 +127,7 @@ func TestCreateInvalidArgs(t *testing.T) {
 	i := 0
 	for _, args := range invalidArgs {
 		entity, err := repo.Create(ctx, args)
-		if !assert.Error(t, err, i) {
+		if !assert.Error(t, err) {
 			log.Println("create user:", i)
 		}
 		assert.Empty(t, entity)
@@ -145,16 +144,16 @@ func TestGetCredentialsByEmail(t *testing.T) {
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+		t.Fatalf("failed to insert user: %v", err)
 	}
 
 	creds, err := repo.GetCredentialsByEmail(ctx, insert.Email)
 	assert.NoError(t, err)
 
-	assert.Equal(t, creds.ID, insert.ID)
-	assert.Equal(t, creds.Role, insert.Role)
-	assert.Equal(t, creds.Hash, insert.Hash)
-	assert.Equal(t, creds.UserStatus, insert.UserStatus)
+	assert.Equal(t, insert.ID, creds.ID)
+	assert.Equal(t, insert.Role, creds.Role)
+	assert.Equal(t, insert.Hash, creds.Hash)
+	assert.Equal(t, insert.UserStatus, creds.UserStatus)
 }
 
 func TestGetCredentialsByEmailFromNonexistendUser(t *testing.T) {
@@ -178,13 +177,13 @@ func TestGetHashById(t *testing.T) {
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+		t.Fatalf("failed to insert user: %v", err)
 	}
 
 	hash, err := repo.GetHashById(ctx, insert.ID)
 	assert.NoError(t, err)
 
-	assert.Equal(t, hash, insert.Hash)
+	assert.Equal(t, insert.Hash, hash)
 }
 
 func TestGetHashFromNonexistentUser(t *testing.T) {
@@ -208,7 +207,7 @@ func TestUpdate(t *testing.T) {
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+		t.Fatalf("failed to insert user: %v", err)
 	}
 
 	firstName := "updated_firstname"
@@ -227,10 +226,10 @@ func TestUpdate(t *testing.T) {
 	update, err := repo.Update(ctx, updateArgs)
 	assert.NoError(t, err)
 
-	assert.Equal(t, update.FirstName, firstName)
-	assert.Equal(t, update.LastName, lastName)
-	assert.Equal(t, update.PhoneNumber, phoneNumber)
-	assert.Equal(t, update.Email, email)
+	assert.Equal(t, firstName, update.FirstName)
+	assert.Equal(t, lastName, update.LastName)
+	assert.Equal(t, phoneNumber, update.PhoneNumber)
+	assert.Equal(t, email, update.Email)
 }
 
 func TestUpdateWithPartialArguments(t *testing.T) {
@@ -242,7 +241,7 @@ func TestUpdateWithPartialArguments(t *testing.T) {
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+		t.Fatalf("failed to insert user: %v", err)
 	}
 
 	firstName := "updated_firstname"
@@ -257,10 +256,10 @@ func TestUpdateWithPartialArguments(t *testing.T) {
 	update, err := repo.Update(ctx, updateArgs)
 	assert.NoError(t, err)
 
-	assert.Equal(t, update.FirstName, firstName)
-	assert.Equal(t, update.LastName, lastName)
-	assert.Equal(t, update.PhoneNumber, userCreateArgs.PhoneNumber)
-	assert.Equal(t, update.Email, userCreateArgs.Email)
+	assert.Equal(t, firstName, update.FirstName)
+	assert.Equal(t, lastName, update.LastName)
+	assert.Equal(t, userCreateArgs.PhoneNumber, update.PhoneNumber)
+	assert.Equal(t, userCreateArgs.Email, update.Email)
 }
 
 func TestUpdateWithNoArguments(t *testing.T) {
@@ -272,7 +271,7 @@ func TestUpdateWithNoArguments(t *testing.T) {
 
 	_, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+		t.Fatalf("failed to insert user: %v", err)
 	}
 
 	update, err := repo.Update(ctx, repository.UpdateUserParams{ID: 1})
@@ -301,7 +300,7 @@ func TestUpdatePicture(t *testing.T) {
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+		t.Fatalf("failed to insert user: %v", err)
 	}
 
 	var pictureArg pgtype.Text
@@ -318,7 +317,7 @@ func TestUpdatePicture(t *testing.T) {
 	err = row.Scan(&updatedPicture)
 	assert.NoError(t, err)
 
-	assert.Equal(t, pictureArg, updatedPicture)
+	assert.Equal(t, updatedPicture, pictureArg)
 }
 
 func TestUpdatePictureForNonexistentUser(t *testing.T) {
@@ -341,7 +340,7 @@ func TestUpdateStatus(t *testing.T) {
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+		t.Fatalf("failed to insert user: %v", err)
 	}
 
 	var statusArg pgtype.Bool
@@ -358,7 +357,7 @@ func TestUpdateStatus(t *testing.T) {
 	err = row.Scan(&updatedStatus)
 	assert.NoError(t, err)
 
-	assert.Equal(t, statusArg, updatedStatus)
+	assert.Equal(t, updatedStatus, statusArg)
 }
 
 func TestUpdateStatusForNonexistentUser(t *testing.T) {
@@ -381,7 +380,7 @@ func TestUpdateHash(t *testing.T) {
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+		t.Fatalf("failed to insert user: %v", err)
 	}
 
 	args := repository.UpdateUserHashParams{
@@ -408,7 +407,7 @@ func TestUpdateHashWithInvalidArgs(t *testing.T) {
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+		t.Fatalf("failed to insert user: %v", err)
 	}
 
 	err = repo.UpdateHash(ctx, repository.UpdateUserHashParams{
@@ -417,7 +416,7 @@ func TestUpdateHashWithInvalidArgs(t *testing.T) {
 	})
 	var pgErr *pgconn.PgError
 	if assert.ErrorAs(t, err, &pgErr) {
-		assert.Equal(t, pgErr.Code, pgerrcode.CheckViolation)
+		assert.Equal(t, pgerrcode.CheckViolation, pgErr.Code)
 	}
 }
 
@@ -441,7 +440,7 @@ func TestDeleteById(t *testing.T) {
 
 	insert, err := insertUser(dbPool, ctx, userCreateArgs, 1)
 	if err != nil {
-		assert.FailNow(t, fmt.Sprintf("failed to insert user: %v", err))
+		t.Fatalf("failed to insert user: %v", err)
 	}
 
 	err = repo.DeleteById(ctx, insert.ID)
@@ -450,7 +449,7 @@ func TestDeleteById(t *testing.T) {
 	row := dbPool.QueryRow(ctx, "SELECT * FROM users WHERE id = $1", insert.ID)
 	var userId int64
 	err = row.Scan(userId)
-	assert.Error(t, err, pgx.ErrNoRows)
+	assert.ErrorIs(t, err, pgx.ErrNoRows)
 }
 
 func TestDeleteByIdWithNonexistendUser(t *testing.T) {
