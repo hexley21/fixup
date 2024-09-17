@@ -97,12 +97,12 @@ func (s *authServiceImpl) SetTemplates(confirmation *template.Template, verified
 func (s *authServiceImpl) RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error) {
 	var dto dto.User
 
-	user, err := s.userRepository.Create(ctx,
+	user, err := s.userRepository.CreateUser(ctx,
 		repository.CreateUserParams{
-			FirstName:   dto.FirstName,
-			LastName:    dto.LastName,
-			PhoneNumber: dto.PhoneNumber,
-			Email:       dto.Email,
+			FirstName:   registerDto.FirstName,
+			LastName:    registerDto.LastName,
+			PhoneNumber: registerDto.PhoneNumber,
+			Email:       registerDto.Email,
 			Hash:        s.hasher.HashPassword(registerDto.Password),
 			Role:        enum.UserRoleCUSTOMER,
 		})
@@ -126,12 +126,12 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 		return dto, err
 	}
 
-	user, err := s.userRepository.WithTx(tx).Create(ctx,
+	user, err := s.userRepository.WithTx(tx).CreateUser(ctx,
 		repository.CreateUserParams{
-			FirstName:   dto.FirstName,
-			LastName:    dto.LastName,
-			PhoneNumber: dto.PhoneNumber,
-			Email:       dto.Email,
+			FirstName:   registerDto.FirstName,
+			LastName:    registerDto.LastName,
+			PhoneNumber: registerDto.PhoneNumber,
+			Email:       registerDto.Email,
 			Hash:        s.hasher.HashPassword(registerDto.Password),
 			Role:        enum.UserRoleCUSTOMER,
 		},
