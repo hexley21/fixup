@@ -5,11 +5,17 @@ import (
 )
 
 const (
+	MsgInvalidArguments = "Invalid arguments"
+
 	MsgUserNotFound      = "User not found"
 	MsgUserAlreadyExists = "User already exists"
 
 	MsgIncorrectPassword    = "Password is incorrect"
 	MsgIncorrectEmailOrPass = "Email or Password is incorrect"
+
+	MsgFileReadError = "Failed read file"
+	MsgNoFile = "No file provided"
+	MsgTooManyFiles = "Too many files"
 
 	MsgInvalidToken = "Invalid token"
 	MsgMissingAuthorizationHeader = "Authorization header is missing"
@@ -19,9 +25,9 @@ const (
 )
 
 func NewInvalidArgumentsError(cause error) *ErrorResponse {
-	return newError(cause, "Invalid arguments", http.StatusBadRequest)
+	return newError(cause, MsgInvalidArguments, http.StatusBadRequest)
 }
 
 func NewReadFileError(cause error) *ErrorResponse {
-	return newError(cause, "Failed read file", http.StatusInternalServerError)
+	return newError(cause, MsgFileReadError, http.StatusInternalServerError)
 }

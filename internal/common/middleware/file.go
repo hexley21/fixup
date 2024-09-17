@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	errTooManyFiles = rest.NewBadRequestError(nil, "Too many files")
-	errNoFile       = rest.NewBadRequestError(nil, "No file provided")
+	errTooManyFiles = rest.NewBadRequestError(nil, rest.MsgTooManyFiles)
+	errNoFile       = rest.NewBadRequestError(nil, rest.MsgNoFile)
 )
 
 func AllowFilesAmount(key string, amount int) echo.MiddlewareFunc {
