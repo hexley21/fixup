@@ -29,57 +29,8 @@ var (
 	invalidValue = "uwox71YgdFn6SuR4x971KjxrUaSoUdax9k0DkCt1WnzEHcdG9lpqEkF7RHw0SWUL"
 )
 
-func TestCreate(t *testing.T) {
-	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	snowflakeNode := getSnowflakeNode()
-	setupDatabaseCleanup(t, ctx, dbPool)
 
-	repo := repository.NewUserRepository(dbPool, snowflakeNode)
-
-	entity, err := repo.CreateUser(ctx, userCreateArgs)
-	assert.NoError(t, err)
-
-	assert.Equal(t, userCreateArgs.FirstName, entity.FirstName)
-	assert.Equal(t, userCreateArgs.LastName, entity.LastName)
-	assert.Equal(t, userCreateArgs.PhoneNumber, entity.PhoneNumber)
-	assert.Equal(t, userCreateArgs.Email, entity.Email)
-	assert.Equal(t, userCreateArgs.Role, entity.Role)
-	assert.Equal(t, false, entity.UserStatus.Bool)
-
-	assert.NotEqual(t, 0, entity.ID)
-	assert.NotEmpty(t, entity.CreatedAt)
-
-	assert.Empty(t, entity.PictureName)
-	assert.Empty(t, entity.Hash)
-}
-
-func TestCreateWithInvalidArgs(t *testing.T) {
-	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	snowflakeNode := getSnowflakeNode()
-	setupDatabaseCleanup(t, ctx, dbPool)
-
-	repo := repository.NewUserRepository(dbPool, snowflakeNode)
-
-	entity, err := repo.CreateUser(ctx, userCreateArgs)
-	assert.NoError(t, err)
-
-	assert.Equal(t, userCreateArgs.FirstName, entity.FirstName)
-	assert.Equal(t, userCreateArgs.LastName, entity.LastName)
-	assert.Equal(t, userCreateArgs.PhoneNumber, entity.PhoneNumber)
-	assert.Equal(t, userCreateArgs.Email, entity.Email)
-	assert.Equal(t, userCreateArgs.Role, entity.Role)
-	assert.Equal(t, false, entity.UserStatus.Bool)
-
-	assert.NotEqual(t, 0, entity.ID)
-	assert.NotEmpty(t, entity.CreatedAt)
-
-	assert.Empty(t, entity.PictureName)
-	assert.Empty(t, entity.Hash)
-}
-
-func TestGetById(t *testing.T) {
+func TestGetById_Success(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -107,7 +58,32 @@ func TestGetById(t *testing.T) {
 	assert.Empty(t, entity.Hash)
 }
 
-func TestCreateInvalidArgs(t *testing.T) {
+func TestCreate_Success(t *testing.T) {
+	ctx := context.Background()
+	dbPool := getDbPool(ctx)
+	snowflakeNode := getSnowflakeNode()
+	setupDatabaseCleanup(t, ctx, dbPool)
+
+	repo := repository.NewUserRepository(dbPool, snowflakeNode)
+
+	entity, err := repo.CreateUser(ctx, userCreateArgs)
+	assert.NoError(t, err)
+
+	assert.Equal(t, userCreateArgs.FirstName, entity.FirstName)
+	assert.Equal(t, userCreateArgs.LastName, entity.LastName)
+	assert.Equal(t, userCreateArgs.PhoneNumber, entity.PhoneNumber)
+	assert.Equal(t, userCreateArgs.Email, entity.Email)
+	assert.Equal(t, userCreateArgs.Role, entity.Role)
+	assert.Equal(t, false, entity.UserStatus.Bool)
+
+	assert.NotEqual(t, 0, entity.ID)
+	assert.NotEmpty(t, entity.CreatedAt)
+
+	assert.Empty(t, entity.PictureName)
+	assert.Empty(t, entity.Hash)
+}
+
+func TestCreate_InvalidArgs(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	snowflakeNode := getSnowflakeNode()
@@ -135,7 +111,7 @@ func TestCreateInvalidArgs(t *testing.T) {
 	}
 }
 
-func TestGetCredentialsByEmail(t *testing.T) {
+func TestGetCredentialsByEmail_Success(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -156,7 +132,7 @@ func TestGetCredentialsByEmail(t *testing.T) {
 	assert.Equal(t, insert.UserStatus, creds.UserStatus)
 }
 
-func TestGetCredentialsByEmailFromNonexistendUser(t *testing.T) {
+func TestGetCredentialsByEmail_NotFound(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -168,7 +144,7 @@ func TestGetCredentialsByEmailFromNonexistendUser(t *testing.T) {
 	assert.Empty(t, creds)
 }
 
-func TestGetHashById(t *testing.T) {
+func TestGetHashById_Success(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -186,7 +162,7 @@ func TestGetHashById(t *testing.T) {
 	assert.Equal(t, insert.Hash, hash)
 }
 
-func TestGetHashFromNonexistentUser(t *testing.T) {
+func TestGetHash_NotFound(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -198,7 +174,7 @@ func TestGetHashFromNonexistentUser(t *testing.T) {
 	assert.Empty(t, hash)
 }
 
-func TestUpdate(t *testing.T) {
+func TestUpdate_Success(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -232,7 +208,7 @@ func TestUpdate(t *testing.T) {
 	assert.Equal(t, email, update.Email)
 }
 
-func TestUpdateWithPartialArguments(t *testing.T) {
+func TestUpdate_PartialArguments(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -262,7 +238,7 @@ func TestUpdateWithPartialArguments(t *testing.T) {
 	assert.Equal(t, userCreateArgs.Email, update.Email)
 }
 
-func TestUpdateWithNoArguments(t *testing.T) {
+func TestUpdate_NoArguments(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -279,7 +255,7 @@ func TestUpdateWithNoArguments(t *testing.T) {
 	assert.Empty(t, update)
 }
 
-func TestUpdateForNonexistentUser(t *testing.T) {
+func TestUpdate_NotFound(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -291,7 +267,7 @@ func TestUpdateForNonexistentUser(t *testing.T) {
 	assert.Empty(t, update)
 }
 
-func TestUpdatePicture(t *testing.T) {
+func TestUpdatePicture_Success(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -320,7 +296,7 @@ func TestUpdatePicture(t *testing.T) {
 	assert.Equal(t, updatedPicture, pictureArg)
 }
 
-func TestUpdatePictureForNonexistentUser(t *testing.T) {
+func TestUpdatePicture_NotFound(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -331,7 +307,7 @@ func TestUpdatePictureForNonexistentUser(t *testing.T) {
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 }
 
-func TestUpdateStatus(t *testing.T) {
+func TestUpdateStatus_Success(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -360,7 +336,7 @@ func TestUpdateStatus(t *testing.T) {
 	assert.Equal(t, updatedStatus, statusArg)
 }
 
-func TestUpdateStatusForNonexistentUser(t *testing.T) {
+func TestUpdateStatus_NotFound(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -371,7 +347,7 @@ func TestUpdateStatusForNonexistentUser(t *testing.T) {
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 }
 
-func TestUpdateHash(t *testing.T) {
+func TestUpdateHash_Success(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -398,7 +374,7 @@ func TestUpdateHash(t *testing.T) {
 	assert.Equal(t, args.Hash, updatedHash)
 }
 
-func TestUpdateHashWithInvalidArgs(t *testing.T) {
+func TestUpdateHash_InvalidArguments(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -420,7 +396,7 @@ func TestUpdateHashWithInvalidArgs(t *testing.T) {
 	}
 }
 
-func TestUpdateHashForNonexistentUser(t *testing.T) {
+func TestUpdateHash_NotFound(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -431,7 +407,7 @@ func TestUpdateHashForNonexistentUser(t *testing.T) {
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 }
 
-func TestDeleteById(t *testing.T) {
+func TestDeleteById_Success(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -452,7 +428,7 @@ func TestDeleteById(t *testing.T) {
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 }
 
-func TestDeleteByIdWithNonexistendUser(t *testing.T) {
+func TestDeleteById_NotFound(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)

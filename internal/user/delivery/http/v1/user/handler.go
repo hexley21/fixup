@@ -186,7 +186,7 @@ func (h *userHandler) DeleteUser(c echo.Context) error {
 // @Produce json
 // @Param id path int true "User ID"
 // @Param body body dto.UpdatePassword true "Update Password DTO"
-// @Success 201 "Accepted"
+// @Success 204 "No Content"
 // @Failure 400 {object} rest.ErrorResponse "Invalid arguments"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"
 // @Failure 404 {object} rest.ErrorResponse "User not found"
@@ -222,5 +222,5 @@ func (h *userHandler) ChangePassword(c echo.Context) error {
 		return rest.NewInternalServerError(err)
 	}
 
-	return c.NoContent(http.StatusAccepted)
+	return c.NoContent(http.StatusNoContent)
 }

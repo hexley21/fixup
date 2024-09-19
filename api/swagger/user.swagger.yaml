@@ -364,8 +364,8 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Accepted
+        "204":
+          description: No Content
         "400":
           description: Invalid arguments
           schema:

@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateProvider(t *testing.T) {
+func TestCreateProvider_Success(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -43,7 +43,7 @@ func TestCreateProvider(t *testing.T) {
 	assert.Equal(t, args.UserID, p.UserID)
 }
 
-func TestCreateProviderWithInvalidArgs(t *testing.T) {
+func TestCreateProvider_InvalidArguments(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -70,7 +70,7 @@ func TestCreateProviderWithInvalidArgs(t *testing.T) {
 	}
 }
 
-func TestCreateProviderForNonexistentUser(t *testing.T) {
+func TestCreateProvider_NotFound(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -95,7 +95,7 @@ func TestCreateProviderForNonexistentUser(t *testing.T) {
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 }
 
-func TestGetByUserId(t *testing.T) {
+func TestGetByUserId_Success(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)
@@ -132,7 +132,7 @@ func TestGetByUserId(t *testing.T) {
 	assert.Equal(t, selection.UserID, provider.UserID)
 }
 
-func TestGetByUserIdWithNonexistentProvider(t *testing.T) {
+func TestGetByUserId_NotFound(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getDbPool(ctx)
 	setupDatabaseCleanup(t, ctx, dbPool)

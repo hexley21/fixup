@@ -39,7 +39,7 @@ var (
 		CreatedAt:   time.Now(),
 	}
 
-	updateUserJSON = `{"email": "larry@page.com","first_name": "Larry","last_name": "Page","phone_number": "995112233"}`
+	updateUserJSON     = `{"email": "larry@page.com","first_name": "Larry","last_name": "Page","phone_number": "995112233"}`
 	changePasswordJSON = `{"old_password": "larrypage123", "new_password": "pagelarry321"}`
 
 	fileContent = []byte("fake file content")
@@ -67,7 +67,7 @@ func createMultipartFormData(t *testing.T, fieldName, fileName string, fileConte
 	return body, writer.FormDataContentType()
 }
 
-func TestFindUserById(t *testing.T) {
+func TestFindUserById_Success(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -76,20 +76,21 @@ func TestFindUserById(t *testing.T) {
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	mockUserService.EXPECT().FindUserById(ctx, int64(1)).Return(userDto, nil)
 
-	e := echo.New()
+	h := user.NewUserHandler(mockUserService)
+
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
 	ctxutil.SetParamId(c, userDto.ID)
-
-	h := user.NewUserHandler(mockUserService)
 
 	assert.NoError(t, h.FindUserById(c))
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
 
-func TestFindUserByIdOnNonexistentUser(t *testing.T) {
+func TestFindUserById_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -98,14 +99,15 @@ func TestFindUserByIdOnNonexistentUser(t *testing.T) {
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	mockUserService.EXPECT().FindUserById(ctx, int64(1)).Return(dto.User{}, pgx.ErrNoRows)
 
-	e := echo.New()
+	h := user.NewUserHandler(mockUserService)
+
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
 	ctxutil.SetParamId(c, userDto.ID)
-
-	h := user.NewUserHandler(mockUserService)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.FindUserById(c), &errResp) {
@@ -115,23 +117,24 @@ func TestFindUserByIdOnNonexistentUser(t *testing.T) {
 	}
 }
 
-func TestFindUserByIdWithServiceError(t *testing.T) {
+func TestFindUserById_ServiceError(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	e := echo.New()
-	req := httptest.NewRequest(http.MethodPost, "/", nil)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-	c.SetPath("/:id")
-	ctxutil.SetParamId(c, userDto.ID)
-
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	mockUserService.EXPECT().FindUserById(ctx, int64(1)).Return(dto.User{}, errors.New(""))
 
 	h := user.NewUserHandler(mockUserService)
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rec := httptest.NewRecorder()
+
+	e := echo.New()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:id")
+	ctxutil.SetParamId(c, userDto.ID)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.FindUserById(c), &errResp) {
@@ -140,17 +143,18 @@ func TestFindUserByIdWithServiceError(t *testing.T) {
 	}
 }
 
-func TestFindUserByIdOnIdParamNotImplemented(t *testing.T) {
+func TestFindUserById_IdParamNotImplemented(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	e := echo.New()
+	h := user.NewUserHandler(nil)
+
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
-
-	h := user.NewUserHandler(nil)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.FindUserById(c), &errResp) {
@@ -160,7 +164,7 @@ func TestFindUserByIdOnIdParamNotImplemented(t *testing.T) {
 	}
 }
 
-func TestUploadProfilePicture(t *testing.T) {
+func TestUploadProfilePicture_Success(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -169,31 +173,32 @@ func TestUploadProfilePicture(t *testing.T) {
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	mockUserService.EXPECT().SetProfilePicture(ctx, int64(1), gomock.Any(), "", gomock.Any(), gomock.Any()).Return(nil)
 
-	body, contentType := createMultipartFormData(t, "image", "test.jpg", fileContent)
+	h := user.NewUserHandler(mockUserService)
 
-	e := echo.New()
+	body, contentType := createMultipartFormData(t, "image", "test.jpg", fileContent)
 	req := httptest.NewRequest(http.MethodPost, "/", body)
 	req.Header.Set(echo.HeaderContentType, contentType)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
 	ctxutil.SetParamId(c, "1")
-
-	h := user.NewUserHandler(mockUserService)
 
 	assert.NoError(t, h.UploadProfilePicture(c))
 	assert.Equal(t, http.StatusNoContent, rec.Code)
 }
 
-func TestUploadProfilePictureWithoutMultipart(t *testing.T) {
-	e := echo.New()
+func TestUploadProfilePicture_MissingHeaders(t *testing.T) {
+	h := user.NewUserHandler(nil)
+
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
+	
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
 	ctxutil.SetParamId(c, "1")
-
-	h := user.NewUserHandler(nil)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.UploadProfilePicture(c), &errResp) {
@@ -203,18 +208,19 @@ func TestUploadProfilePictureWithoutMultipart(t *testing.T) {
 	}
 }
 
-func TestUploadProfilePictureWithoutFile(t *testing.T) {
-	_, contentType := createMultipartFormData(t, "image", "test.jpg", fileContent)
+func TestUploadProfilePicture_MissingFile(t *testing.T) {
+	h := user.NewUserHandler(nil)
 
-	e := echo.New()
+	_, contentType := createMultipartFormData(t, "image", "test.jpg", fileContent)
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	req.Header.Set(echo.HeaderContentType, contentType)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
 	ctxutil.SetParamId(c, "1")
 
-	h := user.NewUserHandler(nil)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.UploadProfilePicture(c), &errResp) {
@@ -224,18 +230,19 @@ func TestUploadProfilePictureWithoutFile(t *testing.T) {
 	}
 }
 
-func TestUploadProfilePictureWithWrongField(t *testing.T) {
-	body, contentType := createMultipartFormData(t, "img", "test.jpg", fileContent)
+func TestUploadProfilePicture_WrongFormData(t *testing.T) {
+	h := user.NewUserHandler(nil)
 
-	e := echo.New()
+
+	body, contentType := createMultipartFormData(t, "img", "test.jpg", fileContent)
 	req := httptest.NewRequest(http.MethodPost, "/", body)
 	req.Header.Set(echo.HeaderContentType, contentType)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
 	ctxutil.SetParamId(c, "1")
-
-	h := user.NewUserHandler(nil)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.UploadProfilePicture(c), &errResp) {
@@ -245,7 +252,7 @@ func TestUploadProfilePictureWithWrongField(t *testing.T) {
 	}
 }
 
-func TestUploadProfilePictureToNonexistentUser(t *testing.T) {
+func TestUploadProfilePicture_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -254,17 +261,17 @@ func TestUploadProfilePictureToNonexistentUser(t *testing.T) {
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	mockUserService.EXPECT().SetProfilePicture(ctx, int64(1), gomock.Any(), "", gomock.Any(), gomock.Any()).Return(pgx.ErrNoRows)
 
-	body, contentType := createMultipartFormData(t, "image", "test.jpg", fileContent)
+	h := user.NewUserHandler(mockUserService)
 
-	e := echo.New()
+	body, contentType := createMultipartFormData(t, "image", "test.jpg", fileContent)
 	req := httptest.NewRequest(http.MethodPost, "/", body)
 	req.Header.Set(echo.HeaderContentType, contentType)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
 	ctxutil.SetParamId(c, "1")
-
-	h := user.NewUserHandler(mockUserService)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.UploadProfilePicture(c), &errResp) {
@@ -274,7 +281,7 @@ func TestUploadProfilePictureToNonexistentUser(t *testing.T) {
 	}
 }
 
-func TestUploadProfilePictureWithServiceError(t *testing.T) {
+func TestUploadProfilePicture_ServiceError(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -283,17 +290,17 @@ func TestUploadProfilePictureWithServiceError(t *testing.T) {
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	mockUserService.EXPECT().SetProfilePicture(ctx, int64(1), gomock.Any(), "", gomock.Any(), gomock.Any()).Return(errors.New(""))
 
-	body, contentType := createMultipartFormData(t, "image", "test.jpg", fileContent)
+	h := user.NewUserHandler(mockUserService)
 
-	e := echo.New()
+	body, contentType := createMultipartFormData(t, "image", "test.jpg", fileContent)
 	req := httptest.NewRequest(http.MethodPost, "/", body)
 	req.Header.Set(echo.HeaderContentType, contentType)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
 	ctxutil.SetParamId(c, "1")
-
-	h := user.NewUserHandler(mockUserService)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.UploadProfilePicture(c), &errResp) {
@@ -302,18 +309,15 @@ func TestUploadProfilePictureWithServiceError(t *testing.T) {
 	}
 }
 
+func TestUploadProfilePicture_IdParamNotImplemented(t *testing.T) {
+	h := user.NewUserHandler(nil)
 
-func TestUploadProfilePictureWithIdParamNotImplemented(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
-
-	h := user.NewUserHandler(nil)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.UploadProfilePicture(c), &errResp) {
@@ -323,7 +327,7 @@ func TestUploadProfilePictureWithIdParamNotImplemented(t *testing.T) {
 	}
 }
 
-func TestUpdateUserData(t *testing.T) {
+func TestUpdateUserData_Success(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -335,35 +339,33 @@ func TestUpdateUserData(t *testing.T) {
 	mockUserService.EXPECT().UpdateUserDataById(ctx, int64(1), gomock.Any()).Return(userDto, nil)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
-	e := echo.New()
-	e.Validator = mockValidator
-
+	h := user.NewUserHandler(mockUserService)
+	
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(updateUserJSON))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
+	
+	e := echo.New()
+	e.Validator = mockValidator
+
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
 	ctxutil.SetParamId(c, "1")
-
-	h := user.NewUserHandler(mockUserService)
 
 	assert.NoError(t, h.UpdateUserData(c))
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
 
-func TestUpdateUserDataWithBindError(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	e := echo.New()
+func TestUpdateUserDataWith_BindError(t *testing.T) {
+	h := user.NewUserHandler(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(updateUserJSON))
 	rec := httptest.NewRecorder()
+	
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
 	ctxutil.SetParamId(c, "1")
-
-	h := user.NewUserHandler(nil)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.UpdateUserData(c), &errResp) {
@@ -372,24 +374,25 @@ func TestUpdateUserDataWithBindError(t *testing.T) {
 	}
 }
 
-func TestUpdateUserDataWithInvalidValues(t *testing.T) {
+func TestUpdateUserData_InvalidValues(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	mockValidator := mock_validator.NewMockValidator(ctrl)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(errors.New(""))
-
-	e := echo.New()
-	e.Validator = mockValidator
+	
+	h := user.NewUserHandler(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(updateUserJSON))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
+	
+	e := echo.New()
+	e.Validator = mockValidator
+
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
 	ctxutil.SetParamId(c, "1")
-
-	h := user.NewUserHandler(nil)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.UpdateUserData(c), &errResp) {
@@ -398,7 +401,7 @@ func TestUpdateUserDataWithInvalidValues(t *testing.T) {
 	}
 }
 
-func TestUpdateUserDataForNonexistentUser(t *testing.T) {
+func TestUpdateUserData_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -410,17 +413,18 @@ func TestUpdateUserDataForNonexistentUser(t *testing.T) {
 	mockUserService.EXPECT().UpdateUserDataById(ctx, int64(1), gomock.Any()).Return(dto.User{}, pgx.ErrNoRows)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
-	e := echo.New()
-	e.Validator = mockValidator
+	h := user.NewUserHandler(mockUserService)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(updateUserJSON))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
+	e.Validator = mockValidator
+
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
 	ctxutil.SetParamId(c, "1")
-
-	h := user.NewUserHandler(mockUserService)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.UpdateUserData(c), &errResp) {
@@ -430,7 +434,7 @@ func TestUpdateUserDataForNonexistentUser(t *testing.T) {
 	}
 }
 
-func TestUpdateUserDataWithServiceError(t *testing.T) {
+func TestUpdateUserData_ServiceError(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -442,36 +446,35 @@ func TestUpdateUserDataWithServiceError(t *testing.T) {
 	mockUserService.EXPECT().UpdateUserDataById(ctx, int64(1), gomock.Any()).Return(dto.User{}, errors.New(""))
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
-	e := echo.New()
-	e.Validator = mockValidator
+	h := user.NewUserHandler(mockUserService)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(updateUserJSON))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
+	e.Validator = mockValidator
+
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
 	ctxutil.SetParamId(c, "1")
-
-	h := user.NewUserHandler(mockUserService)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.UpdateUserData(c), &errResp) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
-	}	
+	}
 }
 
-func TestUpdateUserDataWithIdParamNotImplemented(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+func TestUpdateUserData_IdParamNotImplemented(t *testing.T) {
+	h := user.NewUserHandler(nil)
 
-	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
-
-	h := user.NewUserHandler(nil)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.UpdateUserData(c), &errResp) {
@@ -481,7 +484,7 @@ func TestUpdateUserDataWithIdParamNotImplemented(t *testing.T) {
 	}
 }
 
-func TestDeleteUser(t *testing.T) {
+func TestDeleteUser_Success(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -490,22 +493,22 @@ func TestDeleteUser(t *testing.T) {
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	mockUserService.EXPECT().DeleteUserById(ctx, int64(1)).Return(nil)
 
-	e := echo.New()
+	h := user.NewUserHandler(mockUserService)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
 	ctxutil.SetParamId(c, "1")
-
-	h := user.NewUserHandler(mockUserService)
 
 	assert.NoError(t, h.DeleteUser(c))
 	assert.Equal(t, http.StatusNoContent, rec.Code)
 }
 
-func TestDeleteNonexistentUser(t *testing.T) {
+func TestDelete_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -514,16 +517,17 @@ func TestDeleteNonexistentUser(t *testing.T) {
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	mockUserService.EXPECT().DeleteUserById(ctx, int64(1)).Return(pgx.ErrNoRows)
 
-	e := echo.New()
+	h := user.NewUserHandler(mockUserService)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
 	ctxutil.SetParamId(c, "1")
 
-	h := user.NewUserHandler(mockUserService)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.DeleteUser(c), &errResp) {
@@ -533,7 +537,7 @@ func TestDeleteNonexistentUser(t *testing.T) {
 	}
 }
 
-func TestDeleteUserWithServiceError(t *testing.T) {
+func TestDeleteUser_ServiceError(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -542,16 +546,16 @@ func TestDeleteUserWithServiceError(t *testing.T) {
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	mockUserService.EXPECT().DeleteUserById(ctx, int64(1)).Return(errors.New(""))
 
-	e := echo.New()
+	h := user.NewUserHandler(mockUserService)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
 	ctxutil.SetParamId(c, "1")
-
-	h := user.NewUserHandler(mockUserService)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.DeleteUser(c), &errResp) {
@@ -560,17 +564,15 @@ func TestDeleteUserWithServiceError(t *testing.T) {
 	}
 }
 
-func TestTestDeleteUserWithIdParamNotImplemented(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+func TestTestDeleteUser_IdParamNotImplemented(t *testing.T) {
+	h := user.NewUserHandler(nil)
 
-	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	c.SetPath("/:id")
-
-	h := user.NewUserHandler(nil)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.DeleteUser(c), &errResp) {
@@ -580,44 +582,42 @@ func TestTestDeleteUserWithIdParamNotImplemented(t *testing.T) {
 	}
 }
 
-func TestChangePassword(t *testing.T) {
+func TestChangePassword_Success(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-		
+
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	mockValidator := mock_validator.NewMockValidator(ctrl)
 
 	mockUserService.EXPECT().ChangePassword(ctx, int64(1), gomock.Any()).Return(nil)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
-	e := echo.New()
-	e.Validator = mockValidator
+	h := user.NewUserHandler(mockUserService)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
+	e.Validator = mockValidator
 	c := e.NewContext(req, rec)
 	ctxutil.SetJwtId(c, "1")
 
-	h := user.NewUserHandler(mockUserService)
-
 	assert.NoError(t, h.ChangePassword(c))
-	assert.Equal(t, http.StatusAccepted ,rec.Code)
+	assert.Equal(t, http.StatusNoContent, rec.Code)
 }
 
-func TestChangePasswordWithBindError(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-		
-	e := echo.New()
+func TestChangePassword_BindError(t *testing.T) {
+	h := user.NewUserHandler(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(changePasswordJSON))
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
 	c := e.NewContext(req, rec)
 	ctxutil.SetJwtId(c, "1")
 
-	h := user.NewUserHandler(nil)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.ChangePassword(c), &errResp) {
@@ -626,23 +626,23 @@ func TestChangePasswordWithBindError(t *testing.T) {
 	}
 }
 
-func TestChangePasswordWithInvalidValues(t *testing.T) {
+func TestChangePassword_InvalidValues(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-		
+
 	mockValidator := mock_validator.NewMockValidator(ctrl)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(errors.New(""))
 
-	e := echo.New()
-	e.Validator = mockValidator
+	h := user.NewUserHandler(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(changePasswordJSON))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
+	e.Validator = mockValidator
 	c := e.NewContext(req, rec)
 	ctxutil.SetJwtId(c, "1")
-
-	h := user.NewUserHandler(nil)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.ChangePassword(c), &errResp) {
@@ -651,27 +651,27 @@ func TestChangePasswordWithInvalidValues(t *testing.T) {
 	}
 }
 
-func TestChangePasswordForNonexistentUser(t *testing.T) {
+func TestChangePassword_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-		
+
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	mockValidator := mock_validator.NewMockValidator(ctrl)
 
 	mockUserService.EXPECT().ChangePassword(ctx, int64(1), gomock.Any()).Return(pgx.ErrNoRows)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
-	e := echo.New()
-	e.Validator = mockValidator
+	h := user.NewUserHandler(mockUserService)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
+
+	e := echo.New()
+	e.Validator = mockValidator
 	c := e.NewContext(req, rec)
 	ctxutil.SetJwtId(c, "1")
-
-	h := user.NewUserHandler(mockUserService)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.ChangePassword(c), &errResp) {
@@ -681,27 +681,27 @@ func TestChangePasswordForNonexistentUser(t *testing.T) {
 	}
 }
 
-func TestChangePasswordWithIncorrectPassword(t *testing.T) {
+func TestChangePassword_IncorrectPassword(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-		
+
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	mockValidator := mock_validator.NewMockValidator(ctrl)
 
 	mockUserService.EXPECT().ChangePassword(ctx, int64(1), gomock.Any()).Return(hasher.ErrPasswordMismatch)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
-	e := echo.New()
-	e.Validator = mockValidator
+	h := user.NewUserHandler(mockUserService)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
+	
+	e := echo.New()
+	e.Validator = mockValidator
 	c := e.NewContext(req, rec)
 	ctxutil.SetJwtId(c, "1")
-
-	h := user.NewUserHandler(mockUserService)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.ChangePassword(c), &errResp) {
@@ -711,27 +711,27 @@ func TestChangePasswordWithIncorrectPassword(t *testing.T) {
 	}
 }
 
-func TestChangePasswordWithServiceError(t *testing.T) {
+func TestChangePassword_ServiceError(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-		
+
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	mockValidator := mock_validator.NewMockValidator(ctrl)
 
 	mockUserService.EXPECT().ChangePassword(ctx, int64(1), gomock.Any()).Return(errors.New(""))
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
-	e := echo.New()
-	e.Validator = mockValidator
+	h := user.NewUserHandler(mockUserService)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
+	
+	e := echo.New()
+	e.Validator = mockValidator
 	c := e.NewContext(req, rec)
 	ctxutil.SetJwtId(c, "1")
-
-	h := user.NewUserHandler(mockUserService)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.ChangePassword(c), &errResp) {
@@ -740,16 +740,13 @@ func TestChangePasswordWithServiceError(t *testing.T) {
 	}
 }
 
-func TestChangePasswordWithJwtNotImplement(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-		
+func TestChangePassword_JwtNotImplement(t *testing.T) {
+	h := user.NewUserHandler(nil)
+
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-
-	h := user.NewUserHandler(nil)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.ChangePassword(c), &errResp) {

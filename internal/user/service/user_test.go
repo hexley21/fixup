@@ -65,7 +65,7 @@ var (
 	errDeleteError         = errors.New("failed to delete row")
 )
 
-func TestFindUserById(t *testing.T) {
+func TestFindUserById_Success(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -93,7 +93,7 @@ func TestFindUserById(t *testing.T) {
 	assert.Equal(t, userEntity.CreatedAt.Time, dto.CreatedAt)
 }
 
-func TestFindUserByIdOnNonexistendUser(t *testing.T) {
+func TestFindUserById_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -109,7 +109,7 @@ func TestFindUserByIdOnNonexistendUser(t *testing.T) {
 	assert.Empty(t, dto)
 }
 
-func TestFindUserByIdOnMapperError(t *testing.T) {
+func TestFindUserById_MapperError(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -128,7 +128,7 @@ func TestFindUserByIdOnMapperError(t *testing.T) {
 	assert.Empty(t, dto)
 }
 
-func TestUpdateUserDataById(t *testing.T) {
+func TestUpdateUserDataById_Success(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -155,7 +155,7 @@ func TestUpdateUserDataById(t *testing.T) {
 	assert.Equal(t, userEntity.LastName, dto.LastName)
 }
 
-func TestUpdateUserDataByIdOnNonexistendUser(t *testing.T) {
+func TestUpdateUserDataById_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -175,7 +175,7 @@ func TestUpdateUserDataByIdOnNonexistendUser(t *testing.T) {
 	assert.Empty(t, dto)
 }
 
-func TestUpdateUserDataByIdOnSignerError(t *testing.T) {
+func TestUpdateUserDataById_SignerError(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -197,7 +197,7 @@ func TestUpdateUserDataByIdOnSignerError(t *testing.T) {
 	assert.Empty(t, dto)
 }
 
-func TestSetProfilePictureWithPicturePresent(t *testing.T) {
+func TestSetProfilePicture_Success(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -219,7 +219,7 @@ func TestSetProfilePictureWithPicturePresent(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestSetProfilePictureWithoutPicture(t *testing.T) {
+func TestSetProfilePicture_WithoutPicture(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -238,7 +238,7 @@ func TestSetProfilePictureWithoutPicture(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestSetProfilePictureOnNonexistentUser(t *testing.T) {
+func TestSetProfilePicture_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -253,7 +253,7 @@ func TestSetProfilePictureOnNonexistentUser(t *testing.T) {
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 }
 
-func TestSetProfilePictureOnPutObjectError(t *testing.T) {
+func TestSetProfilePicture_PutObjectError(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -271,7 +271,7 @@ func TestSetProfilePictureOnPutObjectError(t *testing.T) {
 	assert.ErrorIs(t, err, errS3PutObject)
 }
 
-func TestSetProfilePictureWithUpdatePictureError(t *testing.T) {
+func TestSetProfilePicture_UpdatePictureError(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -290,7 +290,7 @@ func TestSetProfilePictureWithUpdatePictureError(t *testing.T) {
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 }
 
-func TestSetProfilePictureWithDeleteObjectError(t *testing.T) {
+func TestSetProfilePicture_DeleteObjectError(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -310,7 +310,7 @@ func TestSetProfilePictureWithDeleteObjectError(t *testing.T) {
 	assert.ErrorIs(t, err, errS3DeleteObject)
 }
 
-func TestSetProfilePictureWithInvalidationError(t *testing.T) {
+func TestSetProfilePicture_InvalidationError(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -332,7 +332,7 @@ func TestSetProfilePictureWithInvalidationError(t *testing.T) {
 	assert.ErrorIs(t, err, errCdnFileInvalidation)
 }
 
-func TestChangePassword(t *testing.T) {
+func TestChangePassword_Success(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -350,7 +350,7 @@ func TestChangePassword(t *testing.T) {
 	assert.NoError(t, service.ChangePassword(ctx, userEntity.ID, dto.UpdatePassword{}))
 }
 
-func TestChangePasswordOnNonexistendUser(t *testing.T) {
+func TestChangePassword_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -363,7 +363,7 @@ func TestChangePasswordOnNonexistendUser(t *testing.T) {
 	assert.ErrorIs(t, service.ChangePassword(ctx, userEntity.ID, dto.UpdatePassword{}), pgx.ErrNoRows)
 }
 
-func TestChangePasswordWithIncorrectPassword(t *testing.T) {
+func TestChangePassword_IncorrectPassword(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -379,7 +379,7 @@ func TestChangePasswordWithIncorrectPassword(t *testing.T) {
 	assert.ErrorIs(t, service.ChangePassword(ctx, userEntity.ID, dto.UpdatePassword{}), hasher.ErrPasswordMismatch)
 }
 
-func TestChangePasswordWithUpdateError(t *testing.T) {
+func TestChangePassword_UpdateError(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -397,7 +397,7 @@ func TestChangePasswordWithUpdateError(t *testing.T) {
 	assert.ErrorIs(t, service.ChangePassword(ctx, userEntity.ID, dto.UpdatePassword{}), errUpdateError)
 }
 
-func TestDeleteUserById(t *testing.T) {
+func TestDeleteUserById_Success(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -416,7 +416,7 @@ func TestDeleteUserById(t *testing.T) {
 	assert.NoError(t, service.DeleteUserById(ctx, userEntity.ID))
 }
 
-func TestDeleteUserByIdOnEmptyPicture(t *testing.T) {
+func TestDeleteUserById_EmptyPicture(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -430,7 +430,7 @@ func TestDeleteUserByIdOnEmptyPicture(t *testing.T) {
 	assert.NoError(t, service.DeleteUserById(ctx, userEntity.ID))
 }
 
-func TestDeleteUserByIdOnNonexistendUser(t *testing.T) {
+func TestDeleteUserById_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -443,7 +443,7 @@ func TestDeleteUserByIdOnNonexistendUser(t *testing.T) {
 	assert.ErrorIs(t, service.DeleteUserById(ctx, userEntity.ID), pgx.ErrNoRows)
 }
 
-func TestDeleteUserByIdWithDeleteObjectError(t *testing.T) {
+func TestDeleteUserById_DeleteObjectError(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -459,7 +459,7 @@ func TestDeleteUserByIdWithDeleteObjectError(t *testing.T) {
 	assert.ErrorIs(t, service.DeleteUserById(ctx, userEntity.ID), errS3DeleteObject)
 }
 
-func TestDeleteUserByIdWithInvalidationError(t *testing.T) {
+func TestDeleteUserById_InvalidationError(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -477,7 +477,7 @@ func TestDeleteUserByIdWithInvalidationError(t *testing.T) {
 	assert.ErrorIs(t, service.DeleteUserById(ctx, userEntity.ID), errCdnFileInvalidation)
 }
 
-func TestDeleteUserByIdWithRowDeletionError(t *testing.T) {
+func TestDeleteUserById_RowDeletionError(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
