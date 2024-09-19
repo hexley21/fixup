@@ -153,7 +153,7 @@ func TestFindUserByIdOnIdParamNotImplemented(t *testing.T) {
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.FindUserById(c), &errResp) {
-		assert.ErrorIs(t, ctxutil.ErrParamIdNotImplemented, errResp.Cause)
+		assert.ErrorIs(t, ctxutil.ErrParamIdNotImplemented.Cause, errResp.Cause)
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 	}
@@ -300,6 +300,27 @@ func TestUploadProfilePictureWithServiceError(t *testing.T) {
 	}
 }
 
+
+func TestUploadProfilePictureWithIdParamNotImplemented(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:id")
+
+	h := user.NewUserHandler(nil)
+
+	var errResp *rest.ErrorResponse
+	if assert.ErrorAs(t, h.UploadProfilePicture(c), &errResp) {
+		assert.ErrorIs(t, ctxutil.ErrParamIdNotImplemented.Cause, errResp.Cause)
+		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
+		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+	}
+}
+
 func TestUpdateUserData(t *testing.T) {
 	ctx := context.Background()
 
@@ -415,4 +436,123 @@ func TestUpdateUserDataWithServiceError(t *testing.T) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 	}	
+}
+
+func TestUpdateUserDataWithIdParamNotImplemented(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:id")
+
+	h := user.NewUserHandler(nil)
+
+	var errResp *rest.ErrorResponse
+	if assert.ErrorAs(t, h.UpdateUserData(c), &errResp) {
+		assert.ErrorIs(t, ctxutil.ErrParamIdNotImplemented.Cause, errResp.Cause)
+		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
+		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+	}
+}
+
+func TestDeleteUser(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUserService := mock_service.NewMockUserService(ctrl)
+	mockUserService.EXPECT().DeleteUserById(ctx, int64(1)).Return(nil)
+
+	e := echo.New()
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:id")
+	ctxutil.SetParamId(c, "1")
+
+	h := user.NewUserHandler(mockUserService)
+
+	assert.NoError(t, h.DeleteUser(c))
+	assert.Equal(t, http.StatusNoContent, rec.Code)
+}
+
+func TestDeleteNonexistentUser(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUserService := mock_service.NewMockUserService(ctrl)
+	mockUserService.EXPECT().DeleteUserById(ctx, int64(1)).Return(pgx.ErrNoRows)
+
+	e := echo.New()
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:id")
+	ctxutil.SetParamId(c, "1")
+
+	h := user.NewUserHandler(mockUserService)
+
+	var errResp *rest.ErrorResponse
+	if assert.ErrorAs(t, h.DeleteUser(c), &errResp) {
+		assert.ErrorIs(t, pgx.ErrNoRows, errResp.Cause)
+		assert.Equal(t, rest.MsgUserNotFound, errResp.Message)
+		assert.Equal(t, http.StatusNotFound, errResp.Status)
+	}
+}
+
+func TestDeleteUserWithServiceError(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUserService := mock_service.NewMockUserService(ctrl)
+	mockUserService.EXPECT().DeleteUserById(ctx, int64(1)).Return(errors.New(""))
+
+	e := echo.New()
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:id")
+	ctxutil.SetParamId(c, "1")
+
+	h := user.NewUserHandler(mockUserService)
+
+	var errResp *rest.ErrorResponse
+	if assert.ErrorAs(t, h.DeleteUser(c), &errResp) {
+		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
+		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+	}
+}
+
+func TestTestDeleteUserWithIdParamNotImplemented(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:id")
+
+	h := user.NewUserHandler(nil)
+
+	var errResp *rest.ErrorResponse
+	if assert.ErrorAs(t, h.DeleteUser(c), &errResp) {
+		assert.ErrorIs(t, ctxutil.ErrParamIdNotImplemented.Cause, errResp.Cause)
+		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
+		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+	}
 }
