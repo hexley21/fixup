@@ -27,7 +27,7 @@ func (h *userHandler) MapRoutes(
 		middleware.AllowContentType("image", "image/jpeg", "image/png"),
 	)
 
-	usersGroup.PATCH("/:id/change-password", h.UpdatePassword)
+	e.PATCH("/me/change-password", h.ChangePassword, jwtAccessMiddleware)
 
 	return usersGroup
 }

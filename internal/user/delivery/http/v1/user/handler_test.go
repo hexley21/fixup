@@ -18,6 +18,7 @@ import (
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/user"
 	"github.com/hexley21/fixup/internal/user/enum"
 	mock_service "github.com/hexley21/fixup/internal/user/service/mock"
+	"github.com/hexley21/fixup/pkg/hasher"
 	mock_validator "github.com/hexley21/fixup/pkg/validator/mock"
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
@@ -39,7 +40,7 @@ var (
 	}
 
 	updateUserJSON = `{"email": "larry@page.com","first_name": "Larry","last_name": "Page","phone_number": "995112233"}`
-	updateUserBlankJSON = `{"email": "","first_name": "","last_name": "","phone_number": ""}`
+	changePasswordJSON = `{"old_password": "larrypage123", "new_password": "pagelarry321"}`
 
 	fileContent = []byte("fake file content")
 )
@@ -222,6 +223,7 @@ func TestUploadProfilePictureWithoutFile(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 	}
 }
+
 func TestUploadProfilePictureWithWrongField(t *testing.T) {
 	body, contentType := createMultipartFormData(t, "img", "test.jpg", fileContent)
 
@@ -347,6 +349,27 @@ func TestUpdateUserData(t *testing.T) {
 
 	assert.NoError(t, h.UpdateUserData(c))
 	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestUpdateUserDataWithBindError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	e := echo.New()
+
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(updateUserJSON))
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:id")
+	ctxutil.SetParamId(c, "1")
+
+	h := user.NewUserHandler(nil)
+
+	var errResp *rest.ErrorResponse
+	if assert.ErrorAs(t, h.UpdateUserData(c), &errResp) {
+		assert.Equal(t, rest.MsgInvalidArguments, errResp.Message)
+		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+	}
 }
 
 func TestUpdateUserDataWithInvalidValues(t *testing.T) {
@@ -552,6 +575,185 @@ func TestTestDeleteUserWithIdParamNotImplemented(t *testing.T) {
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.DeleteUser(c), &errResp) {
 		assert.ErrorIs(t, ctxutil.ErrParamIdNotImplemented.Cause, errResp.Cause)
+		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
+		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+	}
+}
+
+func TestChangePassword(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+		
+	mockUserService := mock_service.NewMockUserService(ctrl)
+	mockValidator := mock_validator.NewMockValidator(ctrl)
+
+	mockUserService.EXPECT().ChangePassword(ctx, int64(1), gomock.Any()).Return(nil)
+	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+
+	e := echo.New()
+	e.Validator = mockValidator
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	ctxutil.SetJwtId(c, "1")
+
+	h := user.NewUserHandler(mockUserService)
+
+	assert.NoError(t, h.ChangePassword(c))
+	assert.Equal(t, http.StatusAccepted ,rec.Code)
+}
+
+func TestChangePasswordWithBindError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+		
+	e := echo.New()
+
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(changePasswordJSON))
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	ctxutil.SetJwtId(c, "1")
+
+	h := user.NewUserHandler(nil)
+
+	var errResp *rest.ErrorResponse
+	if assert.ErrorAs(t, h.ChangePassword(c), &errResp) {
+		assert.Equal(t, rest.MsgInvalidArguments, errResp.Message)
+		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+	}
+}
+
+func TestChangePasswordWithInvalidValues(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+		
+	mockValidator := mock_validator.NewMockValidator(ctrl)
+	mockValidator.EXPECT().Validate(gomock.Any()).Return(errors.New(""))
+
+	e := echo.New()
+	e.Validator = mockValidator
+
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(changePasswordJSON))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	ctxutil.SetJwtId(c, "1")
+
+	h := user.NewUserHandler(nil)
+
+	var errResp *rest.ErrorResponse
+	if assert.ErrorAs(t, h.ChangePassword(c), &errResp) {
+		assert.Equal(t, rest.MsgInvalidArguments, errResp.Message)
+		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+	}
+}
+
+func TestChangePasswordForNonexistentUser(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+		
+	mockUserService := mock_service.NewMockUserService(ctrl)
+	mockValidator := mock_validator.NewMockValidator(ctrl)
+
+	mockUserService.EXPECT().ChangePassword(ctx, int64(1), gomock.Any()).Return(pgx.ErrNoRows)
+	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+
+	e := echo.New()
+	e.Validator = mockValidator
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	ctxutil.SetJwtId(c, "1")
+
+	h := user.NewUserHandler(mockUserService)
+
+	var errResp *rest.ErrorResponse
+	if assert.ErrorAs(t, h.ChangePassword(c), &errResp) {
+		assert.Equal(t, pgx.ErrNoRows, errResp.Cause)
+		assert.Equal(t, rest.MsgUserNotFound, errResp.Message)
+		assert.Equal(t, http.StatusNotFound, errResp.Status)
+	}
+}
+
+func TestChangePasswordWithIncorrectPassword(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+		
+	mockUserService := mock_service.NewMockUserService(ctrl)
+	mockValidator := mock_validator.NewMockValidator(ctrl)
+
+	mockUserService.EXPECT().ChangePassword(ctx, int64(1), gomock.Any()).Return(hasher.ErrPasswordMismatch)
+	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+
+	e := echo.New()
+	e.Validator = mockValidator
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	ctxutil.SetJwtId(c, "1")
+
+	h := user.NewUserHandler(mockUserService)
+
+	var errResp *rest.ErrorResponse
+	if assert.ErrorAs(t, h.ChangePassword(c), &errResp) {
+		assert.Equal(t, hasher.ErrPasswordMismatch, errResp.Cause)
+		assert.Equal(t, rest.MsgIncorrectPassword, errResp.Message)
+		assert.Equal(t, http.StatusUnauthorized, errResp.Status)
+	}
+}
+
+func TestChangePasswordWithServiceError(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+		
+	mockUserService := mock_service.NewMockUserService(ctrl)
+	mockValidator := mock_validator.NewMockValidator(ctrl)
+
+	mockUserService.EXPECT().ChangePassword(ctx, int64(1), gomock.Any()).Return(errors.New(""))
+	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+
+	e := echo.New()
+	e.Validator = mockValidator
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	ctxutil.SetJwtId(c, "1")
+
+	h := user.NewUserHandler(mockUserService)
+
+	var errResp *rest.ErrorResponse
+	if assert.ErrorAs(t, h.ChangePassword(c), &errResp) {
+		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
+		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+	}
+}
+
+func TestChangePasswordWithJwtNotImplement(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+		
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	h := user.NewUserHandler(nil)
+
+	var errResp *rest.ErrorResponse
+	if assert.ErrorAs(t, h.ChangePassword(c), &errResp) {
+		assert.ErrorIs(t, ctxutil.ErrJwtNotImplemented.Cause, errResp.Cause)
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 	}

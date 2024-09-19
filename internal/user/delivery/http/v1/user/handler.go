@@ -27,7 +27,6 @@ func NewUserHandler(service service.UserService) *userHandler {
 	}
 }
 
-// findUserById godoc
 // @Summary Find user by ID
 // @Description Retrieve user details by user ID
 // @Tags users
@@ -45,7 +44,7 @@ func NewUserHandler(service service.UserService) *userHandler {
 func (h *userHandler) FindUserById(c echo.Context) error {
 	id, err := ctxutil.GetParamId(c)
 	if err != nil {
-		return rest.NewInternalServerError(err)
+		return err
 	}
 
 	user, err := h.service.FindUserById(context.Background(), id)
@@ -59,7 +58,6 @@ func (h *userHandler) FindUserById(c echo.Context) error {
 	return c.JSON(http.StatusOK, rest.NewApiResponse(user))
 }
 
-// uploadProfilePicture godoc
 // @Summary Upload profile picture
 // @Description Upload a profile picture for the user by ID
 // @Tags users
@@ -110,7 +108,6 @@ func (h *userHandler) UploadProfilePicture(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
-// updateUserData godoc
 // @Summary Update user data
 // @Description Update user data by ID
 // @Tags users
@@ -134,11 +131,11 @@ func (h *userHandler) UpdateUserData(c echo.Context) error {
 
 	dto := new(dto.UpdateUser)
 	if err := c.Bind(dto); err != nil {
-		return rest.NewInternalServerError(err)
+		return rest.NewBindError(err)
 	}
 
 	if err := c.Validate(dto); err != nil {
-		return rest.NewInvalidArgumentsError(err)
+		return rest.NewValidationError(err)
 	}
 
 	user, err := h.service.UpdateUserDataById(context.Background(), id, *dto)
@@ -152,7 +149,6 @@ func (h *userHandler) UpdateUserData(c echo.Context) error {
 	return c.JSON(http.StatusOK, rest.NewApiResponse(user))
 }
 
-// deleteUser godoc
 // @Summary Delete a user
 // @Description Delete a user by ID or the currently authenticated user if "me" is provided
 // @Tags users
@@ -183,7 +179,6 @@ func (h *userHandler) DeleteUser(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
-// updatePassword godoc
 // @Summary Update user password
 // @Description Update the password of an existing user
 // @Tags users
@@ -191,30 +186,30 @@ func (h *userHandler) DeleteUser(c echo.Context) error {
 // @Produce json
 // @Param id path int true "User ID"
 // @Param body body dto.UpdatePassword true "Update Password DTO"
-// @Success 204 "No Content"
+// @Success 201 "Accepted"
 // @Failure 400 {object} rest.ErrorResponse "Invalid arguments"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"
 // @Failure 404 {object} rest.ErrorResponse "User not found"
 // @Failure 500 {object} rest.ErrorResponse "Internal server error"
-// @Router /user/{id}/change-password [patch]
-func (h *userHandler) UpdatePassword(c echo.Context) error {
+// @Router /user/me/change-password [patch]
+func (h *userHandler) ChangePassword(c echo.Context) error {
 	id, err := ctxutil.GetJwtId(c)
 	if err != nil {
 		return err
 	}
 
-	userId, err := strconv.ParseInt(id,  10, 64)
+	userId, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return rest.NewInternalServerError(err)
 	}
 
 	dto := new(dto.UpdatePassword)
 	if err := c.Bind(dto); err != nil {
-		return rest.NewInvalidArgumentsError(err)
+		return rest.NewBindError(err)
 	}
 
 	if err := c.Validate(dto); err != nil {
-		return rest.NewInvalidArgumentsError(err)
+		return rest.NewValidationError(err)
 	}
 
 	if err := h.service.ChangePassword(context.Background(), userId, *dto); err != nil {
@@ -227,5 +222,5 @@ func (h *userHandler) UpdatePassword(c echo.Context) error {
 		return rest.NewInternalServerError(err)
 	}
 
-	return c.NoContent(http.StatusNoContent)
+	return c.NoContent(http.StatusAccepted)
 }
