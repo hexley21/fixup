@@ -18,9 +18,10 @@ const (
 	MsgIncorrectPassword    = "Password is incorrect"
 	MsgIncorrectEmailOrPass = "Email or Password is incorrect"
 
-	MsgFileReadError = "Failed read file"
-	MsgNoFile        = "No file provided"
-	MsgTooManyFiles  = "Too many files"
+	MsgFileReadError  = "Failed read file"
+	MsgNoFile         = "No file provided"
+	MsgTooManyFiles   = "Too many files"
+	MsgNotEnoughFiles = "Not enough files"
 
 	MsgInvalidToken               = "Invalid token"
 	MsgMissingAuthorizationHeader = "Authorization header is missing"
@@ -42,5 +43,5 @@ func NewValidationError(cause error) *ErrorResponse {
 }
 
 func NewReadFileError(cause error) *ErrorResponse {
-	return newError(cause, MsgFileReadError, http.StatusInternalServerError)
+	return newError(cause, MsgFileReadError, http.StatusBadRequest)
 }

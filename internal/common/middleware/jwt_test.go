@@ -21,7 +21,7 @@ var (
 	userClaims = jwt.NewClaims("1", string(enum.UserRoleCUSTOMER), true, time.Hour)
 )
 
-func setup(t *testing.T) (*gomock.Controller, echo.MiddlewareFunc,  *mock_jwt.MockJwtVerifier) {
+func setupJWT(t *testing.T) (*gomock.Controller, echo.MiddlewareFunc, *mock_jwt.MockJwtVerifier) {
 	ctrl := gomock.NewController(t)
 	mockJwtVerifier := mock_jwt.NewMockJwtVerifier(ctrl)
 
@@ -31,10 +31,10 @@ func setup(t *testing.T) (*gomock.Controller, echo.MiddlewareFunc,  *mock_jwt.Mo
 func TestJWT_MissingAuthorizationHeader(t *testing.T) {
 	JWTMiddleware := middleware.JWT(nil)
 
-    e := echo.New()
-    req := httptest.NewRequest(http.MethodGet, "/", nil)
-    rec := httptest.NewRecorder()
-    c := e.NewContext(req, rec)
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, JWTMiddleware(BasicHandler)(c), &errResp) {
@@ -46,13 +46,13 @@ func TestJWT_MissingAuthorizationHeader(t *testing.T) {
 func TestJWT_MissingBearerToken(t *testing.T) {
 	JWTMiddleware := middleware.JWT(nil)
 
-    e := echo.New()
-    req := httptest.NewRequest(http.MethodGet, "/", nil)
-    req.Header.Set("Authorization", "InvalidToken")
-    rec := httptest.NewRecorder()
-    c := e.NewContext(req, rec)
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Authorization", "InvalidToken")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
 
-    var errResp *rest.ErrorResponse
+	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, JWTMiddleware(BasicHandler)(c), &errResp) {
 		assert.Equal(t, rest.MsgMissingBearerToken, errResp.Message)
 		assert.Equal(t, http.StatusUnauthorized, errResp.Status)
@@ -60,18 +60,18 @@ func TestJWT_MissingBearerToken(t *testing.T) {
 }
 
 func TestJWT_InvalidToken(t *testing.T) {
-	ctrl, JWTMiddleware, mockJWTVerifier := setup(t)
+	ctrl, JWTMiddleware, mockJWTVerifier := setupJWT(t)
 	defer ctrl.Finish()
 
 	mockJWTVerifier.EXPECT().VerifyJWT(gomock.Any()).Return(jwt.UserClaims{}, rest.NewUnauthorizedError(errors.New(""), rest.MsgInvalidToken))
 
-    e := echo.New()
-    req := httptest.NewRequest(http.MethodGet, "/", nil)
-    req.Header.Set("Authorization", "Bearer invalidtoken")
-    rec := httptest.NewRecorder()
-    c := e.NewContext(req, rec)
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Authorization", "Bearer invalidtoken")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
 
-    var errResp *rest.ErrorResponse
+	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, JWTMiddleware(BasicHandler)(c), &errResp) {
 		assert.Equal(t, rest.MsgInvalidToken, errResp.Message)
 		assert.Equal(t, http.StatusUnauthorized, errResp.Status)
@@ -79,16 +79,16 @@ func TestJWT_InvalidToken(t *testing.T) {
 }
 
 func TestJWT_ValidToken(t *testing.T) {
-	ctrl, JWTMiddleware, mockJWTVerifier := setup(t)
+	ctrl, JWTMiddleware, mockJWTVerifier := setupJWT(t)
 	defer ctrl.Finish()
 
 	mockJWTVerifier.EXPECT().VerifyJWT(gomock.Any()).Return(userClaims, nil)
 
-    e := echo.New()
-    req := httptest.NewRequest(http.MethodGet, "/", nil)
-    req.Header.Set("Authorization", "Bearer validtoken")
-    rec := httptest.NewRecorder()
-    c := e.NewContext(req, rec)
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Authorization", "Bearer validtoken")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
 
 	assert.NoError(t, JWTMiddleware(BasicHandler)(c))
 	assert.Equal(t, http.StatusOK, rec.Code)

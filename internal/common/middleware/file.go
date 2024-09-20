@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	errTooManyFiles = rest.NewBadRequestError(nil, rest.MsgTooManyFiles)
-	errNoFile       = rest.NewBadRequestError(nil, rest.MsgNoFile)
+	ErrTooManyFiles   = rest.NewBadRequestError(nil, rest.MsgTooManyFiles)
+	ErrNotEnoughFiles = rest.NewBadRequestError(nil, rest.MsgNotEnoughFiles)
+	ErrNoFile         = rest.NewBadRequestError(nil, rest.MsgNoFile)
 )
 
 func AllowFilesAmount(key string, amount int) echo.MiddlewareFunc {
@@ -24,11 +25,17 @@ func AllowFilesAmount(key string, amount int) echo.MiddlewareFunc {
 			files := form.File[key]
 
 			if len(files) > amount {
-				return errTooManyFiles
+				return ErrTooManyFiles
 			}
+			
+			if len(files) == 0 {
+				return ErrNoFile
+			}
+			
 			if len(files) < amount {
-				return errNoFile
+				return ErrNotEnoughFiles
 			}
+			
 			return next(c)
 		}
 	}

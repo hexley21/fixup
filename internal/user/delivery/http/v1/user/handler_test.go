@@ -204,7 +204,7 @@ func TestUploadProfilePicture_MissingHeaders(t *testing.T) {
 	if assert.ErrorAs(t, h.UploadProfilePicture(c), &errResp) {
 		assert.ErrorIs(t, errResp.Cause, http.ErrNotMultipart)
 		assert.Equal(t, rest.MsgFileReadError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, errResp.Status)
 	}
 }
 
@@ -226,7 +226,7 @@ func TestUploadProfilePicture_MissingFile(t *testing.T) {
 	if assert.ErrorAs(t, h.UploadProfilePicture(c), &errResp) {
 		assert.ErrorIs(t, errResp.Cause, io.EOF)
 		assert.Equal(t, rest.MsgFileReadError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, errResp.Status)
 	}
 }
 
