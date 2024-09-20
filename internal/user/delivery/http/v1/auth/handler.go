@@ -25,12 +25,12 @@ const (
 )
 
 
-type authHandler struct {
+type AuthHandler struct {
 	service service.AuthService
 }
 
-func NewAuthHandler(service service.AuthService) *authHandler {
-	return &authHandler{
+func NewAuthHandler(service service.AuthService) *AuthHandler {
+	return &AuthHandler{
 		service,
 	}
 }
@@ -59,7 +59,6 @@ func eraseCookie(c echo.Context, cookieName string) {
 	c.SetCookie(&cookie)
 }
 
-// registerCustomer godoc
 // @Summary Register a new customer
 // @Description Register a new customer with the provided details
 // @Tags auth
@@ -71,27 +70,24 @@ func eraseCookie(c echo.Context, cookieName string) {
 // @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/register/customer [post]
-func (h *authHandler) registerCustomer(
+func (h *AuthHandler) RegisterCustomer(
 	verGenerator verifier.JwtGenerator,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		dto := new(dto.RegisterUser)
 		if err := c.Bind(dto); err != nil {
-			return rest.NewInternalServerError(err)
+			return rest.NewBindError(err)
 		}
 
 		if err := c.Validate(dto); err != nil {
-			return rest.NewInvalidArgumentsError(err)
+			return rest.NewValidationError(err)
 		}
 
 		user, err := h.service.RegisterCustomer(context.Background(), *dto)
 		if err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-				switch pgErr.Code {
-				case pgerrcode.UniqueViolation:
-					return rest.NewConflictError(err, rest.MsgUserAlreadyExists)
-				}
+				return rest.NewConflictError(err, rest.MsgUserAlreadyExists)
 			}
 			return rest.NewInternalServerError(err)
 		}
@@ -102,7 +98,6 @@ func (h *authHandler) registerCustomer(
 	}
 }
 
-// registerProvider godoc
 // @Summary Register a new provider
 // @Description Register a new provider with the provided details
 // @Tags auth
@@ -114,27 +109,24 @@ func (h *authHandler) registerCustomer(
 // @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/register/provider [post]
-func (h *authHandler) registerProvider(
+func (h *AuthHandler) RegisterProvider(
 	verGenerator verifier.JwtGenerator,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		dto := new(dto.RegisterProvider)
 		if err := c.Bind(dto); err != nil {
-			return rest.NewInternalServerError(err)
+			return rest.NewBindError(err)
 		}
 
 		if err := c.Validate(dto); err != nil {
-			return rest.NewInvalidArgumentsError(err)
+			return rest.NewValidationError(err)
 		}
 
 		user, err := h.service.RegisterProvider(context.Background(), *dto)
 		if err != nil {
 			var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) {
-				switch pgErr.Code {
-				case pgerrcode.UniqueViolation:
-					return rest.NewConflictError(err, rest.MsgUserAlreadyExists)
-				}
+			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+				return rest.NewConflictError(err, rest.MsgUserAlreadyExists)
 			}
 			return rest.NewInternalServerError(err)
 		}
@@ -145,7 +137,6 @@ func (h *authHandler) registerProvider(
 	}
 }
 
-// resendConfirmationLetter godoc
 // @Summary Resent confirmation letter
 // @Description Resends a confirmation letter to email
 // @Tags auth
@@ -157,7 +148,7 @@ func (h *authHandler) registerProvider(
 // @Failure 409 {object} rest.ErrorResponse "Conflict"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/resend-confirmation [post]
-func (h *authHandler) resendConfirmationLetter(
+func (h *AuthHandler) ResendConfirmationLetter(
 	verGenerator verifier.JwtGenerator,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -186,7 +177,6 @@ func (h *authHandler) resendConfirmationLetter(
 	}
 }
 
-// login godoc
 // @Summary Login a user
 // @Description Authenticate a user and set access and refresh tokens
 // @Tags auth
@@ -198,7 +188,7 @@ func (h *authHandler) resendConfirmationLetter(
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized - Incorrect email or password"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/login [post]
-func (h *authHandler) login(
+func (h *AuthHandler) Login(
 	accessGenerator authjwt.JwtGenerator,
 	refreshGenerator authjwt.JwtGenerator,
 ) echo.HandlerFunc {
@@ -228,20 +218,18 @@ func (h *authHandler) login(
 	}
 }
 
-// logout godoc
 // @Summary Logout a user
 // @Description Erase access and refresh tokens
 // @Tags auth
 // @Success 200 {string} string "Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token; HttpOnly"
 // @Router /auth/logout [post]
-func (h *authHandler) logout(c echo.Context) error {
+func (h *AuthHandler) Logout(c echo.Context) error {
 	eraseCookie(c, access_token_cookie)
 	eraseCookie(c, refresh_token_cookie)
 
 	return c.NoContent(http.StatusOK)
 }
 
-// refresh godoc
 // @Summary Refresh access token
 // @Description Refresh the access token using the refresh token
 // @Tags auth
@@ -250,7 +238,7 @@ func (h *authHandler) logout(c echo.Context) error {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security refresh_token
 // @Router /auth/refresh [post]
-func (h *authHandler) refresh(
+func (h *AuthHandler) Refresh(
 	accessGenerator authjwt.JwtGenerator,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -282,7 +270,6 @@ func (h *authHandler) refresh(
 	}
 }
 
-// verifyEmail godoc
 // @Summary Verify email
 // @Description Verifies the email of a user using a JWT token provided as a query parameter.
 // @Tags auth
@@ -295,7 +282,7 @@ func (h *authHandler) refresh(
 // @Failure 404 {object} rest.ErrorResponse "User was not found"
 // @Failure 500 {object} rest.ErrorResponse "Internal server error"
 // @Router /auth/verify-email [get]
-func (h *authHandler) verifyEmail(
+func (h *AuthHandler) VerifyEmail(
 	jwtVerifier verifier.JwtVerifier,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {

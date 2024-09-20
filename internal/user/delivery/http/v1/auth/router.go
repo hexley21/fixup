@@ -7,18 +7,18 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (h *authHandler) MapRoutes(e *echo.Group, refreshJwt jwt.Jwt, accessJwt jwt.Jwt, verificationJwt verifier.Jwt) *echo.Group {
+func (h *AuthHandler) MapRoutes(e *echo.Group, refreshJwt jwt.Jwt, accessJwt jwt.Jwt, verificationJwt verifier.Jwt) *echo.Group {
 	authGroup := e.Group("/auth")
 
-	authGroup.POST("/register/customer", h.registerCustomer(verificationJwt))
-	authGroup.POST("/register/provider", h.registerProvider(verificationJwt))
-	authGroup.POST("/resend-confirmation", h.resendConfirmationLetter(verificationJwt))
+	authGroup.POST("/register/customer", h.RegisterCustomer(verificationJwt))
+	authGroup.POST("/register/provider", h.RegisterProvider(verificationJwt))
+	authGroup.POST("/resend-confirmation", h.ResendConfirmationLetter(verificationJwt))
 
-	authGroup.POST("/refresh", h.refresh(refreshJwt), middleware.JWT(refreshJwt))
-	authGroup.POST("/login", h.login(accessJwt, refreshJwt))
-	authGroup.POST("/logout", h.logout)
+	authGroup.POST("/refresh", h.Refresh(refreshJwt), middleware.JWT(refreshJwt))
+	authGroup.POST("/login", h.Login(accessJwt, refreshJwt))
+	authGroup.POST("/logout", h.Logout)
 
-	authGroup.GET("/verify", h.verifyEmail(verificationJwt))
+	authGroup.GET("/verify", h.VerifyEmail(verificationJwt))
 
 	return authGroup
 }
