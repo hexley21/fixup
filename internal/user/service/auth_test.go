@@ -13,10 +13,12 @@ import (
 	mock_repository "github.com/hexley21/fixup/internal/user/repository/mock"
 	"github.com/hexley21/fixup/internal/user/service"
 	mock_encryption "github.com/hexley21/fixup/pkg/encryption/mock"
+	"github.com/hexley21/fixup/pkg/hasher"
 	mock_hasher "github.com/hexley21/fixup/pkg/hasher/mock"
 	mock_cdn "github.com/hexley21/fixup/pkg/infra/cdn/mock"
 	mock_postgres "github.com/hexley21/fixup/pkg/infra/postgres/mock"
 	mock_mailer "github.com/hexley21/fixup/pkg/mailer/mock"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -39,6 +41,13 @@ var (
 	loginDto = dto.Login{
 		Email: "larry@page.com",
 		Password: "12345678",
+	}
+
+	creds = repository.GetCredentialsByEmailRow{
+		ID: 1,
+		Role: enum.UserRoleADMIN,
+		Hash: newHash,
+		UserStatus: pgtype.Bool{Bool: true, Valid: true},
 	}
 
 	mockEmailAddress = "fixup@gmail.com"
@@ -116,7 +125,7 @@ func TestRegisterProvider(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 }
 
-func TestAuthenticateUser(t *testing.T) {
+func TestAuthenticateUser_Success(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -124,13 +133,6 @@ func TestAuthenticateUser(t *testing.T) {
 
 	mockUserRepo := mock_repository.NewMockUserRepository(ctrl)
 	mockHasher := mock_hasher.NewMockHasher(ctrl)
-
-	creds := repository.GetCredentialsByEmailRow{
-		ID: 1,
-		Role: enum.UserRoleADMIN,
-		Hash: newHash,
-		UserStatus: pgtype.Bool{Bool: true, Valid: true},
-	}
 
 	mockUserRepo.EXPECT().GetCredentialsByEmail(ctx, loginDto.Email).Return(creds, nil)
 	mockHasher.EXPECT().VerifyPassword(loginDto.Password, creds.Hash).Return(nil)
@@ -142,6 +144,41 @@ func TestAuthenticateUser(t *testing.T) {
 	assert.Equal(t, strconv.FormatInt(creds.ID, 10), credentialsDto.ID)
 	assert.Equal(t, string(credentialsDto.Role), credentialsDto.Role)
 	assert.Equal(t, creds.UserStatus.Bool, credentialsDto.UserStatus)
+}
+
+func TestAuthenticateUser_NotFound(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUserRepo := mock_repository.NewMockUserRepository(ctrl)
+	mockUserRepo.EXPECT().GetCredentialsByEmail(ctx, loginDto.Email).Return(repository.GetCredentialsByEmailRow{}, pgx.ErrNoRows)
+
+	svc := service.NewAuthService(mockUserRepo, nil, nil, nil, nil, nil, mockEmailAddress, nil)
+
+	credentialsDto, err := svc.AuthenticateUser(ctx, loginDto)
+	assert.ErrorIs(t, err, pgx.ErrNoRows)
+	assert.Empty(t, credentialsDto)
+}
+
+func TestAuthenticateUser_PasswordMissmatch(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUserRepo := mock_repository.NewMockUserRepository(ctrl)
+	mockHasher := mock_hasher.NewMockHasher(ctrl)
+
+	mockUserRepo.EXPECT().GetCredentialsByEmail(ctx, loginDto.Email).Return(creds, nil)
+	mockHasher.EXPECT().VerifyPassword(loginDto.Password, creds.Hash).Return(hasher.ErrPasswordMismatch)
+
+	svc := service.NewAuthService(mockUserRepo, nil, nil, mockHasher, nil, nil, mockEmailAddress, nil)
+
+	credentialsDto, err := svc.AuthenticateUser(ctx, loginDto)
+	assert.ErrorIs(t, err, hasher.ErrPasswordMismatch)
+	assert.Empty(t, credentialsDto)
 }
 
 func TestVerifyUser(t *testing.T) {
@@ -156,14 +193,37 @@ func TestVerifyUser(t *testing.T) {
 	service := service.NewAuthService(mockUserRepo, nil, nil, nil, nil, nil, mockEmailAddress, nil)
 	service.SetTemplates(nil, verifiedTemplate)
 
-	err := service.VerifyUser(ctx, 1, "")
-	assert.NoError(t, err)
+	assert.NoError(t, service.VerifyUser(ctx, 1, ""))
 
 	time.Sleep(100 * time.Millisecond)
 }
 
+func TestGetUserConfirmationDetails_Success(t *testing.T) {
+	ctx := context.Background()
 
-func TestGetUserConfirmationDetails(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUserRepo := mock_repository.NewMockUserRepository(ctrl)
+
+	args := repository.GetUserConfirmationDetailsRow{
+		ID: 1,
+		UserStatus: pgtype.Bool{Bool: false, Valid: true},
+		FirstName: "Larry",
+	}
+
+	mockUserRepo.EXPECT().GetUserConfirmationDetails(ctx, gomock.Any()).Return(args, nil)
+
+	service := service.NewAuthService(mockUserRepo, nil, nil, nil, nil, nil, mockEmailAddress, nil)
+
+	dto, err := service.GetUserConfirmationDetails(ctx, "")
+	assert.NoError(t, err)
+	assert.Equal(t, strconv.FormatInt(args.ID, 10), dto.ID)
+	assert.Equal(t, args.UserStatus.Bool, dto.UserStatus)
+	assert.Equal(t, args.FirstName, dto.Firstname)
+}
+
+func TestGetUserConfirmationDetails_ActiveUserError(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
@@ -179,16 +239,14 @@ func TestGetUserConfirmationDetails(t *testing.T) {
 
 	mockUserRepo.EXPECT().GetUserConfirmationDetails(ctx, gomock.Any()).Return(args, nil)
 
-	service := service.NewAuthService(mockUserRepo, nil, nil, nil, nil, nil, mockEmailAddress, nil)
+	svc := service.NewAuthService(mockUserRepo, nil, nil, nil, nil, nil, mockEmailAddress, nil)
 
-	dto, err := service.GetUserConfirmationDetails(ctx, "")
-	assert.NoError(t, err)
-	assert.Equal(t, strconv.FormatInt(args.ID, 10), dto.ID)
-	assert.Equal(t, args.UserStatus.Bool, dto.UserStatus)
-	assert.Equal(t, args.FirstName, dto.Firstname)
+	dto, err := svc.GetUserConfirmationDetails(ctx, "")
+	assert.ErrorIs(t, err, service.ErrUserAlreadyActive)
+	assert.NotEmpty(t, dto)
 }
 
-func TestSendConfirmationLetter(t *testing.T) {
+func TestSendConfirmationLetter_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -201,7 +259,7 @@ func TestSendConfirmationLetter(t *testing.T) {
 	assert.NoError(t, service.SendConfirmationLetter("", "", ""))
 }
 
-func TestSendVerifiedLetter(t *testing.T) {
+func TestSendVerifiedLetter_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
