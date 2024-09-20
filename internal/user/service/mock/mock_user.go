@@ -84,6 +84,21 @@ func (mr *MockUserServiceMockRecorder) FindUserById(ctx, userId any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserById", reflect.TypeOf((*MockUserService)(nil).FindUserById), ctx, userId)
 }
 
+// FindUserProfileById mocks base method.
+func (m *MockUserService) FindUserProfileById(ctx context.Context, userId int64) (dto.Profile, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindUserProfileById", ctx, userId)
+	ret0, _ := ret[0].(dto.Profile)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindUserProfileById indicates an expected call of FindUserProfileById.
+func (mr *MockUserServiceMockRecorder) FindUserProfileById(ctx, userId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserProfileById", reflect.TypeOf((*MockUserService)(nil).FindUserProfileById), ctx, userId)
+}
+
 // SetProfilePicture mocks base method.
 func (m *MockUserService) SetProfilePicture(ctx context.Context, userId int64, file io.Reader, fileName string, fileSize int64, fileType string) error {
 	m.ctrl.T.Helper()

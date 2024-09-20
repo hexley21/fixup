@@ -28,6 +28,7 @@ func (h *userHandler) MapRoutes(
 	)
 
 	e.PATCH("/me/change-password", h.ChangePassword, jwtAccessMiddleware)
+	e.PATCH("profile/:id", h.FindUserProfileById)
 
 	return usersGroup
 }

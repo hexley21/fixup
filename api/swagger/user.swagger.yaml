@@ -122,6 +122,27 @@ definitions:
       user_status:
         type: boolean
     type: object
+  profile:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      phone_number:
+        type: string
+      picture_url:
+        type: string
+      role:
+        type: string
+      user_status:
+        type: boolean
+    type: object
   rest.ErrorResponse:
     properties:
       message:
@@ -133,6 +154,11 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/User'
+    type: object
+  rest.apiResponse-profile:
+    properties:
+      data:
+        $ref: '#/definitions/profile'
     type: object
 host: localhost:8080
 info:
@@ -344,6 +370,49 @@ paths:
       summary: Verify email
       tags:
       - auth
+  /profile/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve profile details by user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.apiResponse-profile'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Find user profile by ID
+      tags:
+      - profile
   /user/me/change-password:
     patch:
       consumes:

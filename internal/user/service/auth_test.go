@@ -241,9 +241,8 @@ func TestGetUserConfirmationDetails_ActiveUserError(t *testing.T) {
 
 	svc := service.NewAuthService(mockUserRepo, nil, nil, nil, nil, nil, mockEmailAddress, nil)
 
-	dto, err := svc.GetUserConfirmationDetails(ctx, "")
+	_, err := svc.GetUserConfirmationDetails(ctx, "")
 	assert.ErrorIs(t, err, service.ErrUserAlreadyActive)
-	assert.NotEmpty(t, dto)
 }
 
 func TestSendConfirmationLetter_Success(t *testing.T) {

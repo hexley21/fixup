@@ -18,6 +18,7 @@ var directory = "pfp/"
 
 type UserService interface {
 	FindUserById(ctx context.Context, userId int64) (dto.User, error)
+	FindUserProfileById(ctx context.Context, userId int64) (dto.Profile, error)
 	UpdateUserDataById(ctx context.Context, id int64, updateDto dto.UpdateUser) (dto.User, error)
 	SetProfilePicture(ctx context.Context, userId int64, file io.Reader, fileName string, fileSize int64, fileType string) error
 	ChangePassword(ctx context.Context, id int64, updateDto dto.UpdatePassword) error
@@ -62,6 +63,22 @@ func (s *userServiceImpl) FindUserById(ctx context.Context, userId int64) (dto.U
 	}
 
 	return dto, nil
+}
+
+func (s *userServiceImpl) FindUserProfileById(ctx context.Context, userId int64) (dto.Profile, error) {
+	var profile dto.Profile
+
+	entity, err := s.userRepository.GetById(ctx, userId)
+	if err != nil {
+		return profile, err
+	}
+
+	profile, err = mapper.MapUserToProfileDto(entity, s.cdnUrlSigner)
+	if err != nil {
+		return profile, err
+	}
+
+	return profile, nil
 }
 
 func (s *userServiceImpl) UpdateUserDataById(ctx context.Context, id int64, updateDto dto.UpdateUser) (dto.User, error) {

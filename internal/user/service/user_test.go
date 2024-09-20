@@ -128,6 +128,67 @@ func TestFindUserById_MapperError(t *testing.T) {
 	assert.Empty(t, dto)
 }
 
+func TestFindUserProfileById_Success(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUserRepo := mock_repository.NewMockUserRepository(ctrl)
+	mockCdnUrlSigner := mock_cdn.NewMockURLSigner(ctrl)
+
+	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
+	mockCdnUrlSigner.EXPECT().SignURL(userEntity.PictureName.String).Return(signedPicture, nil)
+
+	service := service.NewUserService(mockUserRepo, nil, nil, mockCdnUrlSigner, nil)
+	dto, err := service.FindUserProfileById(ctx, userEntity.ID)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, strconv.FormatInt(userEntity.ID, 10), dto.ID)
+	assert.Equal(t, userEntity.FirstName, dto.FirstName)
+	assert.Equal(t, userEntity.LastName, dto.LastName)
+	assert.Equal(t, signedPicture, dto.PictureUrl)
+	assert.Equal(t, string(userEntity.Role), dto.Role)
+	assert.Equal(t, userEntity.UserStatus.Bool, dto.UserStatus)
+	assert.Equal(t, userEntity.CreatedAt.Time, dto.CreatedAt)
+}
+
+func TestFindUserProfileById_NotFound(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUserRepo := mock_repository.NewMockUserRepository(ctrl)
+	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(entity.User{}, pgx.ErrNoRows)
+
+	service := service.NewUserService(mockUserRepo, nil, nil, nil, nil)
+	dto, err := service.FindUserProfileById(ctx, userEntity.ID)
+
+	assert.ErrorIs(t, err, pgx.ErrNoRows)
+	assert.Empty(t, dto)
+}
+
+func TestFindUserProfileById_MapperError(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUserRepo := mock_repository.NewMockUserRepository(ctrl)
+	mockCdnUrlSigner := mock_cdn.NewMockURLSigner(ctrl)
+
+	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
+	mockCdnUrlSigner.EXPECT().SignURL(userEntity.PictureName.String).Return(signedPicture, errSigningUrl)
+
+	service := service.NewUserService(mockUserRepo, nil, nil, mockCdnUrlSigner, nil)
+	dto, err := service.FindUserProfileById(ctx, userEntity.ID)
+
+	assert.ErrorIs(t, err, errSigningUrl)
+	assert.Empty(t, dto)
+}
+
 func TestUpdateUserDataById_Success(t *testing.T) {
 	ctx := context.Background()
 

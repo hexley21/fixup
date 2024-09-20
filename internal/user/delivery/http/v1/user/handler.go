@@ -16,6 +16,7 @@ import (
 )
 
 // TODO: manage contextes
+// TODO: manage who can access certain endpoint
 
 type userHandler struct {
 	service service.UserService
@@ -57,6 +58,40 @@ func (h *userHandler) FindUserById(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, rest.NewApiResponse(user))
 }
+
+
+// @Summary Find user profile by ID
+// @Description Retrieve profile details by user ID
+// @Tags profile
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} rest.apiResponse[dto.Profile] "OK"
+// @Failure 400 {object} rest.ErrorResponse "Bad Request"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized"
+// @Failure 403 {object} rest.ErrorResponse "Forbidden"
+// @Failure 404 {object} rest.ErrorResponse "Not Found"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Security access_token
+// @Router /profile/{id} [get]
+func (h *userHandler) FindUserProfileById(c echo.Context) error {
+	ctx := context.Background()
+	id, err := ctxutil.GetParamId(c)
+	if err != nil {
+		return err
+	}
+
+	profile, err := h.service.FindUserProfileById(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return rest.NewNotFoundError(err, rest.MsgUserNotFound)
+		}
+		return rest.NewInternalServerError(err)
+	}
+
+	return c.JSON(http.StatusOK, rest.NewApiResponse(profile))
+}
+
 
 // @Summary Upload profile picture
 // @Description Upload a profile picture for the user by ID
