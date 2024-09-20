@@ -12,6 +12,7 @@ import (
 
 	mock_jwt "github.com/hexley21/fixup/internal/common/jwt/mock"
 	"github.com/hexley21/fixup/internal/common/rest"
+	"github.com/hexley21/fixup/internal/common/util/ctxutil"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/auth"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/enum"
@@ -574,4 +575,74 @@ func TestLogout_Success(t *testing.T) {
     assert.Equal(t, http.StatusOK, rec.Code)
     assert.Contains(t, rec.Header().Values("Set-Cookie")[0], "access_token=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; HttpOnly")
 	assert.Contains(t, rec.Header().Values("Set-Cookie")[1], "refresh_token=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; HttpOnly")
+}
+
+func TestRefresh_Success(t *testing.T) {
+	ctrl, _, _, _, mockAccessGenerator, _, h, e := setup(t)
+	defer ctrl.Finish()
+
+    mockAccessGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Role, userDto.UserStatus).Return(token, nil)
+
+    req := httptest.NewRequest(http.MethodPost, "/", nil)
+    rec := httptest.NewRecorder()
+    c := e.NewContext(req, rec)
+	ctxutil.SetJwtId(c, userDto.ID)
+    ctxutil.SetJwtRole(c, enum.UserRole(userDto.Role))
+    ctxutil.SetJwtUserStatus(c, userDto.UserStatus)
+
+    assert.NoError(t, h.Refresh(mockAccessGenerator)(c))
+    assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Contains(t, rec.Header().Get("Set-Cookie"), fmt.Sprintf("access_token=%s; HttpOnly; Secure", token))
+}
+
+func TestRefresh_JwtNotImplemented(t *testing.T) {
+	t.Parallel()
+
+	h := auth.NewAuthHandler(nil)
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+
+	t.Run("JWT id", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		e := echo.New()
+		c := e.NewContext(req, rec)
+
+		var errResp *rest.ErrorResponse
+		if assert.ErrorAs(t, h.Refresh(nil)(c), &errResp) {
+			assert.ErrorIs(t, ctxutil.ErrJwtNotImplemented.Cause, errResp.Cause)
+			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
+			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		}
+		assert.NotContains(t, rec.Header().Get("Set-Cookie"), fmt.Sprintf("access_token=%s; HttpOnly; Secure", token))
+	})
+
+	t.Run("JWT role", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		e := echo.New()
+		c := e.NewContext(req, rec)
+		ctxutil.SetJwtId(c, userDto.ID)
+
+		var errResp *rest.ErrorResponse
+		if assert.ErrorAs(t, h.Refresh(nil)(c), &errResp) {
+			assert.ErrorIs(t, ctxutil.ErrJwtNotImplemented.Cause, errResp.Cause)
+			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
+			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		}
+		assert.NotContains(t, rec.Header().Get("Set-Cookie"), fmt.Sprintf("access_token=%s; HttpOnly; Secure", token))
+	})
+
+	t.Run("JWT user status", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		e := echo.New()
+		c := e.NewContext(req, rec)
+		ctxutil.SetJwtId(c, userDto.ID)
+		ctxutil.SetJwtRole(c, enum.UserRole(userDto.Role))
+
+		var errResp *rest.ErrorResponse
+		if assert.ErrorAs(t, h.Refresh(nil)(c), &errResp) {
+			assert.ErrorIs(t, ctxutil.ErrJwtNotImplemented.Cause, errResp.Cause)
+			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
+			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		}
+		assert.NotContains(t, rec.Header().Get("Set-Cookie"), fmt.Sprintf("access_token=%s; HttpOnly; Secure", token))
+	})   
 }
