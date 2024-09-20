@@ -28,6 +28,10 @@ else
 	@$(MAKE) swag-gen/bash svc=$(svc)
 endif
 
+test: 
+	go test -cover ./internal/... -v
+	go test -cover ./internal/user/repository/ -v -mp="${CURDIR}/sql/user/migrations"
+
 compose: build
 	@docker-compose up --build --remove-orphans
 
