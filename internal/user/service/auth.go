@@ -19,6 +19,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// TODO: manage user activation when activated
+
 var (
 	ErrUserAlreadyActive = errors.New("attempt to send confirmation letter to activated user")
 )
