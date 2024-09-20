@@ -154,7 +154,11 @@ func (h *AuthHandler) ResendConfirmationLetter(
 	return func(c echo.Context) error {
 		dto := new(dto.Email)
 		if err := c.Bind(dto); err != nil {
-			return rest.NewInternalServerError(err)
+			return rest.NewBindError(err)
+		}
+
+		if err := c.Validate(dto); err != nil {
+			return rest.NewValidationError(err)
 		}
 
 		details, err := h.service.GetUserConfirmationDetails(context.Background(), dto.Email)
@@ -168,8 +172,7 @@ func (h *AuthHandler) ResendConfirmationLetter(
 			return rest.NewInternalServerError(err)
 		}
 
-		err = sendConfirmationLetter(c.Logger(), h.service, verGenerator, details.ID, dto.Email, details.Firstname)
-		if err != nil {
+		if err := sendConfirmationLetter(c.Logger(), h.service, verGenerator, details.ID, dto.Email, details.Firstname); err != nil {
 			return rest.NewInternalServerError(err)
 		}
 
