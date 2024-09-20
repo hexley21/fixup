@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	errInsufficientRights = rest.NewForbiddenError(nil, "Not enough permissions")
-	errUserVerified       = rest.NewForbiddenError(nil, "User has to be not-verified")
-	errUserNotVerified    = rest.NewForbiddenError(nil, "User has to be verified")
+	ErrInsufficientRights = rest.NewForbiddenError(nil, rest.MsgInsufficientRights)
+	ErrUserVerified       = rest.NewForbiddenError(nil, rest.MsgUserIsVerified)
+	ErrUserNotVerified    = rest.NewForbiddenError(nil, rest.MsgUserIsNotVerified)
 )
 
 func AllowRoles(roles ...enum.UserRole) echo.MiddlewareFunc {
@@ -24,7 +24,7 @@ func AllowRoles(roles ...enum.UserRole) echo.MiddlewareFunc {
 			}
 
 			if !slices.Contains(roles, role) {
-				return errInsufficientRights
+				return ErrInsufficientRights
 			}
 
 			return next(c)
@@ -56,12 +56,17 @@ func AllowSelfOrRole(roles ...enum.UserRole) echo.MiddlewareFunc {
 				return next(c)
 			}
 
-			if (idParam != jwtId) || !slices.Contains(roles, role) {
-				return errInsufficientRights
+			if (idParam == jwtId) || slices.Contains(roles, role) {
+				err = ctxutil.SetParamId(c, idParam)
+				if err != nil {
+					return err
+				}
+
+				return next(c)
 
 			}
 
-			return next(c)
+			return ErrInsufficientRights
 		}
 	}
 }
@@ -79,10 +84,10 @@ func AllowVerified(status bool) echo.MiddlewareFunc {
 			}
 
 			if status {
-				return errUserNotVerified
+				return ErrUserNotVerified
 			}
 
-			return errUserVerified
+			return ErrUserVerified
 		}
 	}
 }
