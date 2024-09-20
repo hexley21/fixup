@@ -13,6 +13,7 @@ import (
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/service"
 	"github.com/hexley21/fixup/internal/user/service/verifier"
+	"github.com/hexley21/fixup/pkg/hasher"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -24,7 +25,6 @@ const (
 	refresh_token_cookie = "refresh_token"
 )
 
-
 type AuthHandler struct {
 	service service.AuthService
 }
@@ -35,7 +35,7 @@ func NewAuthHandler(service service.AuthService) *AuthHandler {
 	}
 }
 
-func setCookies(c echo.Context, token string, cookieName string) error {
+func setCookies(c echo.Context, token string, cookieName string) {
 	cookie := http.Cookie{
 		Name:     cookieName,
 		Value:    token,
@@ -44,7 +44,6 @@ func setCookies(c echo.Context, token string, cookieName string) error {
 	}
 
 	c.SetCookie(&cookie)
-	return nil
 }
 
 func eraseCookie(c echo.Context, cookieName string) {
@@ -198,12 +197,19 @@ func (h *AuthHandler) Login(
 	return func(c echo.Context) error {
 		dto := new(dto.Login)
 		if err := c.Bind(dto); err != nil {
-			return rest.NewInvalidArgumentsError(err)
+			return rest.NewBindError(err)
+		}
+
+		if err := c.Validate(dto); err != nil {
+			return rest.NewValidationError(err)
 		}
 
 		user, err := h.service.AuthenticateUser(context.Background(), *dto)
 		if err != nil {
-			return rest.NewUnauthorizedError(err, rest.MsgIncorrectEmailOrPass)
+			if errors.Is(err, hasher.ErrPasswordMismatch) {
+				return rest.NewUnauthorizedError(err, rest.MsgIncorrectEmailOrPass)
+			}
+			return rest.NewInternalServerError(err)
 		}
 
 		accessToken, err := accessGenerator.GenerateJWT(user.ID, user.Role, user.UserStatus)
@@ -264,11 +270,8 @@ func (h *AuthHandler) Refresh(
 		if err != nil {
 			return err
 		}
-		err = setCookies(c, accessToken, access_token_cookie)
-		if err != nil {
-			return err
-		}
 
+		setCookies(c, accessToken, access_token_cookie)
 		return c.NoContent(http.StatusOK)
 	}
 }
@@ -306,7 +309,7 @@ func (h *AuthHandler) VerifyEmail(
 			return rest.NewInternalServerError(err)
 		}
 
-		go func () {
+		go func() {
 			if err := h.service.SendVerifiedLetter(claims.Email); err != nil {
 				c.Logger().Error(err)
 			}
