@@ -6,5 +6,6 @@ WORKDIR /root/
 COPY ./config/order.config.yml ./config/config.yml
 COPY ./bin/order ./app
 COPY ./.env ./.env
+COPY ./keys/cdn/private_key.pem ./keys/cdn/private_key.pem
 
 CMD ["./app"]
