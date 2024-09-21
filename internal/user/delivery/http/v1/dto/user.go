@@ -29,8 +29,8 @@ type Profile struct {
 type UpdateUser struct {
 	Email       *string `json:"email,omitempty" validate:"omitempty,email,max=40"`
 	PhoneNumber *string `json:"phone_number,omitempty" validate:"omitempty,phone"`
-	FirstName   *string `json:"first_name,omitempty" validate:"omitempty,alphaunicode,min=2,max=50"`
-	LastName    *string `json:"last_name,omitempty" validate:"omitempty,alphaunicode,min=2,max=50"`
+	FirstName   *string `json:"first_name,omitempty" validate:"omitempty,alphaunicode,min=2,max=30"`
+	LastName    *string `json:"last_name,omitempty" validate:"omitempty,alphaunicode,min=2,max=30"`
 } // @name UpdateUserInput
 
 type UpdatePassword struct {

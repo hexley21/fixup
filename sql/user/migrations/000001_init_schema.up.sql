@@ -2,8 +2,8 @@ CREATE TYPE USER_ROLE AS ENUM ('CUSTOMER', 'PROVIDER', 'MODERATOR', 'ADMIN');
 
 CREATE TABLE users (
     id BIGINT PRIMARY KEY NOT NULL,
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,
+    first_name VARCHAR(30) NOT NULL,
+    last_name VARCHAR(30) NOT NULL,
     phone_number VARCHAR(15) NOT NULL,
     email VARCHAR(40) NOT NULL,
     picture_name TEXT,
