@@ -7,6 +7,8 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
+// TODO: Add not found error
+
 type (
 	PGX interface {
 		BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)

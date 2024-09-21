@@ -1,43 +1,66 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
 
+	"github.com/bwmarrin/snowflake"
+	"github.com/hexley21/fixup/cmd/util/shutdown"
+	"github.com/hexley21/fixup/internal/catalog/app"
 	"github.com/hexley21/fixup/pkg/config"
+	"github.com/hexley21/fixup/pkg/infra/postgres"
 	"github.com/hexley21/fixup/pkg/logger"
-	"github.com/hexley21/fixup/internal/common/rest"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/hexley21/fixup/pkg/validator"
 )
 
+// @title Catalog Microservice
+// @version 1.0.0-alpha0
+// @description Handles catalog operations
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @host localhost:8080
+// @BasePath /v1
+// @schemes http
+//
+// @securityDefinitions.apikey access_token
+// @in header
+// @name Authorization
+// @securityDefinitions.apikey refresh_token
+// @in header
+// @name Authorization
 func main() {
 	cfg, err := config.LoadConfig("./config/config.yml")
 	if err != nil {
 		log.Fatalf("could not load config: %v\n", err)
 	}
 
-	e := echo.New()
+	zapLogger := logger.NewZapLogger(cfg.Logging, cfg.Server.IsProd)
+	playgroundValidator := validator.NewValidator()
 
-	e.Logger = logger.NewZapLogger(cfg.Logging, cfg.Server.IsProd)
-
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello World")
-	})
-
-	e.HTTPErrorHandler = func(err error, c echo.Context) {
-		if apiErr, ok := err.(*rest.ErrorResponse); ok {
-			c.JSON(apiErr.Status, apiErr)
-			c.Logger().Error(err)
-			return
-		}
-		c.Logger().Error(err)
-		c.JSON(http.StatusInternalServerError, "Internal server error")
+	pgPool, err := postgres.NewPool(&cfg.Postgres)
+	if err != nil {
+		zapLogger.Fatal(err)
 	}
 
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", cfg.Server.HttpPort)))
+	snowflakeNode, err := snowflake.NewNode(cfg.Server.InstanceId)
+	if err != nil {
+		zapLogger.Fatal(err)
+	}
+
+	server := app.NewServer(
+		cfg,
+		zapLogger,
+		playgroundValidator,
+		pgPool,
+		snowflakeNode,
+		cfg.Mailer.User,
+	)
+
+	shutdownError := make(chan error)
+	go shutdown.NotifyShutdown(server, zapLogger, shutdownError)
+
+	if err := <-shutdownError; err != nil {
+		zapLogger.Error(err)
+	}
+
+	zapLogger.Info("server stopped")
 }
