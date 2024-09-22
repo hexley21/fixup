@@ -21,6 +21,11 @@ export default defineConfig({
     			md: 'calc(var(--radius) - 2px)',
     			sm: 'calc(var(--radius) - 4px)'
     		},
+			screens: {
+				'3xs': '320px',
+				'2xs': '400px',
+				'xs': '480px',
+			},
     		colors: {
     			background: 'hsl(var(--background))',
     			foreground: 'hsl(var(--foreground))',
