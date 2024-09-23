@@ -34,3 +34,4 @@ argon2:
 logging:
     level: debug
     caller_enabled: true
+    log_file: order.log

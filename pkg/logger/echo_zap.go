@@ -35,6 +35,13 @@ func getLoggerLevel(lvl string) zapcore.Level {
 func NewZapLogger(cfg config.Logging, isProduction bool) *zapLogger {
 	logWriter := zapcore.AddSync(os.Stdout)
 
+	logFile, err := os.OpenFile("./log/"+ cfg.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+    if err != nil {
+        log.Fatal(err)
+    }
+	
+    fileWriter := zapcore.AddSync(logFile)
+
 	var encoderCfg zapcore.EncoderConfig
 	var encoder zapcore.Encoder
 
@@ -69,7 +76,10 @@ func NewZapLogger(cfg config.Logging, isProduction bool) *zapLogger {
 		encoder = zapcore.NewConsoleEncoder(encoderCfg)
 	}
 
-	core := zapcore.NewCore(encoder, logWriter, zap.NewAtomicLevelAt(getLoggerLevel(cfg.LogLevel)))
+	core := zapcore.NewTee(
+        zapcore.NewCore(encoder, logWriter, zap.NewAtomicLevelAt(getLoggerLevel(cfg.LogLevel))),
+        zapcore.NewCore(encoder, fileWriter, zap.NewAtomicLevelAt(getLoggerLevel(cfg.LogLevel))),
+    )
 
 	var options []zap.Option
 

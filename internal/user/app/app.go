@@ -99,7 +99,7 @@ func NewServer(
 }
 
 func (s *server) Run() error {
-	s.echo.Use(middleware.Logger())
+s.echo.Use(middleware.Logger())
 	s.echo.Use(middleware.Recover())
 	s.echo.Use(middleware.CORS())
 

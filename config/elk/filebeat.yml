@@ -1,0 +1,10 @@
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+  - /log/*.log
+
+output.logstash:
+  hosts: ["logstash:5044"]
+  timeout: 60s 
+  ttl: 120
