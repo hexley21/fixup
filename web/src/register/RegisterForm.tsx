@@ -55,9 +55,15 @@ export default function RegisternForm() {
   })
 
   function onSubmit(data: AccountFormValues) {
-    data.phone_number = data.phone_number.replace("+", "")
-
-    let body = JSON.stringify(data, null, 2)
+    let dto = {
+      first_name: data.first_name,
+      last_name: data.last_name,
+      email: data.email,
+      phone_number: data.phone_number.replace("+", ""),
+      password: data.password,
+    }
+    
+    let body = JSON.stringify(dto)
     console.log(body)
 
     toast({
@@ -72,7 +78,8 @@ export default function RegisternForm() {
     fetch('http://localhost:8080/v1/auth/register/customer', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Allow-Access-Control-Origin': 'http://localhost:5173',
+        'Content-Type': 'application/json'
       },
       body: body,
     })

@@ -31,17 +31,17 @@ const (
 )
 
 func NewInvalidArgumentsError(cause error) *ErrorResponse {
-	return newError(cause, MsgInvalidArguments, http.StatusBadRequest)
+	return newError(cause, http.StatusBadRequest, MsgInvalidArguments)
 }
 
 func NewBindError(cause error) *ErrorResponse {
-	return newError(fmt.Errorf("bind failed: %w", cause), MsgInvalidArguments, http.StatusBadRequest)
+	return newError(fmt.Errorf("bind failed: %w", cause), http.StatusBadRequest, MsgInvalidArguments)
 }
 
 func NewValidationError(cause error) *ErrorResponse {
-	return newError(fmt.Errorf("validation failed: %w", cause), MsgInvalidArguments, http.StatusBadRequest)
+	return newError(fmt.Errorf("validation failed: %w", cause), http.StatusBadRequest, MsgInvalidArguments)
 }
 
 func NewReadFileError(cause error) *ErrorResponse {
-	return newError(cause, MsgFileReadError, http.StatusBadRequest)
+	return newError(cause, http.StatusBadRequest, MsgFileReadError)
 }

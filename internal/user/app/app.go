@@ -99,7 +99,7 @@ func NewServer(
 }
 
 func (s *server) Run() error {
-	s.echo.Use(middleware.Logger())
+s.echo.Use(middleware.Logger())
 	s.echo.Use(middleware.Recover())
 	s.echo.Use(middleware.CORS())
 
@@ -132,10 +132,10 @@ func (s *server) Close() error {
 }
 
 func httpErrorHandler(err error, c echo.Context) {
-	c.Logger().Error(err)
 	if apiErr, ok := err.(*rest.ErrorResponse); ok {
 		c.JSON(apiErr.Status, apiErr)
 		return
 	}
+	
 	c.JSON(http.StatusInternalServerError, rest.NewInternalServerError(err))
 }

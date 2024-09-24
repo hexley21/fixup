@@ -13,7 +13,7 @@ func NotifyShutdown(serverCloser io.Closer, logger echo.Logger, shutdownError ch
 
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 
-	logger.Info("caught signal", "signal", (<-sig).String())
+logger.Info("caught signal", "signal", (<-sig).String())
 
 	if err := serverCloser.Close(); err != nil {
 		shutdownError <- err

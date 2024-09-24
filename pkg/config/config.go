@@ -90,10 +90,10 @@ type (
 	}
 
 	JWT struct {
-		AccessSecret  string
-		AccessTTL     time.Duration `yaml:"access_ttl"`
-		RefreshSecret string
-		RefreshTTL    time.Duration `yaml:"refresh_ttl"`
+		AccessSecret       string
+		AccessTTL          time.Duration `yaml:"access_ttl"`
+		RefreshSecret      string
+		RefreshTTL         time.Duration `yaml:"refresh_ttl"`
 		VerificationSecret string
 		VerificationTTL    time.Duration `yaml:"verification_ttl"`
 	}
@@ -121,6 +121,7 @@ type (
 	Logging struct {
 		LogLevel      string `yaml:"level"`
 		CallerEnabled bool   `yaml:"caller_enabled"`
+		LogFile       string `yaml:"log_file"`
 	}
 )
 
@@ -175,7 +176,7 @@ func parseEnv(cfg *Config) error {
 	cfg.JWT.AccessSecret = os.Getenv("JWT_ACCESS_SECRET")
 	cfg.JWT.RefreshSecret = os.Getenv("JWT_REFRESH_SECRET")
 	cfg.JWT.VerificationSecret = os.Getenv("JWT_VERIFICATION_SECRET")
-	
+
 	cfg.Postgres.User = os.Getenv("POSTGRES_USER")
 	cfg.Postgres.Password = os.Getenv("POSTGRES_PASSWORD")
 	cfg.Postgres.SslMode = os.Getenv("POSTGRES_SSL_MODE")
