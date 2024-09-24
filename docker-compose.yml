@@ -9,11 +9,8 @@ services:
 
   user-db:
     image: postgres:latest
-    container_name: user-db
     ports:
       - "5433:5432"
-    expose:
-      - "5432"
     volumes:
       - ./docker-data/user/postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -30,11 +27,8 @@ services:
 
   catalog-db:
     image: postgis/postgis:latest
-    container_name: catalog-db
     ports:
       - "5434:5432"
-    expose:
-      - "5432"
     volumes:
       - ./docker-data/catalog/postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -51,11 +45,8 @@ services:
 
   order-db:
     image: postgis/postgis:latest
-    container_name: order-db
     ports:
       - "5435:5432"
-    expose:
-      - "5432"
     volumes:
       - ./docker-data/order/postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -274,7 +265,6 @@ services:
     env_file: .env
 
   user-service:
-    container_name: user-service
     build:
       context: .
       dockerfile: ./docker/Dockerfile.user
@@ -291,7 +281,6 @@ services:
       - ./log/user.log:/root/log/user.log
 
   catalog-service:
-    container_name: catalog-service
     build:
       context: .
       dockerfile: ./docker/Dockerfile.catalog
@@ -308,7 +297,6 @@ services:
       - ./log/catalog.log:/root/log/catalog.log
 
   order-service:
-    container_name: order-service
     build:
       context: .
       dockerfile: ./docker/Dockerfile.order
@@ -325,7 +313,6 @@ services:
       - ./log/order.log:/root/log/order.log
 
   chat-service:
-    container_name: chat-service
     build:
       context: .
       dockerfile: ./docker/Dockerfile.chat
@@ -337,7 +324,6 @@ services:
       - ./log/chat.log:/root/log/chat.log
 
   nginx:
-    container_name: nginx
     build:
       context: .
       dockerfile: ./docker/Dockerfile.nginx
