@@ -22,6 +22,9 @@ go.work
 go.work.sum
 
 *.pem
+*.crt
+*.key
+keys/
 
 docker-data
 bin
