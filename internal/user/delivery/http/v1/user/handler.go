@@ -56,6 +56,8 @@ func (h *userHandler) FindUserById(c echo.Context) error {
 		return rest.NewInternalServerError(err)
 	}
 
+	
+    c.Logger().Infof("Found user by ID: %d", id)
 	return c.JSON(http.StatusOK, rest.NewApiResponse(user))
 }
 
@@ -89,6 +91,8 @@ func (h *userHandler) FindUserProfileById(c echo.Context) error {
 		return rest.NewInternalServerError(err)
 	}
 
+	
+    c.Logger().Infof("Found user profile by ID: %d", id)
 	return c.JSON(http.StatusOK, rest.NewApiResponse(profile))
 }
 
@@ -140,6 +144,7 @@ func (h *userHandler) UploadProfilePicture(c echo.Context) error {
 		return rest.NewInternalServerError(err)
 	}
 
+	c.Logger().Infof("Upload profile picture for user with ID: %d", id)
 	return c.NoContent(http.StatusNoContent)
 }
 
@@ -181,6 +186,7 @@ func (h *userHandler) UpdateUserData(c echo.Context) error {
 		return rest.NewInternalServerError(err)
 	}
 
+	c.Logger().Infof("Update data for user with id ID: %d", id)
 	return c.JSON(http.StatusOK, rest.NewApiResponse(user))
 }
 
@@ -211,6 +217,7 @@ func (h *userHandler) DeleteUser(c echo.Context) error {
 		return rest.NewInternalServerError(err)
 	}
 
+	c.Logger().Infof("User deleted for ID: %d", id)
 	return c.NoContent(http.StatusNoContent)
 }
 
@@ -244,6 +251,7 @@ func (h *userHandler) ChangePassword(c echo.Context) error {
 	}
 
 	if err := c.Validate(dto); err != nil {
+		c.Logger().Errorf("Error validating for user ID: %d", userId)
 		return rest.NewValidationError(err)
 	}
 
@@ -257,5 +265,6 @@ func (h *userHandler) ChangePassword(c echo.Context) error {
 		return rest.NewInternalServerError(err)
 	}
 
+	c.Logger().Infof("User changed password user ID: %d", userId)
 	return c.NoContent(http.StatusNoContent)
 }

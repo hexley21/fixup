@@ -58,7 +58,7 @@ func TestAllowRole_JwtNotImplemented(t *testing.T) {
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
-		assert.Equal(t, ctxutil.ErrJwtNotImplemented.Cause, errResp.Cause)
+		assert.Equal(t, ctxutil.ErrJwtNotImplemented, errResp.Cause)
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 	}
@@ -163,7 +163,7 @@ func TestAllowSelfOrRole_JwtNotImplemented(t *testing.T) {
 
 		var errResp *rest.ErrorResponse
 		if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
-			assert.Equal(t, ctxutil.ErrJwtNotImplemented.Cause, errResp.Cause)
+			assert.Equal(t, ctxutil.ErrJwtNotImplemented, errResp.Cause)
 			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 		}
@@ -181,7 +181,7 @@ func TestAllowSelfOrRole_JwtNotImplemented(t *testing.T) {
 
 		var errResp *rest.ErrorResponse
 		if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
-			assert.Equal(t, ctxutil.ErrJwtNotImplemented.Cause, errResp.Cause)
+			assert.Equal(t, ctxutil.ErrJwtNotImplemented, errResp.Cause)
 			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 		}
@@ -252,7 +252,7 @@ func TestAllowVerified_JwtNotImplemented(t *testing.T) {
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
-		assert.Equal(t, ctxutil.ErrJwtNotImplemented.Cause, errResp.Cause)
+		assert.Equal(t, ctxutil.ErrJwtNotImplemented, errResp.Cause)
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 	}

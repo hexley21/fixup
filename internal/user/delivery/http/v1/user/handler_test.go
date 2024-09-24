@@ -158,7 +158,7 @@ func TestFindUserById_IdParamNotImplemented(t *testing.T) {
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.FindUserById(c), &errResp) {
-		assert.ErrorIs(t, ctxutil.ErrParamIdNotImplemented.Cause, errResp.Cause)
+		assert.ErrorIs(t, ctxutil.ErrParamIdNotImplemented, errResp.Cause)
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 	}
@@ -321,7 +321,7 @@ func TestUploadProfilePicture_IdParamNotImplemented(t *testing.T) {
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.UploadProfilePicture(c), &errResp) {
-		assert.ErrorIs(t, ctxutil.ErrParamIdNotImplemented.Cause, errResp.Cause)
+		assert.ErrorIs(t, ctxutil.ErrParamIdNotImplemented, errResp.Cause)
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 	}
@@ -478,7 +478,7 @@ func TestUpdateUserData_IdParamNotImplemented(t *testing.T) {
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.UpdateUserData(c), &errResp) {
-		assert.ErrorIs(t, ctxutil.ErrParamIdNotImplemented.Cause, errResp.Cause)
+		assert.ErrorIs(t, ctxutil.ErrParamIdNotImplemented, errResp.Cause)
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 	}
@@ -576,7 +576,7 @@ func TestTestDeleteUser_IdParamNotImplemented(t *testing.T) {
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.DeleteUser(c), &errResp) {
-		assert.ErrorIs(t, ctxutil.ErrParamIdNotImplemented.Cause, errResp.Cause)
+		assert.ErrorIs(t, ctxutil.ErrParamIdNotImplemented, errResp.Cause)
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 	}
@@ -750,7 +750,7 @@ func TestChangePassword_JwtNotImplement(t *testing.T) {
 
 	var errResp *rest.ErrorResponse
 	if assert.ErrorAs(t, h.ChangePassword(c), &errResp) {
-		assert.ErrorIs(t, ctxutil.ErrJwtNotImplemented.Cause, errResp.Cause)
+		assert.ErrorIs(t, ctxutil.ErrJwtNotImplemented, errResp.Cause)
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 	}

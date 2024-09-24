@@ -93,6 +93,7 @@ func (h *AuthHandler) RegisterCustomer(
 
 		go sendConfirmationLetter(c.Logger(), h.service, verGenerator, user.ID, user.Email, user.FirstName)
 
+		c.Logger().Infof("Customer was registered with ID: %s, Email: %s", user.ID, user.Email)
 		return c.NoContent(http.StatusCreated)
 	}
 }
@@ -132,6 +133,7 @@ func (h *AuthHandler) RegisterProvider(
 
 		go sendConfirmationLetter(c.Logger(), h.service, verGenerator, user.ID, user.Email, user.FirstName)
 
+		c.Logger().Infof("Provider was registered with ID: %s, Email: %s", user.ID, user.Email)
 		return c.NoContent(http.StatusCreated)
 	}
 }
@@ -162,6 +164,7 @@ func (h *AuthHandler) ResendConfirmationLetter(
 
 		details, err := h.service.GetUserConfirmationDetails(context.Background(), dto.Email)
 		if err != nil {
+
 			if errors.Is(err, service.ErrUserAlreadyActive) {
 				return rest.NewConflictError(err, rest.MsgUserAlreadyExists)
 			}
@@ -175,6 +178,7 @@ func (h *AuthHandler) ResendConfirmationLetter(
 			return rest.NewInternalServerError(err)
 		}
 
+		c.Logger().Infof("Confirmation letter was resent to user with email: %s, ID: %s", dto.Email, details.ID)
 		return c.NoContent(http.StatusNoContent)
 	}
 }
@@ -223,6 +227,8 @@ func (h *AuthHandler) Login(
 
 		setCookies(c, accessToken, access_token_cookie)
 		setCookies(c, refreshToken, refresh_token_cookie)
+
+		c.Logger().Infof("User logged in, user ID: %d, role: %s", user.ID, user.Role)
 		return c.NoContent(http.StatusOK)
 	}
 }
@@ -236,6 +242,7 @@ func (h *AuthHandler) Logout(c echo.Context) error {
 	eraseCookie(c, access_token_cookie)
 	eraseCookie(c, refresh_token_cookie)
 
+	c.Logger().Info("User logged out, cookies erased")
 	return c.NoContent(http.StatusOK)
 }
 
@@ -272,6 +279,8 @@ func (h *AuthHandler) Refresh(
 		}
 
 		setCookies(c, accessToken, access_token_cookie)
+
+		c.Logger().Infof("JWT refreshed for user ID: %s, Role: %s, UserStatus: %s", id, role, userStatus)
 		return c.NoContent(http.StatusOK)
 	}
 }
@@ -292,7 +301,8 @@ func (h *AuthHandler) VerifyEmail(
 	jwtVerifier verifier.JwtVerifier,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		claims, err := jwtVerifier.VerifyJWT(c.QueryParam("token"))
+		tokenParam := c.QueryParam("token")
+		claims, err := jwtVerifier.VerifyJWT(tokenParam)
 		if err != nil {
 			return rest.NewUnauthorizedError(err, rest.MsgInvalidToken)
 		}
@@ -311,10 +321,14 @@ func (h *AuthHandler) VerifyEmail(
 
 		go func() {
 			if err := h.service.SendVerifiedLetter(claims.Email); err != nil {
-				c.Logger().Error(err)
+				c.Logger().Errorf("Failed to send verified letter to Email: %s, user ID: %s, error: %w", claims.Email, id, err)
+				return
 			}
+
+			c.Logger().Infof("Verified letter sent to Email: %s, user ID: %s", claims.Email, id)
 		}()
 
+		c.Logger().Infof("Email verification successful for user ID: %d, Email: %s", id, claims.Email)
 		return c.NoContent(http.StatusOK)
 	}
 }
@@ -323,10 +337,11 @@ func sendConfirmationLetter(logger echo.Logger, authService service.AuthService,
 	jwt, err := verGenerator.GenerateJWT(id, email)
 	if err == nil {
 		if err := authService.SendConfirmationLetter(jwt, email, name); err == nil {
+			logger.Infof("Confirmation letter sent to email: %s, user ID: %s", email, id)
 			return nil
 		}
 	}
 
-	logger.Error(err)
+	logger.Errorf("Failed to send confirmation letter to email: %s, user ID: %s, error: %v", email, id, err)
 	return err
 }

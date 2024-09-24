@@ -132,10 +132,10 @@ func (s *server) Close() error {
 }
 
 func httpErrorHandler(err error, c echo.Context) {
-	c.Logger().Error(err)
 	if apiErr, ok := err.(*rest.ErrorResponse); ok {
 		c.JSON(apiErr.Status, apiErr)
 		return
 	}
+	
 	c.JSON(http.StatusInternalServerError, rest.NewInternalServerError(err))
 }

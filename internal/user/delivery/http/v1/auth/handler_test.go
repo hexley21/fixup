@@ -621,7 +621,7 @@ func TestRefresh_JwtNotImplemented(t *testing.T) {
 
 		var errResp *rest.ErrorResponse
 		if assert.ErrorAs(t, h.Refresh(nil)(c), &errResp) {
-			assert.ErrorIs(t, ctxutil.ErrJwtNotImplemented.Cause, errResp.Cause)
+			assert.ErrorIs(t, ctxutil.ErrJwtNotImplemented, errResp.Cause)
 			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 		}
@@ -636,7 +636,7 @@ func TestRefresh_JwtNotImplemented(t *testing.T) {
 
 		var errResp *rest.ErrorResponse
 		if assert.ErrorAs(t, h.Refresh(nil)(c), &errResp) {
-			assert.ErrorIs(t, ctxutil.ErrJwtNotImplemented.Cause, errResp.Cause)
+			assert.ErrorIs(t, ctxutil.ErrJwtNotImplemented, errResp.Cause)
 			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 		}
@@ -652,7 +652,7 @@ func TestRefresh_JwtNotImplemented(t *testing.T) {
 
 		var errResp *rest.ErrorResponse
 		if assert.ErrorAs(t, h.Refresh(nil)(c), &errResp) {
-			assert.ErrorIs(t, ctxutil.ErrJwtNotImplemented.Cause, errResp.Cause)
+			assert.ErrorIs(t, ctxutil.ErrJwtNotImplemented, errResp.Cause)
 			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 		}

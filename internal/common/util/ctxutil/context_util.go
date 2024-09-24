@@ -17,8 +17,8 @@ const (
 )
 
 var (
-	ErrJwtNotImplemented = rest.NewInternalServerError(errors.New("jwt middleware not implemented"))
-	ErrParamIdNotImplemented = rest.NewInternalServerError(errors.New("param id middleware not implemented"))
+	ErrJwtNotImplemented = errors.New("jwt middleware not implemented")
+	ErrParamIdNotImplemented = errors.New("param id middleware not implemented")
 )
 
 
@@ -27,7 +27,7 @@ func GetJwtId(c echo.Context) (string, error) {
 		return id, nil
 	}
 
-	return "", ErrJwtNotImplemented
+	return "", rest.NewInternalServerError(ErrJwtNotImplemented)
 }
 
 func SetJwtId(c echo.Context, value string) {
@@ -39,7 +39,7 @@ func GetJwtRole(c echo.Context) (enum.UserRole, error) {
 		return role, nil
 	}
 
-	return "", ErrJwtNotImplemented
+	return "", rest.NewInternalServerError(ErrJwtNotImplemented)
 }
 
 func SetJwtRole(c echo.Context, value enum.UserRole) {
@@ -51,7 +51,7 @@ func GetJwtUserStatus(c echo.Context) (bool, error) {
 		return userStatus, nil
 	}
 
-	return false, ErrJwtNotImplemented
+	return false, rest.NewInternalServerError(ErrJwtNotImplemented)
 }
 
 func SetJwtUserStatus(c echo.Context, value bool) {
@@ -63,7 +63,7 @@ func GetParamId(c echo.Context) (int64, error) {
 		return paramId, nil
 	}
 
-	return 0, ErrParamIdNotImplemented
+	return 0, rest.NewInternalServerError(ErrParamIdNotImplemented)
 }
 
 func SetParamId(c echo.Context, value string) error {
