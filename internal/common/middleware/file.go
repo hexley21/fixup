@@ -2,51 +2,56 @@ package middleware
 
 import (
 	"fmt"
+	"net/http"
 	"slices"
 
-	"github.com/hexley21/fixup/internal/common/rest"
-	"github.com/labstack/echo/v4"
+	"github.com/hexley21/fixup/pkg/http/rest"
 )
 
 var (
-	ErrTooManyFiles   = rest.NewBadRequestError(nil, rest.MsgTooManyFiles)
-	ErrNotEnoughFiles = rest.NewBadRequestError(nil, rest.MsgNotEnoughFiles)
-	ErrNoFile         = rest.NewBadRequestError(nil, rest.MsgNoFile)
+	ErrTooManyFiles   = rest.NewBadRequestError(nil, MsgTooManyFiles)
+	ErrNotEnoughFiles = rest.NewBadRequestError(nil, MsgNotEnoughFiles)
+	ErrNoFile         = rest.NewBadRequestError(nil, MsgNoFile)
 )
 
-func AllowFilesAmount(key string, amount int) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			form, err := c.MultipartForm()
+func (f *MiddlewareFactory) NewAllowFilesAmount(size int64, key string, amount int) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			form, err := f.binder.BindMultipartForm(r, size)
 			if err != nil {
-				return rest.NewReadFileError(err)
+				f.writer.WriteError(w, rest.NewReadFileError(err))
+				return
 			}
 
 			files := form.File[key]
 
 			if len(files) > amount {
-				return ErrTooManyFiles
+				f.writer.WriteError(w, ErrTooManyFiles)
+				return
 			}
 			
 			if len(files) == 0 {
-				return ErrNoFile
+				 f.writer.WriteError(w, ErrNoFile)
+				 return
 			}
 			
 			if len(files) < amount {
-				return ErrNotEnoughFiles
+				f.writer.WriteError(w, ErrNotEnoughFiles)
+				return
 			}
-			
-			return next(c)
-		}
+
+			next.ServeHTTP(w, r)
+		})
 	}
 }
 
-func AllowContentType(key string, types ...string) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			form, err := c.MultipartForm()
+func (f *MiddlewareFactory) NewAllowContentType(size int64, key string, types ...string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			form, err := f.binder.BindMultipartForm(r, size)
 			if err != nil {
-				return rest.NewReadFileError(err)
+				f.writer.WriteError(w, err)
+				return
 			}
 
 			for _, file := range form.File[key] {
@@ -54,10 +59,11 @@ func AllowContentType(key string, types ...string) echo.MiddlewareFunc {
 				if slices.Contains(types, contentType) {
 					continue
 				}
-				return rest.NewBadRequestError(nil, fmt.Sprintf("Invalid file type: %s, for file: %s", contentType, file.Filename))
+				f.writer.WriteError(w, rest.NewBadRequestError(nil, fmt.Sprintf("Invalid file type: %s, for file: %s", contentType, file.Filename)))
+				return
 			}
 
-			return next(c)
-		}
+			next.ServeHTTP(w, r)
+		})
 	}
 }

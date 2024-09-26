@@ -13,6 +13,7 @@ import (
 	reflect "reflect"
 
 	jwt "github.com/hexley21/fixup/internal/common/jwt"
+	rest "github.com/hexley21/fixup/pkg/http/rest"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -40,11 +41,11 @@ func (m *MockJwt) EXPECT() *MockJwtMockRecorder {
 }
 
 // GenerateJWT mocks base method.
-func (m *MockJwt) GenerateJWT(id, role string, verified bool) (string, error) {
+func (m *MockJwt) GenerateJWT(id, role string, verified bool) (string, *rest.ErrorResponse) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GenerateJWT", id, role, verified)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
+	ret1, _ := ret[1].(*rest.ErrorResponse)
 	return ret0, ret1
 }
 
@@ -55,11 +56,11 @@ func (mr *MockJwtMockRecorder) GenerateJWT(id, role, verified any) *gomock.Call 
 }
 
 // VerifyJWT mocks base method.
-func (m *MockJwt) VerifyJWT(tokenString string) (jwt.UserClaims, error) {
+func (m *MockJwt) VerifyJWT(tokenString string) (jwt.UserClaims, *rest.ErrorResponse) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "VerifyJWT", tokenString)
 	ret0, _ := ret[0].(jwt.UserClaims)
-	ret1, _ := ret[1].(error)
+	ret1, _ := ret[1].(*rest.ErrorResponse)
 	return ret0, ret1
 }
 
@@ -93,11 +94,11 @@ func (m *MockJwtGenerator) EXPECT() *MockJwtGeneratorMockRecorder {
 }
 
 // GenerateJWT mocks base method.
-func (m *MockJwtGenerator) GenerateJWT(id, role string, verified bool) (string, error) {
+func (m *MockJwtGenerator) GenerateJWT(id, role string, verified bool) (string, *rest.ErrorResponse) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GenerateJWT", id, role, verified)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
+	ret1, _ := ret[1].(*rest.ErrorResponse)
 	return ret0, ret1
 }
 
@@ -131,11 +132,11 @@ func (m *MockJwtVerifier) EXPECT() *MockJwtVerifierMockRecorder {
 }
 
 // VerifyJWT mocks base method.
-func (m *MockJwtVerifier) VerifyJWT(tokenString string) (jwt.UserClaims, error) {
+func (m *MockJwtVerifier) VerifyJWT(tokenString string) (jwt.UserClaims, *rest.ErrorResponse) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "VerifyJWT", tokenString)
 	ret0, _ := ret[0].(jwt.UserClaims)
-	ret1, _ := ret[1].(error)
+	ret1, _ := ret[1].(*rest.ErrorResponse)
 	return ret0, ret1
 }
 

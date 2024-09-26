@@ -1,77 +1,71 @@
 package ctxutil
 
 import (
+	"context"
 	"errors"
-	"strconv"
 
-	"github.com/hexley21/fixup/internal/common/rest"
+	"github.com/hexley21/fixup/pkg/http/rest"
 	"github.com/hexley21/fixup/internal/user/enum"
-	"github.com/labstack/echo/v4"
 )
 
+type ctxKey string
+
 const (
-	jwtIdKey = "jwt_id"
-	jwtRoleKey = "jwt_role"
-	jwtUserStatusKey = "jwt_user_status"
-	paramIdKey = "param_id"
+	jwtIdKey         ctxKey = "jwt_id"
+	jwtRoleKey       ctxKey = "jwt_role"
+	jwtUserStatusKey ctxKey = "jwt_user_status"
+	paramIdKey       ctxKey = "param_id"
 )
 
 var (
-	ErrJwtNotImplemented = errors.New("jwt middleware not implemented")
+	ErrJwtNotImplemented     = errors.New("jwt middleware not implemented")
 	ErrParamIdNotImplemented = errors.New("param id middleware not implemented")
 )
 
-
-func GetJwtId(c echo.Context) (string, error) {
-	if id, ok := c.Get(jwtIdKey).(string); ok {
-		return id, nil
+func GetJwtId(ctx context.Context) (string, *rest.ErrorResponse) {
+	if value, ok := ctx.Value(jwtIdKey).(string); ok {
+		return value, nil
 	}
 
 	return "", rest.NewInternalServerError(ErrJwtNotImplemented)
 }
 
-func SetJwtId(c echo.Context, value string) {
-	c.Set(jwtIdKey, value)
+func SetJwtId(ctx context.Context, value string) context.Context {
+	return context.WithValue(ctx, jwtIdKey, value)
 }
 
-func GetJwtRole(c echo.Context) (enum.UserRole, error) {
-	if role, ok := c.Get(jwtRoleKey).(enum.UserRole); ok {
+func GetJwtRole(ctx context.Context) (enum.UserRole, *rest.ErrorResponse) {
+	if role, ok := ctx.Value(jwtRoleKey).(enum.UserRole); ok {
 		return role, nil
 	}
 
 	return "", rest.NewInternalServerError(ErrJwtNotImplemented)
 }
 
-func SetJwtRole(c echo.Context, value enum.UserRole) {
-	c.Set(jwtRoleKey, value)
+func SetJwtRole(ctx context.Context, value enum.UserRole) context.Context {
+	return context.WithValue(ctx, jwtRoleKey, value)
 }
 
-func GetJwtUserStatus(c echo.Context) (bool, error) {
-	if userStatus, ok := c.Get(jwtUserStatusKey).(bool); ok {
-		return userStatus, nil
+func GetJwtUserStatus(ctx context.Context) (bool, *rest.ErrorResponse) {
+	if role, ok := ctx.Value(jwtUserStatusKey).(bool); ok {
+		return role, nil
 	}
 
 	return false, rest.NewInternalServerError(ErrJwtNotImplemented)
 }
 
-func SetJwtUserStatus(c echo.Context, value bool) {
-	c.Set(jwtUserStatusKey, value)
+func SetJwtUserStatus(ctx context.Context, value bool) context.Context {
+	return context.WithValue(ctx, jwtUserStatusKey, value)
 }
 
-func GetParamId(c echo.Context) (int64, error) {
-	if paramId, ok := c.Get(paramIdKey).(int64); ok {
+func GetParamId(ctx context.Context) (int64, *rest.ErrorResponse) {
+	if paramId, ok := ctx.Value(paramIdKey).(int64); ok {
 		return paramId, nil
 	}
 
-	return 0, rest.NewInternalServerError(ErrParamIdNotImplemented)
+	return int64(0), rest.NewInternalServerError(ErrParamIdNotImplemented)
 }
 
-func SetParamId(c echo.Context, value string) error {
-	id, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		return rest.NewBadRequestError(err, "Invalid id parameter")
-	}
-
-	c.Set(paramIdKey, id)
-	return nil
+func SetParamId(ctx context.Context, value int64) context.Context {
+	return context.WithValue(ctx, paramIdKey, value)
 }

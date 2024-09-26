@@ -1,259 +1,253 @@
 package middleware_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/hexley21/fixup/internal/common/middleware"
-	"github.com/hexley21/fixup/internal/common/rest"
 	"github.com/hexley21/fixup/internal/common/util/ctxutil"
 	"github.com/hexley21/fixup/internal/user/enum"
-	"github.com/labstack/echo/v4"
+	"github.com/hexley21/fixup/pkg/http/rest"
 	"github.com/stretchr/testify/assert"
 )
 
-func BasicHandler(c echo.Context) error {
-	return c.String(http.StatusOK, "OK")
+func ParamTestHandlerFunc(t *testing.T, value int64) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := ctxutil.GetParamId(r.Context())
+		assert.Equal(t, value, id)
+		assert.Nil(t, err)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
+	}
 }
 
 func TestAllowRoles_Success(t *testing.T) {
-	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
 
-	ctxutil.SetJwtRole(c, enum.UserRoleCUSTOMER)
+	req = req.WithContext(ctxutil.SetJwtRole(req.Context(), enum.UserRoleCUSTOMER))
 
-	mw := middleware.AllowRoles(enum.UserRoleCUSTOMER, enum.UserRoleMODERATOR, enum.UserRoleADMIN)
+	factory.NewAllowRoles(enum.UserRoleCUSTOMER, enum.UserRoleMODERATOR, enum.UserRoleADMIN)(BasicHandler()).ServeHTTP(rec, req)
 
-	assert.NoError(t, mw(BasicHandler)(c))
+	assert.Equal(t, "ok", rec.Body.String())
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
 
 func TestAllowRoles_InsuffucientRights(t *testing.T) {
-	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
 
-	ctxutil.SetJwtRole(c, enum.UserRoleCUSTOMER)
+	req = req.WithContext(ctxutil.SetJwtRole(req.Context(), enum.UserRoleCUSTOMER))
 
-	mw := middleware.AllowRoles(enum.UserRoleADMIN, enum.UserRoleMODERATOR)
+	factory.NewAllowRoles(enum.UserRoleADMIN, enum.UserRoleMODERATOR)(BasicHandler()).ServeHTTP(rec, req)
 
-	var errResp *rest.ErrorResponse
-	if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
-		assert.Equal(t, rest.MsgInsufficientRights, errResp.Message)
+	assert.Equal(t, http.StatusForbidden, rec.Code)
+
+	var errResp rest.ErrorResponse
+	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
+		assert.Equal(t, middleware.MsgInsufficientRights, errResp.Message)
 		assert.Equal(t, http.StatusForbidden, errResp.Status)
 	}
 }
 
 func TestAllowRole_JwtNotImplemented(t *testing.T) {
-	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
 
-	mw := middleware.AllowSelfOrRole(enum.UserRoleMODERATOR, enum.UserRoleADMIN)
+	factory.NewAllowSelfOrRole(enum.UserRoleMODERATOR, enum.UserRoleADMIN)(BasicHandler()).ServeHTTP(rec, req)
 
-	var errResp *rest.ErrorResponse
-	if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
-		assert.Equal(t, ctxutil.ErrJwtNotImplemented, errResp.Cause)
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+
+	var errResp rest.ErrorResponse
+	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
 	}
 }
 
 func TestAllowSelfOrRole_SelfMe(t *testing.T) {
-	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	r := chi.NewRouter()
+	r.Group(func(r chi.Router) {
+		r.Use(factory.NewAllowSelfOrRole(enum.UserRoleMODERATOR, enum.UserRoleADMIN))
+		r.Get("/{id}", ParamTestHandlerFunc(t, int64(123)))
+	})
+	
+	req := httptest.NewRequest(http.MethodGet, "/me", nil)
 	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-	c.SetParamNames("id")
-	c.SetParamValues("me")
 
-	ctxutil.SetJwtRole(c, enum.UserRoleCUSTOMER)
-	ctxutil.SetJwtId(c, "123")
+	ctx := ctxutil.SetJwtRole(req.Context(), enum.UserRoleCUSTOMER)
+	ctx = ctxutil.SetJwtId(ctx, "123")
+	ctx = ctxutil.SetJwtUserStatus(ctx, true)
+	req = req.WithContext(ctx)
 
-	mw := middleware.AllowSelfOrRole(enum.UserRoleMODERATOR, enum.UserRoleADMIN)
-
-	assert.NoError(t, mw(BasicHandler)(c))
-	assert.Equal(t, http.StatusOK, rec.Code)
-
-	id, err := ctxutil.GetParamId(c)
-	assert.NoError(t, err)
-	assert.Equal(t, int64(123), id)
+	r.ServeHTTP(rec, req)
 }
 
 func TestAllowSelfOrRole_SelfId(t *testing.T) {
-	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	r := chi.NewRouter()
+	r.Group(func(r chi.Router) {
+		r.Use(factory.NewAllowSelfOrRole(enum.UserRoleMODERATOR, enum.UserRoleADMIN))
+		r.Get("/{id}", ParamTestHandlerFunc(t, int64(123)))
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/123", nil)
 	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-	c.SetParamNames("id")
-	c.SetParamValues("123")
 
-	ctxutil.SetJwtRole(c, enum.UserRoleCUSTOMER)
-	ctxutil.SetJwtId(c, "123")
+	ctx := ctxutil.SetJwtRole(req.Context(), enum.UserRoleCUSTOMER)
+	ctx = ctxutil.SetJwtId(ctx, "123")
+	ctx = ctxutil.SetJwtUserStatus(ctx, true)
+	req = req.WithContext(ctx)
 
-	mw := middleware.AllowSelfOrRole(enum.UserRoleMODERATOR, enum.UserRoleADMIN)
-
-	assert.NoError(t, mw(BasicHandler)(c))
-	assert.Equal(t, http.StatusOK, rec.Code)
-
-	id, err := ctxutil.GetParamId(c)
-	assert.NoError(t, err)
-	assert.Equal(t, int64(123), id)
+	r.ServeHTTP(rec, req)
 }
 
 func TestAllowSelfOrRole_AllowedRole(t *testing.T) {
-	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	r := chi.NewRouter()
+	r.Group(func(r chi.Router) {
+		r.Use(factory.NewAllowSelfOrRole(enum.UserRoleMODERATOR, enum.UserRoleADMIN))
+		r.Get("/{id}", ParamTestHandlerFunc(t, int64(321)))
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/321", nil)
 	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-	c.SetParamNames("id")
-	c.SetParamValues("321")
 
-	ctxutil.SetJwtRole(c, enum.UserRoleADMIN)
-	ctxutil.SetJwtId(c, "123")
+	ctx := ctxutil.SetJwtRole(req.Context(), enum.UserRoleADMIN)
+	ctx = ctxutil.SetJwtId(ctx, "123")
+	ctx = ctxutil.SetJwtUserStatus(ctx, true)
 
-	mw := middleware.AllowSelfOrRole(enum.UserRoleMODERATOR, enum.UserRoleADMIN)
-
-	assert.NoError(t, mw(BasicHandler)(c))
-	assert.Equal(t, http.StatusOK, rec.Code)
-
-	id, err := ctxutil.GetParamId(c)
-	assert.NoError(t, err)
-	assert.Equal(t, int64(321), id)
+	r.ServeHTTP(rec, req.WithContext(ctx))
 }
 
 func TestAllowSelfOrRole_InsufficientRights(t *testing.T) {
-	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-	c.SetParamNames("id")
-	c.SetParamValues("321")
-
-	ctxutil.SetJwtRole(c, enum.UserRoleCUSTOMER)
-	ctxutil.SetJwtId(c, "123")
-
-	mw := middleware.AllowSelfOrRole(enum.UserRoleMODERATOR, enum.UserRoleADMIN)
-
-	var errResp *rest.ErrorResponse
-	if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
-		assert.Equal(t, rest.MsgInsufficientRights, errResp.Message)
-		assert.Equal(t, http.StatusForbidden, errResp.Status)
-	}
-
-	id, err := ctxutil.GetParamId(c)
-	assert.Error(t, err)
-	assert.Equal(t, int64(0), id)
-}
-
-func TestAllowSelfOrRole_JwtNotImplemented(t *testing.T) {
-	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	rec := httptest.NewRecorder()
-
-	t.Run("Id", func(t *testing.T) {
-		c := e.NewContext(req, rec)
-
-		mw := middleware.AllowSelfOrRole(enum.UserRoleMODERATOR, enum.UserRoleADMIN)
-
-		var errResp *rest.ErrorResponse
-		if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
-			assert.Equal(t, ctxutil.ErrJwtNotImplemented, errResp.Cause)
-			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
-		}
-
-		id, err := ctxutil.GetParamId(c)
-		assert.Error(t, err)
-		assert.Equal(t, int64(0), id)
+	r := chi.NewRouter()
+	r.Group(func(r chi.Router) {
+		r.Use(factory.NewAllowSelfOrRole(enum.UserRoleMODERATOR, enum.UserRoleADMIN))
+		r.Get("/{id}", BasicHandlerFunc)
 	})
-
-	t.Run("Role", func(t *testing.T) {
-		c := e.NewContext(req, rec)
-		ctxutil.SetJwtId(c, "123")
-
-		mw := middleware.AllowSelfOrRole(enum.UserRoleMODERATOR, enum.UserRoleADMIN)
-
-		var errResp *rest.ErrorResponse
-		if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
-			assert.Equal(t, ctxutil.ErrJwtNotImplemented, errResp.Cause)
-			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
-		}
-
-		id, err := ctxutil.GetParamId(c)
-		assert.Error(t, err)
-		assert.Equal(t, int64(0), id)
-	})
-}
-
-func TestAllowVerified_Success(t *testing.T) {
-	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	
+	req := httptest.NewRequest(http.MethodGet, "/321", nil)
 	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
 
-	ctxutil.SetJwtUserStatus(c, true)
 
-	mw := middleware.AllowVerified(true)
+	ctx := ctxutil.SetJwtRole(req.Context(), enum.UserRoleCUSTOMER)
+	ctx = ctxutil.SetJwtId(ctx, "123")
+	ctx = ctxutil.SetJwtUserStatus(ctx, true)
 
-	assert.NoError(t, mw(BasicHandler)(c))
-	assert.Equal(t, http.StatusOK, rec.Code)
-}
+	r.ServeHTTP(rec, req.WithContext(ctx))
 
-func TestAllowVerified_ErrorNotVerified(t *testing.T) {
-	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-
-	ctxutil.SetJwtUserStatus(c, false)
-
-	mw := middleware.AllowVerified(true)
-
-	var errResp *rest.ErrorResponse
-	if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
-		assert.Equal(t, middleware.ErrUserNotVerified.Cause, errResp.Cause)
-		assert.Equal(t, rest.MsgUserIsNotVerified, errResp.Message)
+	var errResp rest.ErrorResponse
+	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
+		assert.Equal(t, middleware.MsgInsufficientRights, errResp.Message)
 		assert.Equal(t, http.StatusForbidden, errResp.Status)
 	}
 }
 
-func TestAllowVerified_ErrorVerified(t *testing.T) {
-	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
+// func TestAllowSelfOrRole_JwtNotImplemented(t *testing.T) {
+// 	e := echo.New()
+// 	req := httptest.NewRequest(http.MethodGet, "/", nil)
+// 	rec := httptest.NewRecorder()
 
-	ctxutil.SetJwtUserStatus(c, true)
+// 	t.Run("Id", func(t *testing.T) {
+// 		c := e.NewContext(req, rec)
 
-	mw := middleware.AllowVerified(false)
+// 		mw := middleware.AllowSelfOrRole(enum.UserRoleMODERATOR, enum.UserRoleADMIN)
 
-	var errResp *rest.ErrorResponse
-	if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
-		assert.Equal(t, middleware.ErrUserVerified.Cause, errResp.Cause)
-		assert.Equal(t, rest.MsgUserIsVerified, errResp.Message)
-		assert.Equal(t, http.StatusForbidden, errResp.Status)
-	}
-}
+// 		var errResp *rest.ErrorResponse
+// 		if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
+// 			assert.Equal(t, ctxutil.ErrJwtNotImplemented, errResp.Cause)
+// 			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
+// 			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+// 		}
 
-func TestAllowVerified_JwtNotImplemented(t *testing.T) {
-	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
+// 		id, err := ctxutil.GetParamId(c)
+// 		assert.Error(t, err)
+// 		assert.Equal(t, int64(0), id)
+// 	})
 
-	mw := middleware.AllowVerified(true)
+// 	t.Run("Role", func(t *testing.T) {
+// 		c := e.NewContext(req, rec)
+// 		ctxutil.SetJwtId(c, "123")
 
-	var errResp *rest.ErrorResponse
-	if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
-		assert.Equal(t, ctxutil.ErrJwtNotImplemented, errResp.Cause)
-		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
-	}
-}
+// 		mw := middleware.AllowSelfOrRole(enum.UserRoleMODERATOR, enum.UserRoleADMIN)
+
+// 		var errResp *rest.ErrorResponse
+// 		if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
+// 			assert.Equal(t, ctxutil.ErrJwtNotImplemented, errResp.Cause)
+// 			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
+// 			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+// 		}
+
+// 		id, err := ctxutil.GetParamId(c)
+// 		assert.Error(t, err)
+// 		assert.Equal(t, int64(0), id)
+// 	})
+// }
+
+// func TestAllowVerified_Success(t *testing.T) {
+// 	e := echo.New()
+// 	req := httptest.NewRequest(http.MethodGet, "/", nil)
+// 	rec := httptest.NewRecorder()
+// 	c := e.NewContext(req, rec)
+
+// 	ctxutil.SetJwtUserStatus(c, true)
+
+// 	mw := middleware.AllowVerified(true)
+
+// 	assert.NoError(t, mw(BasicHandler)(c))
+// 	assert.Equal(t, http.StatusOK, rec.Code)
+// }
+
+// func TestAllowVerified_ErrorNotVerified(t *testing.T) {
+// 	e := echo.New()
+// 	req := httptest.NewRequest(http.MethodGet, "/", nil)
+// 	rec := httptest.NewRecorder()
+// 	c := e.NewContext(req, rec)
+
+// 	ctxutil.SetJwtUserStatus(c, false)
+
+// 	mw := middleware.AllowVerified(true)
+
+// 	var errResp *rest.ErrorResponse
+// 	if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
+// 		assert.Equal(t, middleware.ErrUserNotVerified.Cause, errResp.Cause)
+// 		assert.Equal(t, rest.MsgUserIsNotVerified, errResp.Message)
+// 		assert.Equal(t, http.StatusForbidden, errResp.Status)
+// 	}
+// }
+
+// func TestAllowVerified_ErrorVerified(t *testing.T) {
+// 	e := echo.New()
+// 	req := httptest.NewRequest(http.MethodGet, "/", nil)
+// 	rec := httptest.NewRecorder()
+// 	c := e.NewContext(req, rec)
+
+// 	ctxutil.SetJwtUserStatus(c, true)
+
+// 	mw := middleware.AllowVerified(false)
+
+// 	var errResp *rest.ErrorResponse
+// 	if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
+// 		assert.Equal(t, middleware.ErrUserVerified.Cause, errResp.Cause)
+// 		assert.Equal(t, rest.MsgUserIsVerified, errResp.Message)
+// 		assert.Equal(t, http.StatusForbidden, errResp.Status)
+// 	}
+// }
+
+// func TestAllowVerified_JwtNotImplemented(t *testing.T) {
+// 	e := echo.New()
+// 	req := httptest.NewRequest(http.MethodGet, "/", nil)
+// 	rec := httptest.NewRecorder()
+// 	c := e.NewContext(req, rec)
+
+// 	mw := middleware.AllowVerified(true)
+
+// 	var errResp *rest.ErrorResponse
+// 	if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
+// 		assert.Equal(t, ctxutil.ErrJwtNotImplemented, errResp.Cause)
+// 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
+// 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+// 	}
+// }

@@ -1,93 +1,106 @@
 package middleware
 
 import (
+	"net/http"
 	"slices"
+	"strconv"
 
-	"github.com/hexley21/fixup/internal/common/rest"
+	"github.com/go-chi/chi/v5"
+	"github.com/hexley21/fixup/pkg/http/rest"
 	"github.com/hexley21/fixup/internal/common/util/ctxutil"
 	"github.com/hexley21/fixup/internal/user/enum"
-	"github.com/labstack/echo/v4"
 )
 
 var (
-	ErrInsufficientRights = rest.NewForbiddenError(nil, rest.MsgInsufficientRights)
-	ErrUserVerified       = rest.NewForbiddenError(nil, rest.MsgUserIsVerified)
-	ErrUserNotVerified    = rest.NewForbiddenError(nil, rest.MsgUserIsNotVerified)
+	ErrInsufficientRights = rest.NewForbiddenError(nil, MsgInsufficientRights)
+	ErrUserVerified       = rest.NewForbiddenError(nil, MsgUserIsVerified)
+	ErrUserNotVerified    = rest.NewForbiddenError(nil, MsgUserIsNotVerified)
 )
 
-func AllowRoles(roles ...enum.UserRole) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			role, err := ctxutil.GetJwtRole(c)
+func (f *MiddlewareFactory) NewAllowRoles(roles ...enum.UserRole) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			role, err := ctxutil.GetJwtRole(r.Context())
 			if err != nil {
-				return err
+				f.writer.WriteError(w, err)
+				return
 			}
 
 			if !slices.Contains(roles, role) {
-				return ErrInsufficientRights
+				f.writer.WriteError(w, ErrInsufficientRights)
+				return
 			}
 
-			return next(c)
-		}
+			next.ServeHTTP(w, r)
+		})
 	}
 }
 
-func AllowSelfOrRole(roles ...enum.UserRole) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			idParam := c.Param("id")
+func (f *MiddlewareFactory) NewAllowSelfOrRole(roles ...enum.UserRole) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			idParam := chi.URLParam(r, "id")
 
-			role, err := ctxutil.GetJwtRole(c)
+			role, err := ctxutil.GetJwtRole(r.Context())
 			if err != nil {
-				return err
+				f.writer.WriteError(w, err)
+				return
 			}
 
-			jwtId, err := ctxutil.GetJwtId(c)
+			jwtId, err := ctxutil.GetJwtId(r.Context())
 			if err != nil {
-				return err
+				f.writer.WriteError(w, err)
+				return
 			}
 
 			if idParam == "me" {
-				err := ctxutil.SetParamId(c, jwtId)
+				userId, err := strconv.ParseInt(jwtId, 10, 64)
 				if err != nil {
-					return err
+					f.writer.WriteError(w, rest.NewInternalServerError(err))
+					return
 				}
 
-				return next(c)
+				next.ServeHTTP(w, r.WithContext(ctxutil.SetParamId(r.Context(), userId)))
+				return
 			}
 
 			if (idParam == jwtId) || slices.Contains(roles, role) {
-				err = ctxutil.SetParamId(c, idParam)
+				userId, err := strconv.ParseInt(idParam, 10, 64)
 				if err != nil {
-					return err
+					f.writer.WriteError(w, rest.NewInternalServerError(err))
+					return
 				}
 
-				return next(c)
-
+				r = r.WithContext(ctxutil.SetParamId(r.Context(), userId))
+				next.ServeHTTP(w, r)
+				return
 			}
 
-			return ErrInsufficientRights
-		}
+			f.writer.WriteError(w, ErrInsufficientRights)
+		})
 	}
 }
 
-func AllowVerified(status bool) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			verified, err := ctxutil.GetJwtUserStatus(c)
+func (f *MiddlewareFactory) NewAllowVerified(status bool) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			verified, err := ctxutil.GetJwtUserStatus(r.Context())
 			if err != nil {
-				return err
+				f.writer.WriteError(w, err)
+				return
 			}
 
 			if verified == status {
-				return next(c)
+				next.ServeHTTP(w, r)
+				return
 			}
 
 			if status {
-				return ErrUserNotVerified
+				f.writer.WriteError(w, ErrUserNotVerified)
+				return
 			}
 
-			return ErrUserVerified
-		}
+			f.writer.WriteError(w, ErrUserVerified)
+		})
 	}
 }
