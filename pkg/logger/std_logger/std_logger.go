@@ -17,6 +17,10 @@ func (l *stdLogger) Debugf(format string, args ...any) {
 	log.Printf(format+"\n", args...)
 }
 
+func (l *stdLogger) Print(i ...any) {
+	log.Println(i...)
+}
+
 func (l *stdLogger) Info(i ...any) {
 	log.Println(i...)
 }

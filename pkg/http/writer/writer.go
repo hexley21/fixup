@@ -13,7 +13,8 @@ type HTTPWriter interface {
 }
 
 type HTTPDataWriter interface {
-	WriteData(w http.ResponseWriter, data any, code int)
+	WriteData(w http.ResponseWriter, code int, data any)
+	WriteNoContent(w http.ResponseWriter, code int)
 }
 
 type HTTPErrorWriter interface {

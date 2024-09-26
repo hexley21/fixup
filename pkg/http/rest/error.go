@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -71,14 +70,6 @@ func NewInternalServerError(cause error) *ErrorResponse {
 
 func NewInvalidArgumentsError(cause error) *ErrorResponse {
 	return newError(cause, http.StatusBadRequest, MsgInvalidArguments)
-}
-
-func NewBindError(cause error) *ErrorResponse {
-	return newError(fmt.Errorf("bind failed: %w", cause), http.StatusBadRequest, MsgInvalidArguments)
-}
-
-func NewValidationError(cause error) *ErrorResponse {
-	return newError(fmt.Errorf("validation failed: %w", cause), http.StatusBadRequest, MsgInvalidArguments)
 }
 
 func NewReadFileError(cause error) *ErrorResponse {

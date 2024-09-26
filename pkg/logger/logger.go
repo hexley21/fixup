@@ -1,6 +1,9 @@
 package logger
 
+import "github.com/go-chi/chi/v5/middleware"
+
 type Logger interface {
+	middleware.LoggerInterface
 	Debug(i ...any)
 	Debugf(format string, args ...any)
 	Info(i ...any)

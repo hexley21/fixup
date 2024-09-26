@@ -1,4 +1,4 @@
-package zap
+package zap_logger
 
 import (
 	"os"
@@ -31,7 +31,7 @@ func getLoggerLevel(lvl string) zapcore.Level {
 	return level
 }
 
-func NewZapLogger(cfg config.Logging, isProduction bool) *zapLogger {
+func New(cfg config.Logging, isProduction bool) *zapLogger {
 	logWriter := zapcore.AddSync(os.Stdout)
 
 	logFile, err := os.OpenFile("./log/"+ cfg.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
@@ -136,4 +136,8 @@ func (l *zapLogger) Panic(i ...any) {
 
 func (l *zapLogger) Panicf(format string, args ...any) {
 	l.sugarLogger.Panicf(format, args...)
+}
+
+func (l *zapLogger) Print(i ...any) {
+	l.sugarLogger.Info(i...)
 }
