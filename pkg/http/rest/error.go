@@ -1,9 +1,18 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+)
+
+const (
+	MsgInvalidArguments = "Invalid arguments"
+
+	MsgFileReadError  = "Failed read file"
+
+	MsgInternalServerError = "Something went wrong"
 )
 
 type ErrorResponse struct {
@@ -58,4 +67,20 @@ func NewConflictError(cause error, message string) *ErrorResponse {
 
 func NewInternalServerError(cause error) *ErrorResponse {
 	return newError(cause, http.StatusInternalServerError, MsgInternalServerError)
+}
+
+func NewInvalidArgumentsError(cause error) *ErrorResponse {
+	return newError(cause, http.StatusBadRequest, MsgInvalidArguments)
+}
+
+func NewBindError(cause error) *ErrorResponse {
+	return newError(fmt.Errorf("bind failed: %w", cause), http.StatusBadRequest, MsgInvalidArguments)
+}
+
+func NewValidationError(cause error) *ErrorResponse {
+	return newError(fmt.Errorf("validation failed: %w", cause), http.StatusBadRequest, MsgInvalidArguments)
+}
+
+func NewReadFileError(cause error) *ErrorResponse {
+	return newError(cause, http.StatusBadRequest, MsgFileReadError)
 }

@@ -20,6 +20,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
+require github.com/go-chi/chi/v5 v5.1.0 // indirect
+
 require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230811130428-ced1acdcaa24 // indirect

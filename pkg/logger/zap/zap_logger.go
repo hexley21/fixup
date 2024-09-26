@@ -1,7 +1,6 @@
-package logger
+package zap
 
 import (
-	"io"
 	"os"
 
 	"github.com/hexley21/fixup/pkg/config"
@@ -91,71 +90,12 @@ func NewZapLogger(cfg config.Logging, isProduction bool) *zapLogger {
 	return &zapLogger{sugarLogger: zap.New(core, options...).Sugar()}
 }
 
-func (l *zapLogger) Output() io.Writer {
-	return os.Stderr
-}
-
-func (l *zapLogger) SetOutput(_ io.Writer) {}
-
-func (l *zapLogger) Prefix() string {
-	return ""
-}
-
-func (l *zapLogger) SetPrefix(p string) {
-	l.sugarLogger = l.sugarLogger.Named(p)
-}
-
-func (l *zapLogger) Level() log.Lvl {
-	switch l.sugarLogger.Level() {
-	case zap.DebugLevel:
-		return log.DEBUG
-	case zap.InfoLevel:
-		return log.INFO
-	case zap.WarnLevel:
-		return log.WARN
-	default:
-		return log.ERROR
-	}
-}
-
-func (l *zapLogger) SetLevel(_ log.Lvl) {}
-
-func (l *zapLogger) SetHeader(_ string) {}
-
-func (l *zapLogger) Print(i ...any) {
-	l.sugarLogger.Info(i...)
-}
-
-func (l *zapLogger) Printf(format string, args ...any) {
-	l.sugarLogger.Infof(format, args...)
-}
-
-func (l *zapLogger) Printj(j log.JSON) {
-	var args []any
-
-	for k, v := range j {
-		args = append(args, k, v)
-	}
-
-	l.sugarLogger.Info(args...)
-}
-
 func (l *zapLogger) Debug(i ...any) {
 	l.sugarLogger.Debug(i...)
 }
 
 func (l *zapLogger) Debugf(format string, args ...any) {
 	l.sugarLogger.Debugf(format, args...)
-}
-
-func (l *zapLogger) Debugj(j log.JSON) {
-	var args []any
-
-	for k, v := range j {
-		args = append(args, k, v)
-	}
-
-	l.sugarLogger.Debugw("json", args...)
 }
 
 func (l *zapLogger) Info(i ...any) {
@@ -166,32 +106,12 @@ func (l *zapLogger) Infof(format string, args ...any) {
 	l.sugarLogger.Infof(format, args...)
 }
 
-func (l *zapLogger) Infoj(j log.JSON) {
-	var args []any
-
-	for k, v := range j {
-		args = append(args, k, v)
-	}
-
-	l.sugarLogger.Infow("json", args...)
-}
-
 func (l *zapLogger) Warn(i ...any) {
 	l.sugarLogger.Warn(i...)
 }
 
 func (l *zapLogger) Warnf(format string, args ...any) {
 	l.sugarLogger.Warnf(format, args...)
-}
-
-func (l *zapLogger) Warnj(j log.JSON) {
-	var args []any
-
-	for k, v := range j {
-		args = append(args, k, v)
-	}
-
-	l.sugarLogger.Warnw("json", args...)
 }
 
 func (l *zapLogger) Error(i ...any) {
@@ -202,28 +122,8 @@ func (l *zapLogger) Errorf(format string, args ...any) {
 	l.sugarLogger.Errorf(format, args...)
 }
 
-func (l *zapLogger) Errorj(j log.JSON) {
-	var args []any
-
-	for k, v := range j {
-		args = append(args, k, v)
-	}
-
-	l.sugarLogger.Errorw("json", args...)
-}
-
 func (l *zapLogger) Fatal(i ...any) {
 	l.sugarLogger.Fatal(i...)
-}
-
-func (l *zapLogger) Fatalj(j log.JSON) {
-	var args []any
-
-	for k, v := range j {
-		args = append(args, k, v)
-	}
-
-	l.sugarLogger.Fatalw("json", args...)
 }
 
 func (l *zapLogger) Fatalf(format string, args ...any) {
@@ -232,16 +132,6 @@ func (l *zapLogger) Fatalf(format string, args ...any) {
 
 func (l *zapLogger) Panic(i ...any) {
 	l.sugarLogger.Panic(i...)
-}
-
-func (l *zapLogger) Panicj(j log.JSON) {
-	var args []any
-
-	for k, v := range j {
-		args = append(args, k, v)
-	}
-
-	l.sugarLogger.Panicw("json", args...)
 }
 
 func (l *zapLogger) Panicf(format string, args ...any) {
