@@ -1,4 +1,4 @@
-package plaground_validator
+package playground_validator
 
 import (
 	"regexp"

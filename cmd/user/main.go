@@ -41,7 +41,7 @@ func main() {
 	}
 
 	zapLogger := zap_logger.New(cfg.Logging, cfg.Server.IsProd)
-	playgroundValidator := plaground_validator.New()
+	playgroundValidator := playground_validator.New()
 
 	pgPool, err := postgres.NewPool(&cfg.Postgres)
 	if err != nil {

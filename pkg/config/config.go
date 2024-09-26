@@ -22,6 +22,7 @@ import (
 type (
 	Config struct {
 		Server       Server
+		HTTP         HTTP
 		Postgres     Postgres
 		Redis        Redis
 		AWS          AWS
@@ -33,7 +34,6 @@ type (
 	}
 
 	Server struct {
-		HTTP            HTTP
 		ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
 		InstanceId      int64         `yaml:"instance_id"`
 		Email           string        `yaml:"email"`
