@@ -1,34 +1,38 @@
 package user
 
 import (
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
 	"github.com/hexley21/fixup/internal/common/middleware"
 	"github.com/hexley21/fixup/internal/user/enum"
-	"github.com/labstack/echo/v4"
 )
 
-func (h *userHandler) MapRoutes(
-	e *echo.Group,
-	jwtAccessMiddleware echo.MiddlewareFunc,
-	onlyVerifiedMiddleware echo.MiddlewareFunc,
-) *echo.Group {
-	usersGroup := e.Group("/users")
+// TODO: manage missing routes
 
-	usersGroup.Use(
-		jwtAccessMiddleware,
-		middleware.AllowSelfOrRole(enum.UserRoleADMIN, enum.UserRoleMODERATOR),
-	)
+var (
+	maxFileSize int64 = 10 << 20
+)
 
-	usersGroup.GET("/:id", h.FindUserById, onlyVerifiedMiddleware)
-	usersGroup.PATCH("/:id", h.UpdateUserData, onlyVerifiedMiddleware)
-	usersGroup.DELETE("/:id", h.DeleteUser, onlyVerifiedMiddleware)
+func MapRoutes(
+	middlewareFactory *middleware.MiddlewareFactory,
+	jWTAccessMiddleware func(http.Handler) http.Handler,
+	onlyVerifiedMiddleware func(http.Handler) http.Handler,
+	router chi.Router,
+) {
+	router.Route("/user", func(r chi.Router) {
+		r.Use(
+			jWTAccessMiddleware,
+			onlyVerifiedMiddleware,
+			middlewareFactory.NewAllowSelfOrRole(enum.UserRoleADMIN, enum.UserRoleMODERATOR),
+		)
 
-	usersGroup.PATCH("/:id/pfp", h.UploadProfilePicture,
-		middleware.AllowFilesAmount("image", 1),
-		middleware.AllowContentType("image", "image/jpeg", "image/png"),
-	)
+		r.Group(func(r chi.Router) {
+			r.Use(
+				middlewareFactory.NewAllowFilesAmount(maxFileSize, "image", 1),
+				middlewareFactory.NewAllowContentType(maxFileSize, "image", "image/jpeg", "image/png"),
+			)
+		})
 
-	e.PATCH("/me/change-password", h.ChangePassword, jwtAccessMiddleware)
-	e.PATCH("profile/:id", h.FindUserProfileById)
-
-	return usersGroup
+	})
 }

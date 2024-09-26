@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/hexley21/fixup/internal/common/app_error"
-	"github.com/hexley21/fixup/internal/common/jwt"
-	mock_jwt "github.com/hexley21/fixup/internal/common/jwt/mock"
+	"github.com/hexley21/fixup/internal/common/auth_jwt"
+	mock_jwt "github.com/hexley21/fixup/internal/common/auth_jwt/mock"
 	"github.com/hexley21/fixup/internal/common/middleware"
 	"github.com/hexley21/fixup/internal/user/enum"
 	"github.com/hexley21/fixup/pkg/http/rest"
@@ -19,12 +19,12 @@ import (
 )
 
 var (
-	userClaims = jwt.NewClaims("1", string(enum.UserRoleCUSTOMER), true, time.Hour)
+	userClaims = auth_jwt.NewClaims("1", string(enum.UserRoleCUSTOMER), true, time.Hour)
 )
 
-func setupJWT(t *testing.T) (*gomock.Controller, func(http.Handler) http.Handler, *mock_jwt.MockJwtVerifier) {
+func setupJWT(t *testing.T) (*gomock.Controller, func(http.Handler) http.Handler, *mock_jwt.MockJWTVerifier) {
 	ctrl := gomock.NewController(t)
-	mockJwtVerifier := mock_jwt.NewMockJwtVerifier(ctrl)
+	mockJwtVerifier := mock_jwt.NewMockJWTVerifier(ctrl)
 
 
 	return ctrl, factory.NewJWT(mockJwtVerifier), mockJwtVerifier
@@ -73,7 +73,7 @@ func TestJWT_InvalidToken(t *testing.T) {
 	ctrl, JWTMiddleware, mockJWTVerifier := setupJWT(t)
 	defer ctrl.Finish()
 
-	mockJWTVerifier.EXPECT().VerifyJWT(gomock.Any()).Return(jwt.UserClaims{}, rest.NewUnauthorizedError(errors.New(""), app_error.MsgInvalidToken))
+	mockJWTVerifier.EXPECT().VerifyJWT(gomock.Any()).Return(auth_jwt.UserClaims{}, rest.NewUnauthorizedError(errors.New(""), app_error.MsgInvalidToken))
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set("Authorization", "Bearer invalidtoken")

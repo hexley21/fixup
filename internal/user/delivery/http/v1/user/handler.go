@@ -6,25 +6,41 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/hexley21/fixup/internal/common/rest"
-	"github.com/hexley21/fixup/internal/common/util/ctxutil"
+	"github.com/hexley21/fixup/internal/common/app_error"
+	"github.com/hexley21/fixup/internal/common/util/ctx_util"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/service"
 	"github.com/hexley21/fixup/pkg/hasher"
+	"github.com/hexley21/fixup/pkg/http/binder"
+	"github.com/hexley21/fixup/pkg/http/rest"
+	"github.com/hexley21/fixup/pkg/http/writer"
+	"github.com/hexley21/fixup/pkg/logger"
+	"github.com/hexley21/fixup/pkg/validator"
 	"github.com/jackc/pgx/v5"
-	"github.com/labstack/echo/v4"
 )
 
 // TODO: manage contextes
 // TODO: manage who can access certain endpoint
 
-type userHandler struct {
-	service service.UserService
+var (
+	maxPfpSize int64 = 1 << 20
+)
+
+type HandlerFactory struct {
+	logger    logger.Logger
+	binder    binder.FullBinder
+	validator validator.Validator
+	writer    writer.HTTPWriter
+	service   service.UserService
 }
 
-func NewUserHandler(service service.UserService) *userHandler {
-	return &userHandler{
-		service: service,
+func NewFactory(logger logger.Logger, binder binder.FullBinder, validator validator.Validator, writer writer.HTTPWriter, service service.UserService) *HandlerFactory {
+	return &HandlerFactory{
+		logger,
+		binder,
+		validator,
+		writer,
+		service,
 	}
 }
 
@@ -42,23 +58,28 @@ func NewUserHandler(service service.UserService) *userHandler {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security access_token
 // @Router /users/{id} [get]
-func (h *userHandler) FindUserById(c echo.Context) error {
-	id, err := ctxutil.GetParamId(c)
-	if err != nil {
-		return err
+func (f *HandlerFactory) FindUserById(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
+
+	id, errResp := ctx_util.GetParamId(r.Context())
+	if errResp != nil {
+		f.writer.WriteError(w, errResp)
+		return
 	}
 
-	user, err := h.service.FindUserById(context.Background(), id)
+	user, err := f.service.FindUserById(ctx, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return rest.NewNotFoundError(err, rest.MsgUserNotFound)
+			f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
+			return
 		}
-		return rest.NewInternalServerError(err)
+
+		f.writer.WriteError(w, rest.NewInternalServerError(err))
+		return
 	}
 
-	
-    c.Logger().Infof("Found user by ID: %d", id)
-	return c.JSON(http.StatusOK, rest.NewApiResponse(user))
+    f.logger.Infof("Fetch user by ID: %d", id)
+	f.writer.WriteData(w, http.StatusOK, user)
 }
 
 
@@ -76,24 +97,28 @@ func (h *userHandler) FindUserById(c echo.Context) error {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security access_token
 // @Router /profile/{id} [get]
-func (h *userHandler) FindUserProfileById(c echo.Context) error {
+func (f *HandlerFactory) FindUserProfileById(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
-	id, err := ctxutil.GetParamId(c)
-	if err != nil {
-		return err
+
+	id, errResp := ctx_util.GetParamId(r.Context())
+	if errResp != nil {
+		f.writer.WriteError(w, errResp)
+		return
 	}
 
-	profile, err := h.service.FindUserProfileById(ctx, id)
+	profile, err := f.service.FindUserProfileById(ctx, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return rest.NewNotFoundError(err, rest.MsgUserNotFound)
+			f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
+			return 
 		}
-		return rest.NewInternalServerError(err)
-	}
 
+		f.writer.WriteError(w, rest.NewInternalServerError(err))
+		return
+	}
 	
-    c.Logger().Infof("Found user profile by ID: %d", id)
-	return c.JSON(http.StatusOK, rest.NewApiResponse(profile))
+    f.logger.Infof("Find user profile by ID: %d", id)
+	f.writer.WriteData(w, http.StatusOK, profile)
 }
 
 
@@ -112,40 +137,41 @@ func (h *userHandler) FindUserProfileById(c echo.Context) error {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security access_token
 // @Router /users/{id}/pfp [patch]
-func (h *userHandler) UploadProfilePicture(c echo.Context) error {
-	id, err := ctxutil.GetParamId(c)
-	if err != nil {
-		return err
+func (f *HandlerFactory) UploadProfilePicture(w http.ResponseWriter, r *http.Request) {
+	id, errResp := ctx_util.GetParamId(r.Context())
+	if errResp != nil {
+		f.writer.WriteError(w, errResp)
+		return
 	}
 
-	form, err := c.MultipartForm()
-	if err != nil {
-		return rest.NewReadFileError(err)
+	form, errResp := f.binder.BindMultipartForm(r, maxPfpSize)
+	if errResp != nil {
+		f.writer.WriteError(w, rest.NewReadFileError(errResp))
+		return
 	}
 
-	formFile := form.File["image"]
-	if len(formFile) < 1 {
-		return rest.NewBadRequestError(nil, rest.MsgNoFile)
+	imageFile := form.File["image"][0]
+
+	file, opnErr := imageFile.Open()
+	if errResp != nil {
+		f.writer.WriteError(w, rest.NewReadFileError(opnErr))
+		return
 	}
+	defer file.Close()
 
-	imageFile := formFile[0]
-
-	src, err := imageFile.Open()
-	if err != nil {
-		return rest.NewReadFileError(err)
-	}
-	defer src.Close()
-
-	err = h.service.SetProfilePicture(context.Background(), id, src, "", imageFile.Size, imageFile.Header.Get("Content-Type"))
+	err := f.service.SetProfilePicture(context.Background(), id, file, "", imageFile.Size, imageFile.Header.Get("Content-Type"))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return rest.NewNotFoundError(err, rest.MsgUserNotFound)
+			f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
+			return
 		}
-		return rest.NewInternalServerError(err)
+
+		f.writer.WriteError(w, rest.NewInternalServerError(err))
+		return
 	}
 
-	c.Logger().Infof("Upload profile picture for user with ID: %d", id)
-	return c.NoContent(http.StatusNoContent)
+	f.logger.Infof("Upload profile picture for user with ID: %d", id)
+	f.writer.WriteNoContent(w, http.StatusNoContent)
 }
 
 // @Summary Update user data
@@ -163,31 +189,37 @@ func (h *userHandler) UploadProfilePicture(c echo.Context) error {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security access_token
 // @Router /users/{id} [patch]
-func (h *userHandler) UpdateUserData(c echo.Context) error {
-	id, err := ctxutil.GetParamId(c)
-	if err != nil {
-		return err
+func (f *HandlerFactory) UpdateUserData(w http.ResponseWriter, r *http.Request) {
+	id, errResp := ctx_util.GetParamId(r.Context())
+	if errResp != nil {
+		f.writer.WriteError(w, errResp)
+		return
 	}
 
 	dto := new(dto.UpdateUser)
-	if err := c.Bind(dto); err != nil {
-		return rest.NewBindError(err)
+	if errResp := f.binder.BindJSON(r, dto); errResp != nil {
+		f.writer.WriteError(w, errResp)
+		return
 	}
 
-	if err := c.Validate(dto); err != nil {
-		return rest.NewValidationError(err)
+	if errResp := f.validator.Validate(errResp); errResp != nil {
+		f.writer.WriteError(w, errResp)
+		return
 	}
 
-	user, err := h.service.UpdateUserDataById(context.Background(), id, *dto)
+	user, err := f.service.UpdateUserDataById(context.Background(), id, *dto)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return rest.NewNotFoundError(err, rest.MsgUserNotFound)
+			f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
+			return
 		}
-		return rest.NewInternalServerError(err)
+
+		f.writer.WriteError(w, rest.NewInternalServerError(err))
+		return
 	}
 
-	c.Logger().Infof("Update data for user with id ID: %d", id)
-	return c.JSON(http.StatusOK, rest.NewApiResponse(user))
+	f.logger.Infof("Update data for user with id ID: %d", id)
+	f.writer.WriteData(w, http.StatusOK, user)
 }
 
 // @Summary Delete a user
@@ -204,21 +236,26 @@ func (h *userHandler) UpdateUserData(c echo.Context) error {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security access_token
 // @Router /users/{id} [delete]
-func (h *userHandler) DeleteUser(c echo.Context) error {
-	id, err := ctxutil.GetParamId(c)
+func (f *HandlerFactory) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	id, errResp := ctx_util.GetParamId(r.Context())
+	if errResp != nil {
+		f.writer.WriteError(w, errResp)
+		return
+	}
+
+	err := f.service.DeleteUserById(context.Background(), id)
 	if err != nil {
-		return err
-	}
-
-	if err := h.service.DeleteUserById(context.Background(), id); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return rest.NewNotFoundError(err, rest.MsgUserNotFound)
+			f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
+			return
 		}
-		return rest.NewInternalServerError(err)
+
+		f.writer.WriteError(w, rest.NewInternalServerError(err))
+		return
 	}
 
-	c.Logger().Infof("User deleted for ID: %d", id)
-	return c.NoContent(http.StatusNoContent)
+	f.logger.Infof("Delete user with ID: %d", id)
+	f.writer.WriteNoContent(w, http.StatusNoContent)
 }
 
 // @Summary Update user password
@@ -234,37 +271,47 @@ func (h *userHandler) DeleteUser(c echo.Context) error {
 // @Failure 404 {object} rest.ErrorResponse "User not found"
 // @Failure 500 {object} rest.ErrorResponse "Internal server error"
 // @Router /user/me/change-password [patch]
-func (h *userHandler) ChangePassword(c echo.Context) error {
-	id, err := ctxutil.GetJwtId(c)
-	if err != nil {
-		return err
+func (f *HandlerFactory) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	id, errResp := ctx_util.GetJWTId(r.Context())
+	if errResp != nil {
+		f.writer.WriteError(w, errResp)
+		return
 	}
 
 	userId, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		return rest.NewInternalServerError(err)
+		f.writer.WriteError(w, rest.NewInternalServerError(err))
+		return
 	}
 
 	dto := new(dto.UpdatePassword)
-	if err := c.Bind(dto); err != nil {
-		return rest.NewBindError(err)
+	errResp = f.binder.BindJSON(r, dto)
+	if errResp != nil {
+		f.writer.WriteError(w, errResp)
+		return
 	}
 
-	if err := c.Validate(dto); err != nil {
-		c.Logger().Errorf("Error validating for user ID: %d", userId)
-		return rest.NewValidationError(err)
+	errResp = f.validator.Validate(dto)
+	if errResp != nil {
+		f.writer.WriteError(w, errResp)
+		return
 	}
 
-	if err := h.service.ChangePassword(context.Background(), userId, *dto); err != nil {
+	err = f.service.ChangePassword(context.Background(), userId, *dto)
+	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return rest.NewNotFoundError(err, rest.MsgUserNotFound)
+			f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
+			return
 		}
 		if errors.Is(err, hasher.ErrPasswordMismatch) {
-			return rest.NewUnauthorizedError(err, rest.MsgIncorrectPassword)
+			f.writer.WriteError(w, rest.NewUnauthorizedError(err, app_error.MsgIncorrectPassword))
+			return
 		}
-		return rest.NewInternalServerError(err)
+
+		f.writer.WriteError(w,  rest.NewInternalServerError(err))
+		return
 	}
 
-	c.Logger().Infof("User changed password user ID: %d", userId)
-	return c.NoContent(http.StatusNoContent)
+	f.logger.Infof("Change password for user with ID: %d", userId)
+	f.writer.WriteNoContent(w, http.StatusNoContent)
 }

@@ -7,16 +7,16 @@ import (
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/hexley21/fixup/cmd/util/shutdown"
-	"github.com/hexley21/fixup/internal/user/app"
+	"github.com/hexley21/fixup/internal/user/server"
 	"github.com/hexley21/fixup/pkg/config"
 	"github.com/hexley21/fixup/pkg/encryption/aes"
 	"github.com/hexley21/fixup/pkg/hasher/argon2"
 	"github.com/hexley21/fixup/pkg/infra/cdn"
 	"github.com/hexley21/fixup/pkg/infra/postgres"
 	"github.com/hexley21/fixup/pkg/infra/s3"
-	"github.com/hexley21/fixup/pkg/logger"
+	"github.com/hexley21/fixup/pkg/logger/zap_logger"
 	"github.com/hexley21/fixup/pkg/mailer/gomail"
-	"github.com/hexley21/fixup/pkg/validator"
+	"github.com/hexley21/fixup/pkg/validator/playground_validator"
 )
 
 // @title User Microservice
@@ -40,8 +40,8 @@ func main() {
 		log.Fatalf("could not load config: %v\n", err)
 	}
 
-	zapLogger := logger.NewZapLogger(cfg.Logging, cfg.Server.IsProd)
-	playgroundValidator := validator.NewValidator()
+	zapLogger := zap_logger.New(cfg.Logging, cfg.Server.IsProd)
+	playgroundValidator := plaground_validator.New()
 
 	pgPool, err := postgres.NewPool(&cfg.Postgres)
 	if err != nil {
@@ -67,18 +67,17 @@ func main() {
 	argon2Hasher := argon2.NewHasher(cfg.Argon2)
 	aesEncryption := aes.NewAesEncryptor(cfg.AesEncryptor.Key)
 
-	server := app.NewServer(
+	server := server.NewServer(
 		cfg,
-		zapLogger,
-		playgroundValidator,
 		pgPool,
+		zapLogger,
+		snowflakeNode,
+		playgroundValidator,
 		awsS3Bucket,
 		awsCloudFrontCdn,
-		snowflakeNode,
 		argon2Hasher,
 		aesEncryption,
 		goMailer,
-		cfg.Mailer.User,
 	)
 
 	shutdownError := make(chan error)

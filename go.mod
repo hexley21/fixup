@@ -11,7 +11,6 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/joho/godotenv v1.5.1
-	github.com/labstack/echo/v4 v4.12.0
 	github.com/labstack/gommon v0.4.2
 	go.uber.org/mock v0.4.0
 	go.uber.org/zap v1.27.0
@@ -20,9 +19,9 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require github.com/go-chi/chi/v5 v5.1.0 // indirect
-
 require (
+	github.com/go-chi/chi/v5 v5.1.0 // indirect
+	github.com/go-chi/cors v1.2.1 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230811130428-ced1acdcaa24 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect

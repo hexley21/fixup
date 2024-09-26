@@ -7,17 +7,21 @@ import (
 	"strconv"
 	"time"
 
-	authjwt "github.com/hexley21/fixup/internal/common/jwt"
-	"github.com/hexley21/fixup/internal/common/rest"
-	"github.com/hexley21/fixup/internal/common/util/ctxutil"
+	"github.com/hexley21/fixup/internal/common/app_error"
+	"github.com/hexley21/fixup/internal/common/auth_jwt"
+	"github.com/hexley21/fixup/internal/common/util/ctx_util"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/service"
 	"github.com/hexley21/fixup/internal/user/service/verifier"
 	"github.com/hexley21/fixup/pkg/hasher"
+	"github.com/hexley21/fixup/pkg/http/binder"
+	"github.com/hexley21/fixup/pkg/http/rest"
+	"github.com/hexley21/fixup/pkg/http/writer"
+	"github.com/hexley21/fixup/pkg/logger"
+	"github.com/hexley21/fixup/pkg/validator"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/labstack/echo/v4"
 )
 
 const (
@@ -25,17 +29,30 @@ const (
 	refresh_token_cookie = "refresh_token"
 )
 
-type AuthHandler struct {
-	service service.AuthService
+const (
+	MsgUserAlreadyExists = "User already exists"
+	MsgIncorrectEmailOrPass = "Email or Password is incorrect"
+)
+
+type HandlerFactory struct {
+	logger    logger.Logger
+	binder    binder.JSONBinder
+	validator validator.Validator
+	writer    writer.HTTPWriter
+	service   service.AuthService
 }
 
-func NewAuthHandler(service service.AuthService) *AuthHandler {
-	return &AuthHandler{
+func NewFactory(logger logger.Logger, binder binder.JSONBinder, validator validator.Validator, writer writer.HTTPWriter, service service.AuthService) *HandlerFactory {
+	return &HandlerFactory{
+		logger,
+		binder,
+		validator,
+		writer,
 		service,
 	}
 }
 
-func setCookies(c echo.Context, token string, cookieName string) {
+func setCookies(w http.ResponseWriter, token string, cookieName string) {
 	cookie := http.Cookie{
 		Name:     cookieName,
 		Value:    token,
@@ -43,10 +60,10 @@ func setCookies(c echo.Context, token string, cookieName string) {
 		HttpOnly: true,
 	}
 
-	c.SetCookie(&cookie)
+	http.SetCookie(w, &cookie)
 }
 
-func eraseCookie(c echo.Context, cookieName string) {
+func eraseCookie(w http.ResponseWriter, cookieName string) {
 	cookie := http.Cookie{
 		Name:     cookieName,
 		Value:    "",
@@ -55,8 +72,9 @@ func eraseCookie(c echo.Context, cookieName string) {
 		HttpOnly: true,
 	}
 
-	c.SetCookie(&cookie)
+	http.SetCookie(w, &cookie)
 }
+
 
 // @Summary Register a new customer
 // @Description Register a new customer with the provided details
@@ -69,32 +87,36 @@ func eraseCookie(c echo.Context, cookieName string) {
 // @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/register/customer [post]
-func (h *AuthHandler) RegisterCustomer(
-	verGenerator verifier.JwtGenerator,
-) echo.HandlerFunc {
-	return func(c echo.Context) error {
+func (f *HandlerFactory) RegisterCustomer(
+	verGenerator verifier.JWTGenerator,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		dto := new(dto.RegisterUser)
-		if err := c.Bind(dto); err != nil {
-			return rest.NewBindError(err)
+		if err := f.binder.BindJSON(r, dto); err != nil {
+			f.writer.WriteError(w, err)
+			return
 		}
 
-		if err := c.Validate(dto); err != nil {
-			return rest.NewValidationError(err)
+		if err := f.validator.Validate(dto); err != nil {
+			f.writer.WriteError(w, err)
+			return
 		}
 
-		user, err := h.service.RegisterCustomer(context.Background(), *dto)
+		user, err := f.service.RegisterCustomer(context.Background(), *dto)
 		if err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-				return rest.NewConflictError(err, rest.MsgUserAlreadyExists)
+				f.writer.WriteError(w, rest.NewConflictError(err, MsgUserAlreadyExists))
+				return
 			}
-			return rest.NewInternalServerError(err)
+			f.writer.WriteError(w, rest.NewInternalServerError(err))
+			return
 		}
 
-		go sendConfirmationLetter(c.Logger(), h.service, verGenerator, user.ID, user.Email, user.FirstName)
+		go f.sendConfirmationLetter(verGenerator, user.ID, user.Email, user.FirstName)
 
-		c.Logger().Infof("Customer was registered with ID: %s, Email: %s", user.ID, user.Email)
-		return c.NoContent(http.StatusCreated)
+		f.logger.Infof("Customer was registered with ID: %s, Email: %s", user.ID, user.Email)
+		f.writer.WriteNoContent(w, http.StatusCreated)
 	}
 }
 
@@ -109,32 +131,37 @@ func (h *AuthHandler) RegisterCustomer(
 // @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/register/provider [post]
-func (h *AuthHandler) RegisterProvider(
-	verGenerator verifier.JwtGenerator,
-) echo.HandlerFunc {
-	return func(c echo.Context) error {
+func (f *HandlerFactory) RegisterProvider(
+	verGenerator verifier.JWTGenerator,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		dto := new(dto.RegisterProvider)
-		if err := c.Bind(dto); err != nil {
-			return rest.NewBindError(err)
+		if err := f.binder.BindJSON(r, dto); err != nil {
+			f.writer.WriteError(w, err)
+			return
 		}
 
-		if err := c.Validate(dto); err != nil {
-			return rest.NewValidationError(err)
+		if err := f.validator.Validate(dto); err != nil {
+			f.writer.WriteError(w, err)
+			return
 		}
 
-		user, err := h.service.RegisterProvider(context.Background(), *dto)
+		user, err := f.service.RegisterProvider(context.Background(), *dto)
 		if err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-				return rest.NewConflictError(err, rest.MsgUserAlreadyExists)
+				f.writer.WriteError(w, rest.NewConflictError(err, MsgUserAlreadyExists))
+				return
 			}
-			return rest.NewInternalServerError(err)
+
+			f.writer.WriteError(w, rest.NewInternalServerError(err))
+			return
 		}
 
-		go sendConfirmationLetter(c.Logger(), h.service, verGenerator, user.ID, user.Email, user.FirstName)
+		go f.sendConfirmationLetter(verGenerator, user.ID, user.Email, user.FirstName)
 
-		c.Logger().Infof("Provider was registered with ID: %s, Email: %s", user.ID, user.Email)
-		return c.NoContent(http.StatusCreated)
+		f.logger.Infof("Provider was registered with ID: %s, Email: %s", user.ID, user.Email)
+		f.writer.WriteNoContent(w, http.StatusCreated)
 	}
 }
 
@@ -149,37 +176,42 @@ func (h *AuthHandler) RegisterProvider(
 // @Failure 409 {object} rest.ErrorResponse "Conflict"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/resend-confirmation [post]
-func (h *AuthHandler) ResendConfirmationLetter(
-	verGenerator verifier.JwtGenerator,
-) echo.HandlerFunc {
-	return func(c echo.Context) error {
+func (f *HandlerFactory) ResendConfirmationLetter(
+	verGenerator verifier.JWTGenerator,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		dto := new(dto.Email)
-		if err := c.Bind(dto); err != nil {
-			return rest.NewBindError(err)
+		if err := f.binder.BindJSON(r, dto); err != nil {
+			f.writer.WriteError(w, err)
+			return
 		}
 
-		if err := c.Validate(dto); err != nil {
-			return rest.NewValidationError(err)
+		if err := f.validator.Validate(dto); err != nil {
+			f.writer.WriteError(w, err)
+			return 
 		}
 
-		details, err := h.service.GetUserConfirmationDetails(context.Background(), dto.Email)
+		details, err := f.service.GetUserConfirmationDetails(context.Background(), dto.Email)
 		if err != nil {
-
 			if errors.Is(err, service.ErrUserAlreadyActive) {
-				return rest.NewConflictError(err, rest.MsgUserAlreadyExists)
+				f.writer.WriteError(w, rest.NewConflictError(err, MsgUserAlreadyExists))
+				return
 			}
 			if errors.Is(err, pgx.ErrNoRows) {
-				return rest.NewNotFoundError(err, rest.MsgUserNotFound)
+				f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
+				return
 			}
-			return rest.NewInternalServerError(err)
+			f.writer.WriteError(w, rest.NewInternalServerError(err))
+			return
 		}
 
-		if err := sendConfirmationLetter(c.Logger(), h.service, verGenerator, details.ID, dto.Email, details.Firstname); err != nil {
-			return rest.NewInternalServerError(err)
+		if err := f.sendConfirmationLetter(verGenerator, details.ID, dto.Email, details.Firstname); err != nil {
+			f.writer.WriteError(w, rest.NewInternalServerError(err))
+			return 
 		}
 
-		c.Logger().Infof("Confirmation letter was resent to user with email: %s, ID: %s", dto.Email, details.ID)
-		return c.NoContent(http.StatusNoContent)
+		f.logger.Infof("Confirmation letter was resent to user with email: %s, ID: %s", dto.Email, details.ID)
+		f.writer.WriteNoContent(w, http.StatusNoContent)
 	}
 }
 
@@ -194,42 +226,48 @@ func (h *AuthHandler) ResendConfirmationLetter(
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized - Incorrect email or password"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/login [post]
-func (h *AuthHandler) Login(
-	accessGenerator authjwt.JwtGenerator,
-	refreshGenerator authjwt.JwtGenerator,
-) echo.HandlerFunc {
-	return func(c echo.Context) error {
+func (f *HandlerFactory) Login(
+	accessGenerator auth_jwt.JWTGenerator,
+	refreshGenerator auth_jwt.JWTGenerator,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		dto := new(dto.Login)
-		if err := c.Bind(dto); err != nil {
-			return rest.NewBindError(err)
+		if err := f.binder.BindJSON(r, dto); err != nil {
+			f.writer.WriteError(w, err)
+			return
 		}
 
-		if err := c.Validate(dto); err != nil {
-			return rest.NewValidationError(err)
+		if err := f.validator.Validate(dto); err != nil {
+			f.writer.WriteError(w, err)
+			return
 		}
 
-		user, err := h.service.AuthenticateUser(context.Background(), *dto)
+		user, err := f.service.AuthenticateUser(context.Background(), *dto)
 		if err != nil {
 			if errors.Is(err, hasher.ErrPasswordMismatch) {
-				return rest.NewUnauthorizedError(err, rest.MsgIncorrectEmailOrPass)
+				f.writer.WriteError(w, rest.NewUnauthorizedError(err, MsgIncorrectEmailOrPass))
+				return
 			}
-			return rest.NewInternalServerError(err)
+			f.writer.WriteError(w, rest.NewInternalServerError(err))
+			return
 		}
 
-		accessToken, err := accessGenerator.GenerateJWT(user.ID, user.Role, user.UserStatus)
-		if err != nil {
-			return err
+		accessToken, jWTErr := accessGenerator.GenerateJWT(user.ID, user.Role, user.UserStatus)
+		if jWTErr != nil {
+			f.writer.WriteError(w, jWTErr)
+			return
 		}
-		refreshToken, err := refreshGenerator.GenerateJWT(user.ID, user.Role, user.UserStatus)
-		if err != nil {
-			return err
+		refreshToken, jWTErr := refreshGenerator.GenerateJWT(user.ID, user.Role, user.UserStatus)
+		if jWTErr != nil {
+			f.writer.WriteError(w, jWTErr)
+			return
 		}
 
-		setCookies(c, accessToken, access_token_cookie)
-		setCookies(c, refreshToken, refresh_token_cookie)
+		setCookies(w, accessToken, access_token_cookie)
+		setCookies(w, refreshToken, refresh_token_cookie)
 
-		c.Logger().Infof("User logged in, user ID: %d, role: %s", user.ID, user.Role)
-		return c.NoContent(http.StatusOK)
+		f.logger.Infof("User logged in, user ID: %d, role: %s", user.ID, user.Role)
+		f.writer.WriteNoContent(w, http.StatusOK)
 	}
 }
 
@@ -238,12 +276,12 @@ func (h *AuthHandler) Login(
 // @Tags auth
 // @Success 200 {string} string "Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token; HttpOnly"
 // @Router /auth/logout [post]
-func (h *AuthHandler) Logout(c echo.Context) error {
-	eraseCookie(c, access_token_cookie)
-	eraseCookie(c, refresh_token_cookie)
+func (f *HandlerFactory) Logout(w http.ResponseWriter, r *http.Request) {
+	eraseCookie(w, access_token_cookie)
+	eraseCookie(w, refresh_token_cookie)
 
-	c.Logger().Info("User logged out, cookies erased")
-	return c.NoContent(http.StatusOK)
+	f.logger.Info("User logged out, cookies erased")
+	f.writer.WriteNoContent(w, http.StatusOK)
 }
 
 // @Summary Refresh access token
@@ -254,34 +292,38 @@ func (h *AuthHandler) Logout(c echo.Context) error {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security refresh_token
 // @Router /auth/refresh [post]
-func (h *AuthHandler) Refresh(
-	accessGenerator authjwt.JwtGenerator,
-) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		id, err := ctxutil.GetJwtId(c)
+func (f *HandlerFactory) Refresh(
+	accessGenerator auth_jwt.JWTGenerator,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := ctx_util.GetJWTId(r.Context())
 		if err != nil {
-			return err
+			f.writer.WriteError(w, err)
+			return
 		}
 
-		role, err := ctxutil.GetJwtRole(c)
+		role, err := ctx_util.GetJWTRole(r.Context())
 		if err != nil {
-			return err
+			f.writer.WriteError(w, err)
+			return
 		}
 
-		userStatus, err := ctxutil.GetJwtUserStatus(c)
+		userStatus, err := ctx_util.GetJWTUserStatus(r.Context())
 		if err != nil {
-			return err
+			f.writer.WriteError(w, err)
+			return
 		}
 
 		accessToken, err := accessGenerator.GenerateJWT(id, string(role), userStatus)
 		if err != nil {
-			return err
+			f.writer.WriteError(w, err)
+			return
 		}
 
-		setCookies(c, accessToken, access_token_cookie)
+		setCookies(w, accessToken, access_token_cookie)
 
-		c.Logger().Infof("JWT refreshed for user ID: %s, Role: %s, UserStatus: %s", id, role, userStatus)
-		return c.NoContent(http.StatusOK)
+		f.logger.Infof("JWT refreshed for user ID: %s, Role: %s, UserStatus: %s", id, role, userStatus)
+		f.writer.WriteNoContent(w, http.StatusOK)
 	}
 }
 
@@ -297,51 +339,55 @@ func (h *AuthHandler) Refresh(
 // @Failure 404 {object} rest.ErrorResponse "User was not found"
 // @Failure 500 {object} rest.ErrorResponse "Internal server error"
 // @Router /auth/verify-email [get]
-func (h *AuthHandler) VerifyEmail(
-	jwtVerifier verifier.JwtVerifier,
-) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		tokenParam := c.QueryParam("token")
-		claims, err := jwtVerifier.VerifyJWT(tokenParam)
+func (f *HandlerFactory) VerifyEmail(
+	jWTVerifier verifier.JWTVerifier,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		tokenParam := r.URL.Query().Get("token")
+		claims, err := jWTVerifier.VerifyJWT(tokenParam)
 		if err != nil {
-			return rest.NewUnauthorizedError(err, rest.MsgInvalidToken)
+			f.writer.WriteError(w, rest.NewUnauthorizedError(err, app_error.MsgInvalidToken))
+			return
 		}
 
 		id, err := strconv.ParseInt(claims.ID, 10, 64)
 		if err != nil {
-			return rest.NewInternalServerError(err)
+			f.writer.WriteError(w, rest.NewInternalServerError(err))
+			return
 		}
 
-		if err := h.service.VerifyUser(context.Background(), id, claims.Email); err != nil {
+		if err := f.service.VerifyUser(context.Background(), id, claims.Email); err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
-				return rest.NewNotFoundError(err, rest.MsgUserNotFound)
+				f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
+				return
 			}
-			return rest.NewInternalServerError(err)
+			f.writer.WriteError(w, rest.NewInternalServerError(err))
+			return
 		}
 
 		go func() {
-			if err := h.service.SendVerifiedLetter(claims.Email); err != nil {
-				c.Logger().Errorf("Failed to send verified letter to Email: %s, user ID: %s, error: %w", claims.Email, id, err)
+			if err := f.service.SendVerifiedLetter(claims.Email); err != nil {
+				f.logger.Errorf("Failed to send verified letter to Email: %s, user ID: %s, error: %w", claims.Email, id, err)
 				return
 			}
 
-			c.Logger().Infof("Verified letter sent to Email: %s, user ID: %s", claims.Email, id)
+			f.logger.Infof("Verified letter sent to Email: %s, user ID: %s", claims.Email, id)
 		}()
 
-		c.Logger().Infof("Email verification successful for user ID: %d, Email: %s", id, claims.Email)
-		return c.NoContent(http.StatusOK)
+		f.logger.Infof("Email verification successful for user ID: %d, Email: %s", id, claims.Email)
+		f.writer.WriteNoContent(w, http.StatusOK)
 	}
 }
 
-func sendConfirmationLetter(logger echo.Logger, authService service.AuthService, verGenerator verifier.JwtGenerator, id string, email string, name string) error {
-	jwt, err := verGenerator.GenerateJWT(id, email)
+func (f *HandlerFactory) sendConfirmationLetter(verGenerator verifier.JWTGenerator, id string, email string, name string) error {
+	jWT, err := verGenerator.GenerateJWT(id, email)
 	if err == nil {
-		if err := authService.SendConfirmationLetter(jwt, email, name); err == nil {
-			logger.Infof("Confirmation letter sent to email: %s, user ID: %s", email, id)
+		if err := f.service.SendConfirmationLetter(jWT, email, name); err == nil {
+			f.logger.Infof("Confirmation letter sent to email: %s, user ID: %s", email, id)
 			return nil
 		}
 	}
 
-	logger.Errorf("Failed to send confirmation letter to email: %s, user ID: %s, error: %v", email, id, err)
+	f.logger.Errorf("Failed to send confirmation letter to email: %s, user ID: %s, error: %v", email, id, err)
 	return err
 }

@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/hexley21/fixup/pkg/http/rest"
-	"github.com/hexley21/fixup/internal/common/util/ctxutil"
+	"github.com/hexley21/fixup/internal/common/util/ctx_util"
 	"github.com/hexley21/fixup/internal/user/enum"
 )
 
@@ -20,7 +20,7 @@ var (
 func (f *MiddlewareFactory) NewAllowRoles(roles ...enum.UserRole) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			role, err := ctxutil.GetJwtRole(r.Context())
+			role, err := ctx_util.GetJWTRole(r.Context())
 			if err != nil {
 				f.writer.WriteError(w, err)
 				return
@@ -41,13 +41,13 @@ func (f *MiddlewareFactory) NewAllowSelfOrRole(roles ...enum.UserRole) func(http
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			idParam := chi.URLParam(r, "id")
 
-			role, err := ctxutil.GetJwtRole(r.Context())
+			role, err := ctx_util.GetJWTRole(r.Context())
 			if err != nil {
 				f.writer.WriteError(w, err)
 				return
 			}
 
-			jwtId, err := ctxutil.GetJwtId(r.Context())
+			jwtId, err := ctx_util.GetJWTId(r.Context())
 			if err != nil {
 				f.writer.WriteError(w, err)
 				return
@@ -60,7 +60,7 @@ func (f *MiddlewareFactory) NewAllowSelfOrRole(roles ...enum.UserRole) func(http
 					return
 				}
 
-				next.ServeHTTP(w, r.WithContext(ctxutil.SetParamId(r.Context(), userId)))
+				next.ServeHTTP(w, r.WithContext(ctx_util.SetParamId(r.Context(), userId)))
 				return
 			}
 
@@ -71,7 +71,7 @@ func (f *MiddlewareFactory) NewAllowSelfOrRole(roles ...enum.UserRole) func(http
 					return
 				}
 
-				r = r.WithContext(ctxutil.SetParamId(r.Context(), userId))
+				r = r.WithContext(ctx_util.SetParamId(r.Context(), userId))
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -84,7 +84,7 @@ func (f *MiddlewareFactory) NewAllowSelfOrRole(roles ...enum.UserRole) func(http
 func (f *MiddlewareFactory) NewAllowVerified(status bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			verified, err := ctxutil.GetJwtUserStatus(r.Context())
+			verified, err := ctx_util.GetJWTUserStatus(r.Context())
 			if err != nil {
 				f.writer.WriteError(w, err)
 				return

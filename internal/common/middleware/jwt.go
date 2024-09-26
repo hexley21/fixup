@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"github.com/hexley21/fixup/internal/common/app_error"
-	authjwt "github.com/hexley21/fixup/internal/common/jwt"
-	"github.com/hexley21/fixup/internal/common/util/ctxutil"
+	"github.com/hexley21/fixup/internal/common/auth_jwt"
+	"github.com/hexley21/fixup/internal/common/util/ctx_util"
 	"github.com/hexley21/fixup/pkg/http/rest"
 )
 
-func (f *MiddlewareFactory) NewJWT(jwtVerifier authjwt.JwtVerifier) func(http.Handler) http.Handler {
+func (f *MiddlewareFactory) NewJWT(jwtVerifier auth_jwt.JWTVerifier) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -36,9 +36,9 @@ func (f *MiddlewareFactory) NewJWT(jwtVerifier authjwt.JwtVerifier) func(http.Ha
 				return
 			}
 
-			ctx := ctxutil.SetJwtId(r.Context(), claims.ID)
-			ctx = ctxutil.SetJwtRole(ctx, claims.Role)
-			ctx = ctxutil.SetJwtUserStatus(ctx, claims.Verified)
+			ctx := ctx_util.SetJWTId(r.Context(), claims.ID)
+			ctx = ctx_util.SetJWTRole(ctx, claims.Role)
+			ctx = ctx_util.SetJWTUserStatus(ctx, claims.Verified)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

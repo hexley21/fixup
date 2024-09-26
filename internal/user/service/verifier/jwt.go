@@ -7,29 +7,29 @@ import (
 	"github.com/hexley21/fixup/pkg/jwt"
 )
 
-type Jwt interface {
-	JwtGenerator
-	JwtVerifier
+type JWTManager interface {
+	JWTGenerator
+	JWTVerifier
 }
 
-type JwtGenerator interface {
+type JWTGenerator interface {
 	GenerateJWT(id string, email string) (string, error)
 }
 
-type JwtVerifier interface {
+type JWTVerifier interface {
 	VerifyJWT(tokenString string) (VerifyClaims, error)
 }
 
-type verificationJwtImpl struct {
+type verificationJWTImpl struct {
 	secretKey string
 	ttl       time.Duration
 }
 
-func NewVerificationJwt(secretKey string, ttl time.Duration) *verificationJwtImpl {
-	return &verificationJwtImpl{secretKey, ttl}
+func NewJWTManager(secretKey string, ttl time.Duration) *verificationJWTImpl {
+	return &verificationJWTImpl{secretKey, ttl}
 }
 
-func (j *verificationJwtImpl) GenerateJWT(id string, email string) (string, error) {
+func (j *verificationJWTImpl) GenerateJWT(id string, email string) (string, error) {
 	token, err := jwt.GenerateJWT(newClaims(id, email, j.ttl), j.secretKey)
 	if err != nil {
 		return "", fmt.Errorf("error generating jwt: %w", err)
@@ -38,7 +38,7 @@ func (j *verificationJwtImpl) GenerateJWT(id string, email string) (string, erro
 	return token, nil
 }
 
-func (j *verificationJwtImpl) VerifyJWT(tokenString string) (VerifyClaims, error) {
+func (j *verificationJWTImpl) VerifyJWT(tokenString string) (VerifyClaims, error) {
 	mapClaims, err := jwt.VerifyJWT(tokenString, j.secretKey)
 	if err != nil {
 		return VerifyClaims{}, err
