@@ -28,7 +28,7 @@ type ErrorResponse struct {
 }
 
 func (e *ErrorResponse) Error() string {
-	sb := strings.Builder{}
+	var sb strings.Builder
 
 	sb.WriteString("status: ")
 	sb.WriteString(strconv.Itoa(e.Status))

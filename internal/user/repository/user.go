@@ -65,7 +65,7 @@ type CreateUserParams struct {
 
 func (r *userRepositoryImpl) CreateUser(ctx context.Context, arg CreateUserParams) (entity.User, error) {
 	row := r.db.QueryRow(ctx, createUser,
-		arg.ID,
+		r.snowflake.Generate(),
 		arg.FirstName,
 		arg.LastName,
 		arg.PhoneNumber,
