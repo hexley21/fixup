@@ -8,14 +8,13 @@ import (
 	"github.com/hexley21/fixup/internal/user/enum"
 )
 
-// TODO: manage missing routes
-
 var (
 	maxFileSize int64 = 10 << 20
 )
 
 func MapRoutes(
-	middlewareFactory *middleware.MiddlewareFactory,
+	mf *middleware.MiddlewareFactory,
+	hf *HandlerFactory,
 	jWTAccessMiddleware func(http.Handler) http.Handler,
 	onlyVerifiedMiddleware func(http.Handler) http.Handler,
 	router chi.Router,
@@ -24,15 +23,26 @@ func MapRoutes(
 		r.Use(
 			jWTAccessMiddleware,
 			onlyVerifiedMiddleware,
-			middlewareFactory.NewAllowSelfOrRole(enum.UserRoleADMIN, enum.UserRoleMODERATOR),
+			mf.NewAllowSelfOrRole(enum.UserRoleADMIN, enum.UserRoleMODERATOR),
 		)
 
+		r.Get("/{id}", hf.FindUserById)
+		r.Patch("/{id}", hf.UpdateUserData)
+		r.Delete("/{id}", hf.DeleteUser)
+
 		r.Group(func(r chi.Router) {
+			r.Patch("/{id}/pfp", hf.UploadProfilePicture)
 			r.Use(
-				middlewareFactory.NewAllowFilesAmount(maxFileSize, "image", 1),
-				middlewareFactory.NewAllowContentType(maxFileSize, "image", "image/jpeg", "image/png"),
+				mf.NewAllowFilesAmount(maxFileSize, "image", 1),
+				mf.NewAllowContentType(maxFileSize, "image", "image/jpeg", "image/png"),
 			)
 		})
-
 	})
+
+	router.Group(func(r chi.Router) {
+		r.Use(jWTAccessMiddleware)
+		r.Patch("/me/change-password", hf.ChangePassword)
+	})
+
+	router.Patch("/profile/{id}", hf.FindUserProfileById)
 }
