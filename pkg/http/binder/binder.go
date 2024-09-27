@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	ErrUnsupportedMediaType = rest.NewBadRequestError(nil, "Unsupported media type")
+	ErrUnsupportedMediaType = rest.NewBadRequestError(nil, rest.MsgUnsupportedMedia)
+	ErrEmptyBody = rest.NewBadRequestError(nil, rest.MsgEmptyBody)
 )
 
 type FullBinder interface {

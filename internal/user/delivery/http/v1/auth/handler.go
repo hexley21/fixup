@@ -344,9 +344,9 @@ func (f *HandlerFactory) VerifyEmail(
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenParam := r.URL.Query().Get("token")
-		claims, err := jWTVerifier.VerifyJWT(tokenParam)
-		if err != nil {
-			f.writer.WriteError(w, rest.NewUnauthorizedError(err, app_error.MsgInvalidToken))
+		claims, errResp := jWTVerifier.VerifyJWT(tokenParam)
+		if errResp != nil {
+			f.writer.WriteError(w, errResp)
 			return
 		}
 
@@ -367,7 +367,7 @@ func (f *HandlerFactory) VerifyEmail(
 
 		go func() {
 			if err := f.service.SendVerifiedLetter(claims.Email); err != nil {
-				f.logger.Errorf("Failed to send verified letter to Email: %s, user ID: %s, error: %w", claims.Email, id, err)
+				f.logger.Errorf("Failed to send verified letter to Email: %s, user ID: %s - cause: %w", claims.Email, id, err)
 				return
 			}
 
@@ -388,6 +388,6 @@ func (f *HandlerFactory) sendConfirmationLetter(verGenerator verifier.JWTGenerat
 		}
 	}
 
-	f.logger.Errorf("Failed to send confirmation letter to email: %s, user ID: %s, error: %v", email, id, err)
+	f.logger.Error(err.Error())
 	return err
 }

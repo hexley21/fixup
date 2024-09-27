@@ -24,15 +24,19 @@ func New(JSONDeserializer json.JSONDeserializer) *standardBinder {
 
 func (b *standardBinder) BindJSON(r *http.Request, i any) *rest.ErrorResponse {
 	if r.ContentLength == 0 {
-		return nil
+		return binder.ErrEmptyBody
 	}
 
 	ctype := r.Header.Get("Content-Type")
 	if !strings.HasPrefix(ctype, "application/json") {
 		return binder.ErrUnsupportedMediaType
-
 	}
-	return rest.NewInvalidArgumentsError(b.JSONDeserializer.Deserialize(r.Body, i))
+
+	if err := b.JSONDeserializer.Deserialize(r.Body, i); err != nil {
+		return rest.NewInvalidArgumentsError(err)
+	}
+
+	return nil
 }
 
 func (b *standardBinder) BindMultipartForm(r *http.Request, maxSize int64) (*multipart.Form, *rest.ErrorResponse) {

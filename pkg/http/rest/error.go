@@ -12,6 +12,9 @@ const (
 	MsgFileReadError  = "Failed read file"
 
 	MsgInternalServerError = "Something went wrong"
+
+	MsgUnsupportedMedia = "Unsupported media type"
+	MsgEmptyBody        = "Empty body"
 )
 
 type ErrorResponse struct {
