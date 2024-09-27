@@ -14,6 +14,7 @@ import (
 	"github.com/hexley21/fixup/pkg/http/binder"
 	"github.com/hexley21/fixup/pkg/http/rest"
 	"github.com/hexley21/fixup/pkg/http/writer"
+	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 	"github.com/hexley21/fixup/pkg/logger"
 	"github.com/hexley21/fixup/pkg/validator"
 	"github.com/jackc/pgx/v5"
@@ -69,7 +70,7 @@ func (f *HandlerFactory) FindUserById(w http.ResponseWriter, r *http.Request) {
 
 	user, err := f.service.FindUserById(ctx, id)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, pg_error.ErrNotFound) {
 			f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 			return
 		}
@@ -107,7 +108,7 @@ func (f *HandlerFactory) FindUserProfileById(w http.ResponseWriter, r *http.Requ
 
 	profile, err := f.service.FindUserProfileById(ctx, id)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, pg_error.ErrNotFound) {
 			f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 			return
 		}
@@ -165,7 +166,7 @@ func (f *HandlerFactory) UploadProfilePicture(w http.ResponseWriter, r *http.Req
 
 	err = f.service.SetProfilePicture(context.Background(), id, file, "", imageFile.Size, imageFile.Header.Get("Content-Type"))
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, pg_error.ErrNotFound) {
 			f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 			return
 		}
@@ -213,8 +214,13 @@ func (f *HandlerFactory) UpdateUserData(w http.ResponseWriter, r *http.Request) 
 
 	user, err := f.service.UpdateUserDataById(context.Background(), id, *dto)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, pg_error.ErrNotFound) {
 			f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
+			return
+		}
+
+		if errors.Is(err, pgx.ErrNoRows) {
+			f.writer.WriteError(w, rest.NewBadRequestError(err, app_error.MsgNoChanges))
 			return
 		}
 
@@ -249,7 +255,7 @@ func (f *HandlerFactory) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	err := f.service.DeleteUserById(context.Background(), id)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, pg_error.ErrNotFound) {
 			f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 			return
 		}
@@ -303,7 +309,7 @@ func (f *HandlerFactory) ChangePassword(w http.ResponseWriter, r *http.Request) 
 
 	err = f.service.ChangePassword(context.Background(), userId, *dto)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, pg_error.ErrNotFound) {
 			f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 			return
 		}

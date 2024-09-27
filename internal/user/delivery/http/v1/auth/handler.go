@@ -17,10 +17,10 @@ import (
 	"github.com/hexley21/fixup/pkg/http/binder"
 	"github.com/hexley21/fixup/pkg/http/rest"
 	"github.com/hexley21/fixup/pkg/http/writer"
+	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 	"github.com/hexley21/fixup/pkg/logger"
 	"github.com/hexley21/fixup/pkg/validator"
 	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -197,7 +197,7 @@ func (f *HandlerFactory) ResendConfirmationLetter(
 				f.writer.WriteError(w, rest.NewConflictError(err, MsgUserAlreadyExists))
 				return
 			}
-			if errors.Is(err, pgx.ErrNoRows) {
+			if errors.Is(err, pg_error.ErrNotFound) {
 				f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 				return
 			}
@@ -357,7 +357,7 @@ func (f *HandlerFactory) VerifyEmail(
 		}
 
 		if err := f.service.VerifyUser(context.Background(), id, claims.Email); err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
+			if errors.Is(err, pg_error.ErrNotFound) {
 				f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 				return
 			}

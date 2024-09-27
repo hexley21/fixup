@@ -23,6 +23,7 @@ import (
 	"github.com/hexley21/fixup/pkg/http/json/std_json"
 	"github.com/hexley21/fixup/pkg/http/rest"
 	"github.com/hexley21/fixup/pkg/http/writer/json_writer"
+	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 	"github.com/hexley21/fixup/pkg/logger/std_logger"
 	mock_validator "github.com/hexley21/fixup/pkg/validator/mock"
 	"github.com/jackc/pgx/v5"
@@ -112,7 +113,7 @@ func TestFindUserById_NotFound(t *testing.T) {
 	ctrl, mockUserService, _, f := setup(t)
 	defer ctrl.Finish()
 
-	mockUserService.EXPECT().FindUserById(ctx, int64(1)).Return(dto.User{}, pgx.ErrNoRows)
+	mockUserService.EXPECT().FindUserById(ctx, int64(1)).Return(dto.User{}, pg_error.ErrNotFound)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
@@ -238,7 +239,7 @@ func TestUploadProfilePicture_NotFound(t *testing.T) {
 	ctrl, mockUserService, _, f := setup(t)
 	defer ctrl.Finish()
 
-	mockUserService.EXPECT().SetProfilePicture(ctx, int64(1), gomock.Any(), "", gomock.Any(), gomock.Any()).Return(pgx.ErrNoRows)
+	mockUserService.EXPECT().SetProfilePicture(ctx, int64(1), gomock.Any(), "", gomock.Any(), gomock.Any()).Return(pg_error.ErrNotFound)
 
 	body, contentType := createMultipartFormData(t, "image", "test.jpg", fileContent)
 	req := httptest.NewRequest(http.MethodPost, "/", body)
@@ -352,7 +353,7 @@ func TestUpdateUserData_NotFound(t *testing.T) {
 	ctrl, mockUserService, mockValidator, f := setup(t)
 	defer ctrl.Finish()
 
-	mockUserService.EXPECT().UpdateUserDataById(ctx, int64(1), gomock.Any()).Return(dto.User{}, pgx.ErrNoRows)
+	mockUserService.EXPECT().UpdateUserDataById(ctx, int64(1), gomock.Any()).Return(dto.User{}, pg_error.ErrNotFound)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(updateUserJSON))
@@ -365,6 +366,28 @@ func TestUpdateUserData_NotFound(t *testing.T) {
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, app_error.MsgUserNotFound, errResp.Message)
 		assert.Equal(t, http.StatusNotFound, errResp.Status)
+	}
+}
+
+func TestUpdateUserData_NotChanges(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl, mockUserService, mockValidator, f := setup(t)
+	defer ctrl.Finish()
+
+	mockUserService.EXPECT().UpdateUserDataById(ctx, int64(1), gomock.Any()).Return(dto.User{}, pgx.ErrNoRows)
+	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(updateUserJSON))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	f.UpdateUserData(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+
+	var errResp rest.ErrorResponse
+	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
+		assert.Equal(t, app_error.MsgNoChanges, errResp.Message)
+		assert.Equal(t, http.StatusBadRequest, errResp.Status)
 	}
 }
 
@@ -429,7 +452,7 @@ func TestDelete_NotFound(t *testing.T) {
 	ctrl, mockUserService, _, f := setup(t)
 	defer ctrl.Finish()
 
-	mockUserService.EXPECT().DeleteUserById(ctx, int64(1)).Return(pgx.ErrNoRows)
+	mockUserService.EXPECT().DeleteUserById(ctx, int64(1)).Return(pg_error.ErrNotFound)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	req.Header.Set("Content-Type", "application/json")
@@ -540,7 +563,7 @@ func TestChangePassword_NotFound(t *testing.T) {
 	ctrl, mockUserService, mockValidator, f := setup(t)
 	defer ctrl.Finish()
 
-	mockUserService.EXPECT().ChangePassword(ctx, int64(1), gomock.Any()).Return(pgx.ErrNoRows)
+	mockUserService.EXPECT().ChangePassword(ctx, int64(1), gomock.Any()).Return(pg_error.ErrNotFound)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(changePasswordJSON))

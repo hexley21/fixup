@@ -8,6 +8,7 @@ import (
 	"github.com/hexley21/fixup/internal/user/entity"
 	"github.com/hexley21/fixup/internal/user/enum"
 	"github.com/hexley21/fixup/internal/user/repository"
+	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -140,7 +141,7 @@ func TestGetCredentialsByEmail_NotFound(t *testing.T) {
 	repo := repository.NewUserRepository(dbPool, nil)
 
 	creds, err := repo.GetCredentialsByEmail(ctx, "email")
-	assert.ErrorIs(t, err, pgx.ErrNoRows)
+	assert.ErrorIs(t, err, pg_error.ErrNotFound)
 	assert.Empty(t, creds)
 }
 
@@ -170,7 +171,7 @@ func TestGetHash_NotFound(t *testing.T) {
 	repo := repository.NewUserRepository(dbPool, nil)
 
 	hash, err := repo.GetHashById(ctx, 1)
-	assert.ErrorIs(t, err, pgx.ErrNoRows)
+	assert.ErrorIs(t, err, pg_error.ErrNotFound)
 	assert.Empty(t, hash)
 }
 
@@ -263,7 +264,7 @@ func TestUpdate_NotFound(t *testing.T) {
 	repo := repository.NewUserRepository(dbPool, nil)
 
 	update, err := repo.Update(ctx, repository.UpdateUserParams{ID: 1, FirstName: &userCreateArgs.FirstName})
-	assert.ErrorIs(t, err, pgx.ErrNoRows)
+	assert.ErrorIs(t, err, pg_error.ErrNotFound)
 	assert.Empty(t, update)
 }
 
@@ -304,7 +305,7 @@ func TestUpdatePicture_NotFound(t *testing.T) {
 	repo := repository.NewUserRepository(dbPool, nil)
 
 	err := repo.UpdatePicture(ctx, repository.UpdateUserPictureParams{ID: 1, PictureName: pgtype.Text{}})
-	assert.ErrorIs(t, err, pgx.ErrNoRows)
+	assert.ErrorIs(t, err, pg_error.ErrNotFound)
 }
 
 func TestUpdateStatus_Success(t *testing.T) {
@@ -344,7 +345,7 @@ func TestUpdateStatus_NotFound(t *testing.T) {
 	repo := repository.NewUserRepository(dbPool, nil)
 
 	err := repo.UpdateStatus(ctx, repository.UpdateUserStatusParams{ID: 1, UserStatus: pgtype.Bool{}})
-	assert.ErrorIs(t, err, pgx.ErrNoRows)
+	assert.ErrorIs(t, err, pg_error.ErrNotFound)
 }
 
 func TestUpdateHash_Success(t *testing.T) {
@@ -404,7 +405,7 @@ func TestUpdateHash_NotFound(t *testing.T) {
 	repo := repository.NewUserRepository(dbPool, nil)
 
 	err := repo.UpdateHash(ctx, repository.UpdateUserHashParams{ID: 1, Hash: "abc"})
-	assert.ErrorIs(t, err, pgx.ErrNoRows)
+	assert.ErrorIs(t, err, pg_error.ErrNotFound)
 }
 
 func TestDeleteById_Success(t *testing.T) {
@@ -436,7 +437,7 @@ func TestDeleteById_NotFound(t *testing.T) {
 	repo := repository.NewUserRepository(dbPool, nil)
 
 	err := repo.DeleteById(ctx, 1)
-	assert.ErrorIs(t, err, pgx.ErrNoRows)
+	assert.ErrorIs(t, err, pg_error.ErrNotFound)
 }
 
 func insertUser(dbPool *pgxpool.Pool, ctx context.Context, args repository.CreateUserParams, id int64) (entity.User, error) {

@@ -8,6 +8,7 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/hexley21/fixup/internal/user/entity"
 	"github.com/hexley21/fixup/internal/user/enum"
+	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 	"github.com/hexley21/fixup/pkg/infra/postgres"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -229,7 +230,7 @@ func (r *userRepositoryImpl) UpdatePicture(ctx context.Context, arg UpdateUserPi
 	}
 
 	if result.RowsAffected() == 0 {
-		return pgx.ErrNoRows
+		return pg_error.ErrNotFound
 	}
 
 	return nil
@@ -251,7 +252,7 @@ func (r *userRepositoryImpl) UpdateStatus(ctx context.Context, arg UpdateUserSta
 	}
 
 	if result.RowsAffected() == 0 {
-		return pgx.ErrNoRows
+		return pg_error.ErrNotFound
 	}
 
 	return nil
@@ -273,7 +274,7 @@ func (r *userRepositoryImpl) UpdateHash(ctx context.Context, arg UpdateUserHashP
 	}
 
 	if result.RowsAffected() == 0 {
-		return pgx.ErrNoRows
+		return pg_error.ErrNotFound
 	}
 
 	return nil
@@ -291,7 +292,7 @@ func (r *userRepositoryImpl) DeleteById(ctx context.Context, id int64) error {
 	}
 
 	if result.RowsAffected() == 0 {
-		return pgx.ErrNoRows
+		return pg_error.ErrNotFound
 	}
 
 	return nil

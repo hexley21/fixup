@@ -28,10 +28,10 @@ import (
 	"github.com/hexley21/fixup/pkg/http/json/std_json"
 	"github.com/hexley21/fixup/pkg/http/rest"
 	"github.com/hexley21/fixup/pkg/http/writer/json_writer"
+	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 	"github.com/hexley21/fixup/pkg/logger/std_logger"
 	mock_validator "github.com/hexley21/fixup/pkg/validator/mock"
 	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -387,7 +387,7 @@ func TestResendConfirmationLetter_NotFound(t *testing.T) {
 	ctrl, mockAuthService, mockValidator, mockVerifierGenerator, _, _, f := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserConfirmationDetails(ctx, gomock.Any()).Return(dto.UserConfirmationDetails{}, pgx.ErrNoRows)
+	mockAuthService.EXPECT().GetUserConfirmationDetails(ctx, gomock.Any()).Return(dto.UserConfirmationDetails{}, pg_error.ErrNotFound)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(registerProviderJSON))
@@ -754,7 +754,7 @@ func TestVerifyEmail_NotFound(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockVerifyJWT.EXPECT().VerifyJWT(token).Return(verifyClaims, nil)
-	mockAuthService.EXPECT().VerifyUser(ctx, int64(1), verifyClaims.Email).Return(pgx.ErrNoRows)
+	mockAuthService.EXPECT().VerifyUser(ctx, int64(1), verifyClaims.Email).Return(pg_error.ErrNotFound)
 
 	q := make(url.Values)
 	q.Set("token", token)

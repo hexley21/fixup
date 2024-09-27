@@ -6,4 +6,5 @@ var (
 	MsgIncorrectPassword = "Password is incorrect"
 
 	MsgUserNotFound = "User not found"
+	MsgNoChanges = "No changes"
 )
