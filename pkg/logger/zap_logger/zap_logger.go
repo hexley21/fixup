@@ -1,10 +1,10 @@
 package zap_logger
 
 import (
+	"log"
 	"os"
 
 	"github.com/hexley21/fixup/pkg/config"
-	"github.com/labstack/gommon/log"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
