@@ -13,6 +13,7 @@ import (
 	"github.com/hexley21/fixup/pkg/hasher/argon2"
 	"github.com/hexley21/fixup/pkg/infra/cdn"
 	"github.com/hexley21/fixup/pkg/infra/postgres"
+	"github.com/hexley21/fixup/pkg/infra/redis"
 	"github.com/hexley21/fixup/pkg/infra/s3"
 	"github.com/hexley21/fixup/pkg/logger/zap_logger"
 	"github.com/hexley21/fixup/pkg/mailer/gomail"
@@ -48,6 +49,11 @@ func main() {
 		zapLogger.Fatal(err)
 	}
 
+	redisCluster, err := redis.NewClient(&cfg.Redis)
+	if err != nil {
+		zapLogger.Fatal(err)
+	}
+
 	awsS3Bucket, err := s3.NewClient(cfg.AWS.AWSCfg, cfg.AWS.S3)
 	if err != nil {
 		zapLogger.Fatal(err)
@@ -70,6 +76,7 @@ func main() {
 	server := server.NewServer(
 		cfg,
 		pgPool,
+		redisCluster,
 		zapLogger,
 		snowflakeNode,
 		playgroundValidator,
