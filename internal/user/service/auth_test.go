@@ -73,7 +73,7 @@ func TestRegisterCustomer(t *testing.T) {
 	mockHasher.EXPECT().HashPassword(gomock.Any()).Return(newHash)
 	mockUrlSigner.EXPECT().SignURL(gomock.Any()).Return(newUrl, nil)
 
-	service := service.NewAuthService(mockUserRepo, nil, mockPgx, mockHasher, nil, nil, mockEmailAddress, mockUrlSigner)
+	service := service.NewAuthService(mockUserRepo, nil, nil, time.Hour, mockPgx, mockHasher, nil, nil, mockEmailAddress, mockUrlSigner)
 	service.SetTemplates(confiramtionTemplate, nil)
 
 	dto, err := service.RegisterCustomer(ctx, registerUserDto)
@@ -112,7 +112,7 @@ func TestRegisterProvider(t *testing.T) {
 	mockEncryptor.EXPECT().Encrypt(gomock.Any()).Return([]byte(registerProviderDto.PersonalIDNumber), nil)
 	mockUrlSigner.EXPECT().SignURL(gomock.Any()).Return(newUrl, nil)
 
-	service := service.NewAuthService(mockUserRepo, mockProviderRepo, mockPgx, mockHasher, mockEncryptor, nil, mockEmailAddress, mockUrlSigner)
+	service := service.NewAuthService(mockUserRepo, mockProviderRepo, nil, time.Hour, mockPgx, mockHasher, mockEncryptor, nil, mockEmailAddress, mockUrlSigner)
 	service.SetTemplates(confiramtionTemplate, nil)
 
 	dto, err := service.RegisterProvider(ctx, registerProviderDto)
@@ -137,7 +137,7 @@ func TestAuthenticateUser_Success(t *testing.T) {
 	mockUserRepo.EXPECT().GetCredentialsByEmail(ctx, loginDto.Email).Return(creds, nil)
 	mockHasher.EXPECT().VerifyPassword(loginDto.Password, creds.Hash).Return(nil)
 
-	service := service.NewAuthService(mockUserRepo, nil, nil, mockHasher, nil, nil, mockEmailAddress, nil)
+	service := service.NewAuthService(mockUserRepo, nil, nil, time.Hour, nil, mockHasher, nil, nil, mockEmailAddress, nil)
 
 	credentialsDto, err := service.AuthenticateUser(ctx, loginDto)
 	assert.NoError(t, err)
@@ -155,7 +155,7 @@ func TestAuthenticateUser_NotFound(t *testing.T) {
 	mockUserRepo := mock_repository.NewMockUserRepository(ctrl)
 	mockUserRepo.EXPECT().GetCredentialsByEmail(ctx, loginDto.Email).Return(repository.GetCredentialsByEmailRow{}, pgx.ErrNoRows)
 
-	svc := service.NewAuthService(mockUserRepo, nil, nil, nil, nil, nil, mockEmailAddress, nil)
+	svc := service.NewAuthService(mockUserRepo, nil, nil, time.Hour, nil, nil, nil, nil, mockEmailAddress, nil)
 
 	credentialsDto, err := svc.AuthenticateUser(ctx, loginDto)
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
@@ -174,7 +174,7 @@ func TestAuthenticateUser_PasswordMissmatch(t *testing.T) {
 	mockUserRepo.EXPECT().GetCredentialsByEmail(ctx, loginDto.Email).Return(creds, nil)
 	mockHasher.EXPECT().VerifyPassword(loginDto.Password, creds.Hash).Return(hasher.ErrPasswordMismatch)
 
-	svc := service.NewAuthService(mockUserRepo, nil, nil, mockHasher, nil, nil, mockEmailAddress, nil)
+	svc := service.NewAuthService(mockUserRepo, nil, nil, time.Hour, nil, mockHasher, nil, nil, mockEmailAddress, nil)
 
 	credentialsDto, err := svc.AuthenticateUser(ctx, loginDto)
 	assert.ErrorIs(t, err, hasher.ErrPasswordMismatch)
@@ -190,7 +190,7 @@ func TestVerifyUser(t *testing.T) {
 	mockUserRepo := mock_repository.NewMockUserRepository(ctrl)
 	mockUserRepo.EXPECT().UpdateStatus(ctx, gomock.Any()).Return(nil)
 
-	service := service.NewAuthService(mockUserRepo, nil, nil, nil, nil, nil, mockEmailAddress, nil)
+	service := service.NewAuthService(mockUserRepo, nil, nil, time.Hour, nil, nil, nil, nil, mockEmailAddress, nil)
 	service.SetTemplates(nil, verifiedTemplate)
 
 	assert.NoError(t, service.VerifyUser(ctx, 1, ""))
@@ -214,7 +214,7 @@ func TestGetUserConfirmationDetails_Success(t *testing.T) {
 
 	mockUserRepo.EXPECT().GetUserConfirmationDetails(ctx, gomock.Any()).Return(args, nil)
 
-	service := service.NewAuthService(mockUserRepo, nil, nil, nil, nil, nil, mockEmailAddress, nil)
+	service := service.NewAuthService(mockUserRepo, nil, nil, time.Hour, nil, nil, nil, nil, mockEmailAddress, nil)
 
 	dto, err := service.GetUserConfirmationDetails(ctx, "")
 	assert.NoError(t, err)
@@ -239,23 +239,25 @@ func TestGetUserConfirmationDetails_ActiveUserError(t *testing.T) {
 
 	mockUserRepo.EXPECT().GetUserConfirmationDetails(ctx, gomock.Any()).Return(args, nil)
 
-	svc := service.NewAuthService(mockUserRepo, nil, nil, nil, nil, nil, mockEmailAddress, nil)
+	svc := service.NewAuthService(mockUserRepo, nil, nil, time.Hour, nil, nil, nil, nil, mockEmailAddress, nil)
 
 	_, err := svc.GetUserConfirmationDetails(ctx, "")
 	assert.ErrorIs(t, err, service.ErrUserAlreadyActive)
 }
 
 func TestSendConfirmationLetter_Success(t *testing.T) {
+	ctx := context.Background()
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	mockMailer := mock_mailer.NewMockMailer(ctrl)
 	mockMailer.EXPECT().SendHTML(mockEmailAddress, gomock.Any(), gomock.Any(), confiramtionTemplate, gomock.Any()).Return(nil)
 
-	service := service.NewAuthService(nil, nil, nil, nil, nil, mockMailer, mockEmailAddress, nil)
+	service := service.NewAuthService(nil, nil, nil, time.Hour, nil, nil, nil, mockMailer, mockEmailAddress, nil)
 	service.SetTemplates(confiramtionTemplate, nil)
 
-	assert.NoError(t, service.SendConfirmationLetter("", "", ""))
+	assert.NoError(t, service.SendConfirmationLetter(ctx, "", "", ""))
 }
 
 func TestSendVerifiedLetter_Success(t *testing.T) {
@@ -265,7 +267,7 @@ func TestSendVerifiedLetter_Success(t *testing.T) {
 	mockMailer := mock_mailer.NewMockMailer(ctrl)
 	mockMailer.EXPECT().SendHTML(mockEmailAddress, gomock.Any(), gomock.Any(), verifiedTemplate, gomock.Nil()).Return(nil)
 
-	service := service.NewAuthService(nil, nil, nil, nil, nil, mockMailer, mockEmailAddress, nil)
+	service := service.NewAuthService(nil, nil, nil, time.Hour, nil, nil, nil, mockMailer, mockEmailAddress, nil)
 	service.SetTemplates(nil, verifiedTemplate)
 
 	assert.NoError(t, service.SendVerifiedLetter(""))

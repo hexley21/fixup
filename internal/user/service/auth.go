@@ -5,6 +5,7 @@ import (
 	"errors"
 	"html/template"
 	"strconv"
+	"time"
 
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto/mapper"
@@ -18,8 +19,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
-
-// TODO: manage user activation when activated
 
 var (
 	ErrUserAlreadyActive = errors.New("attempt to send confirmation letter to activated user")
@@ -39,26 +38,31 @@ type AuthService interface {
 	RegisterProvider(ctx context.Context, registerDto dto.RegisterProvider) (dto.User, error)
 	AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.Credentials, error)
 	VerifyUser(ctx context.Context, id int64, email string) error
+	IsVerificationTokenUsed(ctx context.Context, token string) (bool, error)
 	GetUserConfirmationDetails(ctx context.Context, email string) (dto.UserConfirmationDetails, error)
-	SendConfirmationLetter(token string, email string, name string) error
+	SendConfirmationLetter(ctx context.Context, token string, email string, name string) error
 	SendVerifiedLetter(email string) error
 }
 
 type authServiceImpl struct {
-	userRepository     repository.UserRepository
-	providerRepository repository.ProviderRepository
-	pgx                postgres.PGX
-	hasher             hasher.Hasher
-	encryptor          encryption.Encryptor
-	mailer             mailer.Mailer
-	cdnUrlSigner       cdn.URLSigner
-	emailAddres        string
-	templates          *templates
+	userRepository         repository.UserRepository
+	providerRepository     repository.ProviderRepository
+	verificationRepository repository.VerificationRepository
+	verificationTokenTTL   time.Duration
+	pgx                    postgres.PGX
+	hasher                 hasher.Hasher
+	encryptor              encryption.Encryptor
+	mailer                 mailer.Mailer
+	cdnUrlSigner           cdn.URLSigner
+	emailAddres            string
+	templates              *templates
 }
 
 func NewAuthService(
 	userRepository repository.UserRepository,
 	providerRepository repository.ProviderRepository,
+	verificationRepository repository.VerificationRepository,
+	verificationTokenTTL time.Duration,
 	pgx postgres.PGX,
 	hasher hasher.Hasher,
 	encryptor encryption.Encryptor,
@@ -67,14 +71,16 @@ func NewAuthService(
 	cdnUrlSigner cdn.URLSigner,
 ) *authServiceImpl {
 	return &authServiceImpl{
-		userRepository:     userRepository,
-		providerRepository: providerRepository,
-		pgx:                pgx,
-		hasher:             hasher,
-		encryptor:          encryptor,
-		mailer:             mailer,
-		emailAddres:        emailAddres,
-		cdnUrlSigner:       cdnUrlSigner,
+		userRepository:         userRepository,
+		providerRepository:     providerRepository,
+		verificationRepository: verificationRepository,
+		verificationTokenTTL:   verificationTokenTTL,
+		pgx:                    pgx,
+		hasher:                 hasher,
+		encryptor:              encryptor,
+		mailer:                 mailer,
+		emailAddres:            emailAddres,
+		cdnUrlSigner:           cdnUrlSigner,
 	}
 }
 
@@ -197,13 +203,14 @@ func (s *authServiceImpl) AuthenticateUser(ctx context.Context, loginDto dto.Log
 }
 
 func (s *authServiceImpl) VerifyUser(ctx context.Context, id int64, email string) error {
-	var status pgtype.Bool
-	status.Scan(true)
-
 	return s.userRepository.UpdateStatus(ctx, repository.UpdateUserStatusParams{
 		ID:         id,
-		UserStatus: status,
+		UserStatus: pgtype.Bool{Bool: true, Valid: true},
 	})
+}
+
+func (s *authServiceImpl) IsVerificationTokenUsed(ctx context.Context, token string) (bool, error) {
+	return s.verificationRepository.IsTokenUsed(ctx, token)
 }
 
 func (s *authServiceImpl) GetUserConfirmationDetails(ctx context.Context, email string) (dto.UserConfirmationDetails, error) {
@@ -224,7 +231,12 @@ func (s *authServiceImpl) GetUserConfirmationDetails(ctx context.Context, email 
 	return dto, nil
 }
 
-func (s *authServiceImpl) SendConfirmationLetter(token string, email string, name string) error {
+func (s *authServiceImpl) SendConfirmationLetter(ctx context.Context, token string, email string, name string) error {
+	err := s.verificationRepository.SetTokenUsed(ctx, token, s.verificationTokenTTL)
+	if err != nil {
+		return err
+	}
+
 	return s.mailer.SendHTML(
 		s.emailAddres,
 		email,

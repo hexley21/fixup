@@ -107,7 +107,7 @@ func TestRegisterCustomer_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockAuthService.EXPECT().RegisterCustomer(ctx, gomock.Any()).Return(userDto, nil)
-	mockAuthService.EXPECT().SendConfirmationLetter(token, userDto.Email, userDto.FirstName).Return(nil)
+	mockAuthService.EXPECT().SendConfirmationLetter(ctx, token, userDto.Email, userDto.FirstName).Return(nil)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 	mockVerifierGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Email).Return(token, nil)
 
@@ -210,7 +210,7 @@ func TestRegisterProvider_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockAuthService.EXPECT().RegisterProvider(ctx, gomock.Any()).Return(userDto, nil)
-	mockAuthService.EXPECT().SendConfirmationLetter(token, userDto.Email, userDto.FirstName).Return(nil)
+	mockAuthService.EXPECT().SendConfirmationLetter(ctx, token, userDto.Email, userDto.FirstName).Return(nil)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 	mockVerifierGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Email).Return(token, nil)
 
@@ -311,7 +311,7 @@ func TestResendConfirmationLetter_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockAuthService.EXPECT().GetUserConfirmationDetails(ctx, gomock.Any()).Return(userConfirmationDetailsDTO, nil)
-	mockAuthService.EXPECT().SendConfirmationLetter(token, userDto.Email, userDto.FirstName).Return(nil)
+	mockAuthService.EXPECT().SendConfirmationLetter(ctx, token, userDto.Email, userDto.FirstName).Return(nil)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 	mockVerifierGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Email).Return(token, nil)
 

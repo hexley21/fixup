@@ -70,6 +70,21 @@ func (mr *MockAuthServiceMockRecorder) GetUserConfirmationDetails(ctx, email any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserConfirmationDetails", reflect.TypeOf((*MockAuthService)(nil).GetUserConfirmationDetails), ctx, email)
 }
 
+// IsVerificationTokenUsed mocks base method.
+func (m *MockAuthService) IsVerificationTokenUsed(ctx context.Context, token string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsVerificationTokenUsed", ctx, token)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsVerificationTokenUsed indicates an expected call of IsVerificationTokenUsed.
+func (mr *MockAuthServiceMockRecorder) IsVerificationTokenUsed(ctx, token any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsVerificationTokenUsed", reflect.TypeOf((*MockAuthService)(nil).IsVerificationTokenUsed), ctx, token)
+}
+
 // RegisterCustomer mocks base method.
 func (m *MockAuthService) RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error) {
 	m.ctrl.T.Helper()
@@ -101,17 +116,17 @@ func (mr *MockAuthServiceMockRecorder) RegisterProvider(ctx, registerDto any) *g
 }
 
 // SendConfirmationLetter mocks base method.
-func (m *MockAuthService) SendConfirmationLetter(token, email, name string) error {
+func (m *MockAuthService) SendConfirmationLetter(ctx context.Context, token, email, name string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendConfirmationLetter", token, email, name)
+	ret := m.ctrl.Call(m, "SendConfirmationLetter", ctx, token, email, name)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SendConfirmationLetter indicates an expected call of SendConfirmationLetter.
-func (mr *MockAuthServiceMockRecorder) SendConfirmationLetter(token, email, name any) *gomock.Call {
+func (mr *MockAuthServiceMockRecorder) SendConfirmationLetter(ctx, token, email, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendConfirmationLetter", reflect.TypeOf((*MockAuthService)(nil).SendConfirmationLetter), token, email, name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendConfirmationLetter", reflect.TypeOf((*MockAuthService)(nil).SendConfirmationLetter), ctx, token, email, name)
 }
 
 // SendVerifiedLetter mocks base method.
