@@ -25,10 +25,9 @@ func TestMain(m *testing.M) {
 
 	migrationPath := flag.String("mp", "", "Migration Path")
 	flag.Parse()
-	if *migrationPath == "" {
+	if *migrationPath == "" || migrationPath == nil {
 		log.Print("Continueing without database migration")
-		os.Exit(m.Run())
-		return
+		os.Exit(1)
 	}
 
 	image, config := pg_tt.GetConfig()
@@ -54,17 +53,15 @@ func TestMain(m *testing.M) {
 	os.Exit(res)
 }
 
-func setupDatabaseCleanup(t *testing.T, ctx context.Context, dbPool *pgxpool.Pool) {
-	t.Cleanup(func() {
-		_, err := dbPool.Exec(ctx, "TRUNCATE TABLE users CASCADE")
-		dbPool.Close()
-		if err != nil {
-			log.Fatalln("failed to cleanup database:", err)
-		}
-	})
+func cleanupPostgres(ctx context.Context, dbPool *pgxpool.Pool) {
+	_, err := dbPool.Exec(ctx, "TRUNCATE TABLE users CASCADE")
+	dbPool.Close()
+	if err != nil {
+		log.Fatalln("failed to cleanup database:", err)
+	}
 }
 
-func getDbPool(ctx context.Context) *pgxpool.Pool {
+func getPgPool(ctx context.Context) *pgxpool.Pool {
 	pool, err := pgxpool.New(ctx, connURL)
 	if err != nil {
 		log.Fatalln("failed to get database pool:", err)

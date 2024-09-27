@@ -33,8 +33,8 @@ var (
 
 func TestGetById_Success(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -61,9 +61,9 @@ func TestGetById_Success(t *testing.T) {
 
 func TestCreate_Success(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
+	dbPool := getPgPool(ctx)
 	snowflakeNode := getSnowflakeNode()
-	setupDatabaseCleanup(t, ctx, dbPool)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, snowflakeNode)
 
@@ -86,9 +86,9 @@ func TestCreate_Success(t *testing.T) {
 
 func TestCreate_InvalidArgs(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
+	dbPool := getPgPool(ctx)
 	snowflakeNode := getSnowflakeNode()
-	setupDatabaseCleanup(t, ctx, dbPool)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, snowflakeNode)
 
@@ -114,8 +114,8 @@ func TestCreate_InvalidArgs(t *testing.T) {
 
 func TestGetCredentialsByEmail_Success(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -135,8 +135,8 @@ func TestGetCredentialsByEmail_Success(t *testing.T) {
 
 func TestGetCredentialsByEmail_NotFound(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -147,8 +147,8 @@ func TestGetCredentialsByEmail_NotFound(t *testing.T) {
 
 func TestGetHashById_Success(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -165,8 +165,8 @@ func TestGetHashById_Success(t *testing.T) {
 
 func TestGetHash_NotFound(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -177,8 +177,8 @@ func TestGetHash_NotFound(t *testing.T) {
 
 func TestUpdate_Success(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -211,8 +211,8 @@ func TestUpdate_Success(t *testing.T) {
 
 func TestUpdate_PartialArguments(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -241,8 +241,8 @@ func TestUpdate_PartialArguments(t *testing.T) {
 
 func TestUpdate_NoArguments(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -258,8 +258,8 @@ func TestUpdate_NoArguments(t *testing.T) {
 
 func TestUpdate_NotFound(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -270,8 +270,8 @@ func TestUpdate_NotFound(t *testing.T) {
 
 func TestUpdatePicture_Success(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -299,8 +299,8 @@ func TestUpdatePicture_Success(t *testing.T) {
 
 func TestUpdatePicture_NotFound(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -310,8 +310,8 @@ func TestUpdatePicture_NotFound(t *testing.T) {
 
 func TestUpdateStatus_Success(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -339,8 +339,8 @@ func TestUpdateStatus_Success(t *testing.T) {
 
 func TestUpdateStatus_NotFound(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -350,8 +350,8 @@ func TestUpdateStatus_NotFound(t *testing.T) {
 
 func TestUpdateHash_Success(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -377,8 +377,8 @@ func TestUpdateHash_Success(t *testing.T) {
 
 func TestUpdateHash_InvalidArguments(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -399,8 +399,8 @@ func TestUpdateHash_InvalidArguments(t *testing.T) {
 
 func TestUpdateHash_NotFound(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -410,8 +410,8 @@ func TestUpdateHash_NotFound(t *testing.T) {
 
 func TestDeleteById_Success(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
@@ -431,8 +431,8 @@ func TestDeleteById_Success(t *testing.T) {
 
 func TestDeleteById_NotFound(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewUserRepository(dbPool, nil)
 
