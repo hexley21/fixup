@@ -6,6 +6,21 @@ import (
 	"strings"
 )
 
+const (
+	MsgInvalidArguments = "Invalid arguments"
+
+	MsgFileReadError = "Failed read file"
+
+	MsgInternalServerError = "Something went wrong"
+
+	MsgUnsupportedMedia = "Unsupported media type"
+	MsgEmptyBody        = "Empty body"
+
+	MsgNoFile         = "No file provided"
+	MsgTooManyFiles   = "Too many files"
+	MsgNotEnoughFiles = "Not enough files"
+)
+
 type ErrorResponse struct {
 	Cause   error  `json:"-"`
 	Message string `json:"message"`
@@ -58,4 +73,12 @@ func NewConflictError(cause error, message string) *ErrorResponse {
 
 func NewInternalServerError(cause error) *ErrorResponse {
 	return newError(cause, http.StatusInternalServerError, MsgInternalServerError)
+}
+
+func NewInvalidArgumentsError(cause error) *ErrorResponse {
+	return newError(cause, http.StatusBadRequest, MsgInvalidArguments)
+}
+
+func NewReadFileError(cause error) *ErrorResponse {
+	return newError(cause, http.StatusBadRequest, MsgFileReadError)
 }

@@ -5,11 +5,11 @@ import (
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/hexley21/fixup/cmd/util/shutdown"
-	"github.com/hexley21/fixup/internal/catalog/app"
+	"github.com/hexley21/fixup/internal/catalog/server"
 	"github.com/hexley21/fixup/pkg/config"
 	"github.com/hexley21/fixup/pkg/infra/postgres"
-	"github.com/hexley21/fixup/pkg/logger"
-	"github.com/hexley21/fixup/pkg/validator"
+	"github.com/hexley21/fixup/pkg/logger/zap_logger"
+	"github.com/hexley21/fixup/pkg/validator/playground_validator"
 )
 
 // @title Catalog Microservice
@@ -33,8 +33,8 @@ func main() {
 		log.Fatalf("could not load config: %v\n", err)
 	}
 
-	zapLogger := logger.NewZapLogger(cfg.Logging, cfg.Server.IsProd)
-	playgroundValidator := validator.NewValidator()
+	zapLogger := zap_logger.New(cfg.Logging, cfg.Server.IsProd)
+	playgroundValidator := playground_validator.New()
 
 	pgPool, err := postgres.NewPool(&cfg.Postgres)
 	if err != nil {
@@ -46,13 +46,12 @@ func main() {
 		zapLogger.Fatal(err)
 	}
 
-	server := app.NewServer(
+	server := server.NewServer(
 		cfg,
-		zapLogger,
-		playgroundValidator,
 		pgPool,
+		zapLogger,
 		snowflakeNode,
-		cfg.Mailer.User,
+		playgroundValidator,
 	)
 
 	shutdownError := make(chan error)

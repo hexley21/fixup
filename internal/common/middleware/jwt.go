@@ -1,41 +1,46 @@
 package middleware
 
 import (
+	"net/http"
 	"strings"
 
-	"github.com/labstack/echo/v4"
-
-	authjwt "github.com/hexley21/fixup/internal/common/jwt"
-	"github.com/hexley21/fixup/internal/common/rest"
-	"github.com/hexley21/fixup/internal/common/util/ctxutil"
+	"github.com/hexley21/fixup/internal/common/app_error"
+	"github.com/hexley21/fixup/internal/common/auth_jwt"
+	"github.com/hexley21/fixup/internal/common/util/ctx_util"
+	"github.com/hexley21/fixup/pkg/http/rest"
 )
 
-func JWT(jwtVerifier authjwt.JwtVerifier) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			authHeader := c.Request().Header.Get("Authorization")
+func (f *MiddlewareFactory) NewJWT(jwtVerifier auth_jwt.JWTVerifier) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				return rest.NewUnauthorizedError(nil, rest.MsgMissingAuthorizationHeader)
+				f.writer.WriteError(w, rest.NewUnauthorizedError(nil, MsgMissingAuthorizationHeader))
+				return
 			}
 
 			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 			if tokenString == authHeader {
-				return rest.NewUnauthorizedError(nil, rest.MsgMissingBearerToken)
+				f.writer.WriteError(w, rest.NewUnauthorizedError(nil, MsgMissingBearerToken))
+				return
 			}
 
 			claims, err := jwtVerifier.VerifyJWT(tokenString)
 			if err != nil {
-				return err
+				f.writer.WriteError(w, err)
+				return
 			}
 
 			if !claims.Role.Valid() {
-				return rest.NewUnauthorizedError(nil, rest.MsgInvalidToken)
+				f.writer.WriteError(w, rest.NewUnauthorizedError(nil, app_error.MsgInvalidToken))
+				return
 			}
 
-			ctxutil.SetJwtId(c, claims.ID)
-			ctxutil.SetJwtRole(c, claims.Role)
+			ctx := ctx_util.SetJWTId(r.Context(), claims.ID)
+			ctx = ctx_util.SetJWTRole(ctx, claims.Role)
+			ctx = ctx_util.SetJWTUserStatus(ctx, claims.Verified)
 
-			return next(c)
-		}
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
 	}
 }

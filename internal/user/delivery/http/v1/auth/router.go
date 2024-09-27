@@ -1,24 +1,31 @@
 package auth
 
 import (
-	"github.com/hexley21/fixup/internal/common/jwt"
+	"github.com/go-chi/chi/v5"
+	"github.com/hexley21/fixup/internal/common/auth_jwt"
 	"github.com/hexley21/fixup/internal/common/middleware"
 	"github.com/hexley21/fixup/internal/user/service/verifier"
-	"github.com/labstack/echo/v4"
 )
 
-func (h *AuthHandler) MapRoutes(e *echo.Group, refreshJwt jwt.Jwt, accessJwt jwt.Jwt, verificationJwt verifier.Jwt) *echo.Group {
-	authGroup := e.Group("/auth")
+func MapRoutes(
+	mf *middleware.MiddlewareFactory,
+	hf *HandlerFactory,
+	accessJwtManager auth_jwt.JWTManager,
+	refreshJWTManager auth_jwt.JWTManager,
+	vrfJWTManager verifier.JWTManager,
+	r chi.Router,
+) chi.Router {
+	r.Route("/auth", func(auth chi.Router) {
+		auth.Post("/register/customer", hf.RegisterCustomer(vrfJWTManager))
+		auth.Post("/register/provider", hf.RegisterProvider(vrfJWTManager))
+		auth.Post("/resend-confirmation", hf.ResendConfirmationLetter(vrfJWTManager))
 
-	authGroup.POST("/register/customer", h.RegisterCustomer(verificationJwt))
-	authGroup.POST("/register/provider", h.RegisterProvider(verificationJwt))
-	authGroup.POST("/resend-confirmation", h.ResendConfirmationLetter(verificationJwt))
+		auth.With(mf.NewJWT(refreshJWTManager)).Post("/refresh", hf.Refresh(refreshJWTManager))
+		auth.Post("/login", hf.Login(accessJwtManager, refreshJWTManager))
+		auth.Post("/logout", hf.Logout)
 
-	authGroup.POST("/refresh", h.Refresh(refreshJwt), middleware.JWT(refreshJwt))
-	authGroup.POST("/login", h.Login(accessJwt, refreshJwt))
-	authGroup.POST("/logout", h.Logout)
+		auth.Get("/verify", hf.VerifyEmail(vrfJWTManager))
+	})
 
-	authGroup.GET("/verify", h.VerifyEmail(verificationJwt))
-
-	return authGroup
+	return r
 }

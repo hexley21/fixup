@@ -1,35 +1,46 @@
 package v1
 
 import (
-	"github.com/hexley21/fixup/internal/common/jwt"
+	"github.com/go-chi/chi/v5"
+	"github.com/hexley21/fixup/internal/common/auth_jwt"
 	"github.com/hexley21/fixup/internal/common/middleware"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/auth"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/user"
 	"github.com/hexley21/fixup/internal/user/service"
 	"github.com/hexley21/fixup/internal/user/service/verifier"
-	"github.com/hexley21/fixup/pkg/config"
-	"github.com/labstack/echo/v4"
+	"github.com/hexley21/fixup/pkg/http/binder"
+	"github.com/hexley21/fixup/pkg/http/writer"
+	"github.com/hexley21/fixup/pkg/logger"
+	"github.com/hexley21/fixup/pkg/validator"
 )
 
-type V1RouterArgs struct {
-	AuthService service.AuthService
-	UserService service.UserService
-	CfgJwt config.JWT
+type RouterArgs struct {
+	AuthService            service.AuthService
+	UserService            service.UserService
+	MiddlewareFactory      *middleware.MiddlewareFactory
+	Logger                 logger.Logger
+	Binder                 binder.JSONBinder
+	Validator              validator.Validator
+	Writer                 writer.HTTPWriter
+	AccessJWTManager       auth_jwt.JWTManager
+	RefreshJWTManager      auth_jwt.JWTManager
+	VerificationJWTManager verifier.JWTManager
 }
 
-func MapV1Routes(echo *echo.Echo, args V1RouterArgs) *echo.Group {
-	accessAuthJwt := jwt.NewAuthJwtImpl(args.CfgJwt.AccessSecret, args.CfgJwt.AccessTTL)
-	refreshAuthJwt := jwt.NewAuthJwtImpl(args.CfgJwt.RefreshSecret, args.CfgJwt.RefreshTTL)
+func MapV1Routes(args RouterArgs, router chi.Router) {
+	authHandlerFactory := auth.NewFactory(
+		args.Logger,
+		args.Binder,
+		args.Validator,
+		args.Writer,
+		args.AuthService,
+	)
 
-	verificationJwt := verifier.NewVerificationJwt(args.CfgJwt.VerificationSecret, args.CfgJwt.VerificationTTL)
+	accessJWTMiddleware := args.MiddlewareFactory.NewJWT(args.AccessJWTManager)
+	onlyVerifiedMiddleware := args.MiddlewareFactory.NewAllowVerified(true)
 
-	accessJwtMiddleware := middleware.JWT(accessAuthJwt)
-	onlyVerifiedMiddleware := middleware.AllowVerified(true)
-
-	v1Group := echo.Group("/v1")
-
-	auth.NewAuthHandler(args.AuthService).MapRoutes(v1Group, accessAuthJwt, refreshAuthJwt, verificationJwt)
-	user.NewUserHandler(args.UserService).MapRoutes(v1Group, accessJwtMiddleware, onlyVerifiedMiddleware)
-
-	return v1Group
+	router.Route("/v1", func(r chi.Router) {
+		auth.MapRoutes(args.MiddlewareFactory, authHandlerFactory, args.AccessJWTManager, args.RefreshJWTManager, args.VerificationJWTManager, r)
+		user.MapRoutes(args.MiddlewareFactory, accessJWTMiddleware, onlyVerifiedMiddleware, r)
+	})
 }
