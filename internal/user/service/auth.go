@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"html/template"
 	"strconv"
 	"time"
@@ -18,10 +17,6 @@ import (
 	"github.com/hexley21/fixup/pkg/mailer"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-)
-
-var (
-	ErrUserAlreadyActive = errors.New("attempt to send confirmation letter to activated user")
 )
 
 type templates struct {
@@ -218,10 +213,6 @@ func (s *authServiceImpl) GetUserConfirmationDetails(ctx context.Context, email 
 	res, err := s.userRepository.GetUserConfirmationDetails(ctx, email)
 	if err != nil {
 		return dto, err
-	}
-
-	if res.UserStatus.Bool {
-		return dto, ErrUserAlreadyActive
 	}
 
 	dto.ID = strconv.FormatInt(res.ID, 10)

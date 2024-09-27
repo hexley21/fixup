@@ -141,7 +141,7 @@ func TestGetCredentialsByEmail_NotFound(t *testing.T) {
 	repo := repository.NewUserRepository(dbPool, nil)
 
 	creds, err := repo.GetCredentialsByEmail(ctx, "email")
-	assert.ErrorIs(t, err, pg_error.ErrNotFound)
+	assert.ErrorIs(t, err, pgx.ErrNoRows)
 	assert.Empty(t, creds)
 }
 
@@ -171,7 +171,7 @@ func TestGetHash_NotFound(t *testing.T) {
 	repo := repository.NewUserRepository(dbPool, nil)
 
 	hash, err := repo.GetHashById(ctx, 1)
-	assert.ErrorIs(t, err, pg_error.ErrNotFound)
+	assert.ErrorIs(t, err, pgx.ErrNoRows)
 	assert.Empty(t, hash)
 }
 
@@ -264,7 +264,7 @@ func TestUpdate_NotFound(t *testing.T) {
 	repo := repository.NewUserRepository(dbPool, nil)
 
 	update, err := repo.Update(ctx, repository.UpdateUserParams{ID: 1, FirstName: &userCreateArgs.FirstName})
-	assert.ErrorIs(t, err, pg_error.ErrNotFound)
+	assert.ErrorIs(t, err, pgx.ErrNoRows)
 	assert.Empty(t, update)
 }
 

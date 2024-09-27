@@ -21,6 +21,7 @@ import (
 	"github.com/hexley21/fixup/pkg/logger"
 	"github.com/hexley21/fixup/pkg/validator"
 	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -201,10 +202,6 @@ func (f *HandlerFactory) ResendConfirmationLetter(
 
 		details, err := f.service.GetUserConfirmationDetails(context.Background(), dto.Email)
 		if err != nil {
-			if errors.Is(err, service.ErrUserAlreadyActive) {
-				f.writer.WriteError(w, rest.NewConflictError(err, MsgUserAlreadyExists))
-				return
-			}
 			if errors.Is(err, pg_error.ErrNotFound) {
 				f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 				return
@@ -214,7 +211,7 @@ func (f *HandlerFactory) ResendConfirmationLetter(
 		}
 
 		if details.UserStatus {
-			f.writer.WriteError(w, rest.NewConflictError(nil, MsgUserAlreadyActivated))
+			f.writer.WriteError(w, rest.NewConflictError(err, MsgUserAlreadyActivated))
 			return
 		}
 
@@ -259,6 +256,11 @@ func (f *HandlerFactory) Login(
 		if err != nil {
 			if errors.Is(err, hasher.ErrPasswordMismatch) {
 				f.writer.WriteError(w, rest.NewUnauthorizedError(err, MsgIncorrectEmailOrPass))
+				return
+			}
+
+			if errors.Is(err, pgx.ErrNoRows) {
+				f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 				return
 			}
 			f.writer.WriteError(w, rest.NewInternalServerError(err))

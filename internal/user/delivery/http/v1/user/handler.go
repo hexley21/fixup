@@ -309,7 +309,7 @@ func (f *HandlerFactory) ChangePassword(w http.ResponseWriter, r *http.Request) 
 
 	err = f.service.ChangePassword(context.Background(), userId, *dto)
 	if err != nil {
-		if errors.Is(err, pg_error.ErrNotFound) {
+		if errors.Is(err, pg_error.ErrNotFound) || errors.Is(err, pgx.ErrNoRows){
 			f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 			return
 		}

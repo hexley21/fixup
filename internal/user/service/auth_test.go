@@ -221,24 +221,6 @@ func TestGetUserConfirmationDetails_Success(t *testing.T) {
 	assert.Equal(t, args.FirstName, dto.Firstname)
 }
 
-func TestGetUserConfirmationDetails_ActiveUserError(t *testing.T) {
-	ctx := context.Background()
-
-	ctrl, svc, mockUserRepo, _, _, _, _, _, _, _, _ := setupAuth(t)
-	defer ctrl.Finish()
-
-	args := repository.GetUserConfirmationDetailsRow{
-		ID: 1,
-		UserStatus: pgtype.Bool{Bool: true, Valid: true},
-		FirstName: "Larry",
-	}
-
-	mockUserRepo.EXPECT().GetUserConfirmationDetails(ctx, gomock.Any()).Return(args, nil)
-
-	_, err := svc.GetUserConfirmationDetails(ctx, "")
-	assert.ErrorIs(t, err, service.ErrUserAlreadyActive)
-}
-
 func TestSendConfirmationLetter_Success(t *testing.T) {
 	ctx := context.Background()
 
