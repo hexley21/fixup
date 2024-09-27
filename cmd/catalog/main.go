@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"log"
+	"net/http"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/hexley21/fixup/cmd/util/shutdown"
@@ -56,6 +58,10 @@ func main() {
 
 	shutdownError := make(chan error)
 	go shutdown.NotifyShutdown(server, zapLogger, shutdownError)
+
+	if !errors.Is(server.Run(), http.ErrServerClosed) {
+		zapLogger.Fatal(err)
+	}
 
 	if err := <-shutdownError; err != nil {
 		zapLogger.Error(err)

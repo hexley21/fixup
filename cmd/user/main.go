@@ -37,7 +37,7 @@ import (
 func main() {
 	cfg, err := config.LoadConfig("./config/config.yml")
 	if err != nil {
-		log.Fatalf("could not load config: %v\n", err)
+		log.Fatalf("Could not load config: %v\n", err)
 	}
 
 	zapLogger := zap_logger.New(cfg.Logging, cfg.Server.IsProd)
@@ -83,14 +83,13 @@ func main() {
 	shutdownError := make(chan error)
 	go shutdown.NotifyShutdown(server, zapLogger, shutdownError)
 
-	err = server.Run()
-	if !errors.Is(err, http.ErrServerClosed) {
-		zapLogger.Error(err)
+	if !errors.Is(server.Run(), http.ErrServerClosed) {
+		zapLogger.Fatal(err)
 	}
 
 	if err := <-shutdownError; err != nil {
 		zapLogger.Error(err)
 	}
 
-	zapLogger.Info("server stopped")
+	zapLogger.Info("Server stopped")
 }

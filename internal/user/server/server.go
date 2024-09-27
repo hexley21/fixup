@@ -165,7 +165,7 @@ func (s *server) Run() error {
 		VerificationJWTManager: s.jWTManagers.verificationJWTManager,
 	}, s.router)
 
-	return nil
+	return s.mux.ListenAndServe()
 }
 
 func (s *server) Close() error {

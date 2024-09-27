@@ -105,7 +105,7 @@ func (s *server) Run() error {
 	s.router.Use(chi_middleware.Recoverer)
 	s.router.Use(chi_middleware.RequestLogger(chiLogger))
 
-	return nil
+	return s.mux.ListenAndServe()
 }
 
 func (s *server) Close() error {
