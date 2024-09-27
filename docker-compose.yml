@@ -90,12 +90,6 @@ services:
           "      - localhost\n"\
           "    ip:\n"\
           "      - 127.0.0.1\n"\
-          "  - name: kibana\n"\
-          "    dns:\n"\
-          "      - kibana\n"\
-          "      - localhost\n"\
-          "    ip:\n"\
-          "      - 127.0.0.1\n"\
           > config/certs/instances.yml;
           bin/elasticsearch-certutil cert --silent --pem -out config/certs/certs.zip --in config/certs/instances.yml --ca-cert config/certs/ca/ca.crt --ca-key config/certs/ca/ca.key;
           unzip config/certs/certs.zip -d config/certs;
@@ -115,18 +109,13 @@ services:
       interval: 1s
       timeout: 5s
       retries: 120
-    env_file: .env
 
   es01:
     depends_on:
       setup-elk:
         condition: service_healthy
-    networks:
-      - elk
     image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_VERSION}
     restart: unless-stopped
-    labels:
-      co.elastic.logs/module: elasticsearch
     volumes:
       - ./keys/elk:/usr/share/elasticsearch/config/certs
       - ./docker-data/es01/data:/usr/share/elasticsearch/data
@@ -160,18 +149,13 @@ services:
       interval: 10s
       timeout: 10s
       retries: 120
-    env_file: .env
 
   kibana:
     depends_on:
       es01:
         condition: service_healthy
-    networks:
-      - elk
     image: docker.elastic.co/kibana/kibana:${ELK_VERSION}
     restart: unless-stopped
-    labels:
-      co.elastic.logs/module: kibana
     volumes:
       - ./keys/elk:/usr/share/kibana/config/certs
       - ./docker-data/kibana/data:/usr/share/kibana/data
@@ -193,7 +177,6 @@ services:
       interval: 10s
       timeout: 10s
       retries: 120
-    env_file: .env
 
   metricbeat01:
     depends_on:
@@ -201,8 +184,6 @@ services:
         condition: service_healthy
       kibana:
         condition: service_healthy
-    networks:
-      - elk
     image: docker.elastic.co/beats/metricbeat:${ELK_VERSION}
     command:
       - --strict.perms=false
@@ -217,14 +198,11 @@ services:
       - ELASTIC_HOSTS=https://es01:9200
       - KIBANA_HOSTS=http://kibana:5601
       - LOGSTASH_HOSTS=http://logstash01:9600
-    env_file: .env
 
   filebeat01:
     depends_on:
       es01:
         condition: service_healthy
-    networks:
-      - elk
     image: docker.elastic.co/beats/filebeat:${ELK_VERSION}
     user: root
     command:
@@ -240,17 +218,12 @@ services:
       - ELASTIC_HOSTS=https://es01:9200
       - KIBANA_HOSTS=http://kibana:5601
       - LOGSTASH_HOSTS=http://logstash01:9600
-    env_file: .env
 
   logstash01:
     depends_on:
       es01:
         condition: service_healthy
-    networks:
-      - elk
     image: docker.elastic.co/logstash/logstash:${ELK_VERSION}
-    labels:
-      co.elastic.logs/module: logstash
     user: root
     volumes:
       - ./keys/elk:/usr/share/logstash/certs
@@ -261,7 +234,6 @@ services:
       - ELASTIC_USER=elastic
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - ELASTIC_HOSTS=https://es01:9200
-    env_file: .env
 
   user-service:
     build:
@@ -336,7 +308,3 @@ services:
       - chat-service
     volumes:
       - ./docker-data/nginx/logs:/var/log/nginx/
-
-networks:
-  elk:
-    driver: bridge
