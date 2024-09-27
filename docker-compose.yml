@@ -162,7 +162,6 @@ services:
       retries: 120
     env_file: .env
 
-
   kibana:
     depends_on:
       es01:
@@ -341,4 +340,3 @@ services:
 networks:
   elk:
     driver: bridge
-    external: false
