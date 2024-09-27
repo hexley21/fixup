@@ -24,8 +24,6 @@ require (
 )
 
 require (
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230811130428-ced1acdcaa24 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
@@ -48,10 +46,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.7 // indirect
 	github.com/aws/smithy-go v1.20.4 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/containerd/platforms v0.2.1 // indirect
 	github.com/cpuguy83/dockercfg v0.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/docker v27.2.0+incompatible // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
