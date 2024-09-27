@@ -159,7 +159,7 @@ func TestAllowContentType_MissingContentType(t *testing.T) {
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-		assert.Equal(t, rest.MsgFileReadError, errResp.Message)
+		assert.Equal(t, rest.MsgUnsupportedMedia, errResp.Message)
 		assert.Equal(t, http.StatusBadRequest, errResp.Status)
 	}
 }
