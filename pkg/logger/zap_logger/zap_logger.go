@@ -84,7 +84,7 @@ func New(cfg config.Logging, isProduction bool) *zapLogger {
 
 	if cfg.CallerEnabled {
 		options = append(options, zap.AddCaller())
-		options = append(options, zap.AddCallerSkip(1))
+		options = append(options, zap.AddCallerSkip(2))
 	}
 
 	return &zapLogger{sugarLogger: zap.New(core, options...).Sugar()}
