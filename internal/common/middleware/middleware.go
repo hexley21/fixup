@@ -10,10 +10,6 @@ const(
 	MsgUserIsVerified     = "User has to be not-verified"
 	MsgUserIsNotVerified  = "User is not verified"
 
-	MsgNoFile         = "No file provided"
-	MsgTooManyFiles   = "Too many files"
-	MsgNotEnoughFiles = "Not enough files"
-
 	MsgMissingAuthorizationHeader = "Authorization header is missing"
 	MsgMissingBearerToken         = "Bearer token is missing"
 )

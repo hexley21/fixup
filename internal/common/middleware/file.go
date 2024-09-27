@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	ErrTooManyFiles   = rest.NewBadRequestError(nil, MsgTooManyFiles)
-	ErrNotEnoughFiles = rest.NewBadRequestError(nil, MsgNotEnoughFiles)
-	ErrNoFile         = rest.NewBadRequestError(nil, MsgNoFile)
+	ErrTooManyFiles   = rest.NewBadRequestError(nil, rest.MsgTooManyFiles)
+	ErrNotEnoughFiles = rest.NewBadRequestError(nil, rest.MsgNotEnoughFiles)
+	ErrNoFile         = rest.NewBadRequestError(nil, rest.MsgNoFile)
 )
 
 func (f *MiddlewareFactory) NewAllowFilesAmount(size int64, key string, amount int) func(http.Handler) http.Handler {

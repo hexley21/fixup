@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/hexley21/fixup/internal/common/middleware"
 	"github.com/hexley21/fixup/pkg/http/rest"
 	"github.com/stretchr/testify/assert"
 )
@@ -76,7 +75,7 @@ func TestAllowFilesAmount_TooManyFiles(t *testing.T) {
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-		assert.Equal(t, middleware.MsgTooManyFiles, errResp.Message)
+		assert.Equal(t, rest.MsgTooManyFiles, errResp.Message)
 		assert.Equal(t, http.StatusBadRequest, errResp.Status)
 	}
 }
@@ -94,7 +93,7 @@ func TestAllowFilesAmount_NotEnoughFiles(t *testing.T) {
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-		assert.Equal(t, middleware.MsgNotEnoughFiles, errResp.Message)
+		assert.Equal(t, rest.MsgNotEnoughFiles, errResp.Message)
 		assert.Equal(t, http.StatusBadRequest, errResp.Status)
 	}
 }
@@ -114,7 +113,7 @@ func TestAllowFilesAmount_NoFile(t *testing.T) {
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-		assert.Equal(t, middleware.MsgNoFile, errResp.Message)
+		assert.Equal(t, rest.MsgNoFile, errResp.Message)
 		assert.Equal(t, http.StatusBadRequest, errResp.Status)
 	}
 }

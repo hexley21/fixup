@@ -631,7 +631,7 @@ func TestRefresh_Success(t *testing.T) {
 	assert.Contains(t, rec.Header().Get("Set-Cookie"), fmt.Sprintf("access_token=%s; HttpOnly; Secure", token))
 }
 
-func TestRefresh_JwtNotImplemented(t *testing.T) {
+func TestRefresh_JwtNotSet(t *testing.T) {
 	t.Parallel()
 
 	ctrl, _, _, _, _, _, f := setup(t)

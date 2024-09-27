@@ -78,10 +78,9 @@ func (f *HandlerFactory) FindUserById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    f.logger.Infof("Fetch user by ID: %d", id)
+	f.logger.Infof("Fetch user by ID: %d", id)
 	f.writer.WriteData(w, http.StatusOK, user)
 }
-
 
 // @Summary Find user profile by ID
 // @Description Retrieve profile details by user ID
@@ -110,17 +109,16 @@ func (f *HandlerFactory) FindUserProfileById(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
-			return 
+			return
 		}
 
 		f.writer.WriteError(w, rest.NewInternalServerError(err))
 		return
 	}
-	
-    f.logger.Infof("Find user profile by ID: %d", id)
+
+	f.logger.Infof("Find user profile by ID: %d", id)
 	f.writer.WriteData(w, http.StatusOK, profile)
 }
-
 
 // @Summary Upload profile picture
 // @Description Upload a profile picture for the user by ID
@@ -150,16 +148,22 @@ func (f *HandlerFactory) UploadProfilePicture(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	imageFile := form.File["image"][0]
+	formFile := form.File["image"]
+	if len(formFile) < 1 {
+		f.writer.WriteError(w, rest.NewBadRequestError(nil, rest.MsgNoFile))
+		return 
+	}
 
-	file, opnErr := imageFile.Open()
-	if errResp != nil {
-		f.writer.WriteError(w, rest.NewReadFileError(opnErr))
+	imageFile := formFile[0]
+
+	file, err := imageFile.Open()
+	if err != nil {
+		f.writer.WriteError(w, rest.NewReadFileError(err))
 		return
 	}
 	defer file.Close()
 
-	err := f.service.SetProfilePicture(context.Background(), id, file, "", imageFile.Size, imageFile.Header.Get("Content-Type"))
+	err = f.service.SetProfilePicture(context.Background(), id, file, "", imageFile.Size, imageFile.Header.Get("Content-Type"))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
@@ -308,7 +312,7 @@ func (f *HandlerFactory) ChangePassword(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		f.writer.WriteError(w,  rest.NewInternalServerError(err))
+		f.writer.WriteError(w, rest.NewInternalServerError(err))
 		return
 	}
 

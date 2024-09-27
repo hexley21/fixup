@@ -9,12 +9,16 @@ import (
 const (
 	MsgInvalidArguments = "Invalid arguments"
 
-	MsgFileReadError  = "Failed read file"
+	MsgFileReadError = "Failed read file"
 
 	MsgInternalServerError = "Something went wrong"
 
 	MsgUnsupportedMedia = "Unsupported media type"
 	MsgEmptyBody        = "Empty body"
+
+	MsgNoFile         = "No file provided"
+	MsgTooManyFiles   = "Too many files"
+	MsgNotEnoughFiles = "Not enough files"
 )
 
 type ErrorResponse struct {
