@@ -9,9 +9,11 @@ import (
 
 	"github.com/bwmarrin/snowflake"
 	infra "github.com/hexley21/fixup/pkg/infra/postgres"
-	"github.com/hexley21/fixup/pkg/infra/postgres/testcontainer"
+	pg_tt "github.com/hexley21/fixup/pkg/infra/postgres/testcontainer"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
+	redis_tt "github.com/testcontainers/testcontainers-go/modules/redis"
 )
 
 var (
@@ -21,7 +23,14 @@ var (
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 
-	image, config := testcontainer.GetConfig()
+	migrationPath := flag.String("mp", "", "Migration Path")
+	flag.Parse()
+	if *migrationPath == "" || migrationPath == nil {
+		log.Print("Continueing without database migration")
+		os.Exit(1)
+	}
+
+	image, config := pg_tt.GetConfig()
 	container, err := postgres.Run(ctx, image, config...)
 	if err != nil {
 		log.Fatalln("failed to load container:", err)
@@ -30,12 +39,6 @@ func TestMain(m *testing.M) {
 	connURL, err = container.ConnectionString(ctx, "sslmode=disable")
 	if err != nil {
 		log.Fatalln("failed to get database connection string:", err)
-	}
-
-	migrationPath := flag.String("mp", "", "Migration Path")
-	flag.Parse()
-	if *migrationPath == "" {
-		log.Fatalln("migration path flag should not be empty")
 	}
 
 	migrate, err := infra.Migrate(connURL, "file://"+*migrationPath)
@@ -50,23 +53,52 @@ func TestMain(m *testing.M) {
 	os.Exit(res)
 }
 
-func setupDatabaseCleanup(t *testing.T, ctx context.Context, dbPool *pgxpool.Pool) {
-	t.Cleanup(func() {
-		_, err := dbPool.Exec(ctx, "TRUNCATE TABLE users CASCADE")
-		dbPool.Close()
-		if err != nil {
-			log.Fatalln("failed to cleanup database:", err)
-		}
-	})
+func cleanupPostgres(ctx context.Context, dbPool *pgxpool.Pool) {
+	_, err := dbPool.Exec(ctx, "TRUNCATE TABLE users CASCADE")
+	dbPool.Close()
+	if err != nil {
+		log.Fatalln("failed to cleanup database:", err)
+	}
 }
 
-func getDbPool(ctx context.Context) *pgxpool.Pool {
+func getPgPool(ctx context.Context) *pgxpool.Pool {
 	pool, err := pgxpool.New(ctx, connURL)
 	if err != nil {
 		log.Fatalln("failed to get database pool:", err)
 	}
 
 	return pool
+}
+
+func getRedisClient(t *testing.T) (*redis_tt.RedisContainer, *redis.Client) {
+	ctx := context.Background()
+
+	redisContainer, err := redis_tt.Run(ctx,
+		"docker.io/redis:7",
+		redis_tt.WithSnapshotting(10, 1),
+		redis_tt.WithLogLevel(redis_tt.LogLevelVerbose),
+	)
+
+	if err != nil {
+		t.Fatalf("Failed to start container: %v", err)
+	}
+
+	endpoint, err := redisContainer.Endpoint(ctx, "")
+	if err != nil {
+		t.Fatalf("Failed to get container endpoint: %v", err)
+	}
+
+	return redisContainer, redis.NewClient(&redis.Options{Addr: endpoint})
+}
+
+func setupRedisCleanup(t *testing.T, client *redis.Client, container *redis_tt.RedisContainer) {
+	if err := client.Close(); err != nil {
+		t.Fatalf("Failed to close client: %v", err)
+	}
+
+	if err := container.Terminate(context.Background()); err != nil {
+		t.Fatalf("Failed to terminate container: %v", err)
+	}
 }
 
 func getSnowflakeNode() *snowflake.Node {

@@ -20,10 +20,12 @@ postgres:
     healthcheck-period: 60s
 
 redis:
-    port: 6379
-    host: db
-    db_name: 0
-    dial_timeout: 30s
+    addresses: redis01:6379,redis02:6379
+    min_idle_conn: 3
+    pool_size: 50
+    read_timeout: 0.5s
+    write_timeout: 0.5s
+    pool_timeout: 5s
 
 aws:
     awscfg:

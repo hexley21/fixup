@@ -10,6 +10,7 @@ import (
 	chi_middleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/hexley21/fixup/internal/common/auth_jwt"
 	"github.com/hexley21/fixup/internal/common/middleware"
@@ -57,6 +58,7 @@ type server struct {
 	mux               *http.Server
 	cfg               *config.Config
 	dbPool            *pgxpool.Pool
+	redisCluster      *redis.ClusterClient
 	requestComponents *requestComponents
 	jWTManagers       *jWTManagers
 	services          *services
@@ -65,6 +67,7 @@ type server struct {
 func NewServer(
 	cfg *config.Config,
 	dbPool *pgxpool.Pool,
+	redisCluster *redis.ClusterClient,
 	logger logger.Logger,
 	snowflakeNode *snowflake.Node,
 	validator validator.Validator,
@@ -78,10 +81,13 @@ func NewServer(
 
 	userRepository := repository.NewUserRepository(dbPool, snowflakeNode)
 	providerRepository := repository.NewProviderRepository(dbPool)
+	verificationRepository := repository.NewVerificationRepository(redisCluster)
 
 	authService := service.NewAuthService(
 		userRepository,
 		providerRepository,
+		verificationRepository,
+		cfg.JWT.VerificationTTL,
 		dbPool,
 		hasher,
 		encryptor,

@@ -15,8 +15,8 @@ import (
 
 func TestCreateProvider_Success(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewProviderRepository(dbPool)
 
@@ -45,8 +45,8 @@ func TestCreateProvider_Success(t *testing.T) {
 
 func TestCreateProvider_InvalidArguments(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewProviderRepository(dbPool)
 
@@ -72,8 +72,8 @@ func TestCreateProvider_InvalidArguments(t *testing.T) {
 
 func TestCreateProvider_NotFound(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewProviderRepository(dbPool)
 
@@ -97,8 +97,8 @@ func TestCreateProvider_NotFound(t *testing.T) {
 
 func TestGetByUserId_Success(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewProviderRepository(dbPool)
 
@@ -134,8 +134,8 @@ func TestGetByUserId_Success(t *testing.T) {
 
 func TestGetByUserId_NotFound(t *testing.T) {
 	ctx := context.Background()
-	dbPool := getDbPool(ctx)
-	setupDatabaseCleanup(t, ctx, dbPool)
+	dbPool := getPgPool(ctx)
+	defer cleanupPostgres(ctx, dbPool)
 
 	repo := repository.NewProviderRepository(dbPool)
 

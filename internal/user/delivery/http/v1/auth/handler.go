@@ -21,6 +21,7 @@ import (
 	"github.com/hexley21/fixup/pkg/logger"
 	"github.com/hexley21/fixup/pkg/validator"
 	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -31,7 +32,9 @@ const (
 
 const (
 	MsgUserAlreadyExists = "User already exists"
+	MsgUserAlreadyActivated = "User already activated"
 	MsgIncorrectEmailOrPass = "Email or Password is incorrect"
+
 )
 
 type HandlerFactory struct {
@@ -91,6 +94,8 @@ func (f *HandlerFactory) RegisterCustomer(
 	verGenerator verifier.JWTGenerator,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Background()
+
 		dto := new(dto.RegisterUser)
 		if err := f.binder.BindJSON(r, dto); err != nil {
 			f.writer.WriteError(w, err)
@@ -113,7 +118,7 @@ func (f *HandlerFactory) RegisterCustomer(
 			return
 		}
 
-		go f.sendConfirmationLetter(verGenerator, user.ID, user.Email, user.FirstName)
+		go f.sendConfirmationLetter(ctx, verGenerator, user.ID, user.Email, user.FirstName)
 
 		f.logger.Infof("Customer was registered with ID: %s, Email: %s", user.ID, user.Email)
 		f.writer.WriteNoContent(w, http.StatusCreated)
@@ -135,6 +140,8 @@ func (f *HandlerFactory) RegisterProvider(
 	verGenerator verifier.JWTGenerator,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Background()
+
 		dto := new(dto.RegisterProvider)
 		if err := f.binder.BindJSON(r, dto); err != nil {
 			f.writer.WriteError(w, err)
@@ -158,7 +165,7 @@ func (f *HandlerFactory) RegisterProvider(
 			return
 		}
 
-		go f.sendConfirmationLetter(verGenerator, user.ID, user.Email, user.FirstName)
+		go f.sendConfirmationLetter(ctx, verGenerator, user.ID, user.Email, user.FirstName)
 
 		f.logger.Infof("Provider was registered with ID: %s, Email: %s", user.ID, user.Email)
 		f.writer.WriteNoContent(w, http.StatusCreated)
@@ -180,6 +187,8 @@ func (f *HandlerFactory) ResendConfirmationLetter(
 	verGenerator verifier.JWTGenerator,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Background()
+
 		dto := new(dto.Email)
 		if err := f.binder.BindJSON(r, dto); err != nil {
 			f.writer.WriteError(w, err)
@@ -193,10 +202,6 @@ func (f *HandlerFactory) ResendConfirmationLetter(
 
 		details, err := f.service.GetUserConfirmationDetails(context.Background(), dto.Email)
 		if err != nil {
-			if errors.Is(err, service.ErrUserAlreadyActive) {
-				f.writer.WriteError(w, rest.NewConflictError(err, MsgUserAlreadyExists))
-				return
-			}
 			if errors.Is(err, pg_error.ErrNotFound) {
 				f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 				return
@@ -205,7 +210,12 @@ func (f *HandlerFactory) ResendConfirmationLetter(
 			return
 		}
 
-		if err := f.sendConfirmationLetter(verGenerator, details.ID, dto.Email, details.Firstname); err != nil {
+		if details.UserStatus {
+			f.writer.WriteError(w, rest.NewConflictError(err, MsgUserAlreadyActivated))
+			return
+		}
+
+		if err := f.sendConfirmationLetter(ctx, verGenerator, details.ID, dto.Email, details.Firstname); err != nil {
 			f.writer.WriteError(w, rest.NewInternalServerError(err))
 			return 
 		}
@@ -246,6 +256,11 @@ func (f *HandlerFactory) Login(
 		if err != nil {
 			if errors.Is(err, hasher.ErrPasswordMismatch) {
 				f.writer.WriteError(w, rest.NewUnauthorizedError(err, MsgIncorrectEmailOrPass))
+				return
+			}
+
+			if errors.Is(err, pgx.ErrNoRows) {
+				f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 				return
 			}
 			f.writer.WriteError(w, rest.NewInternalServerError(err))
@@ -343,7 +358,20 @@ func (f *HandlerFactory) VerifyEmail(
 	jWTVerifier verifier.JWTVerifier,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Background()
+
 		tokenParam := r.URL.Query().Get("token")
+		
+		isUsed, err := f.service.IsVerificationTokenUsed(ctx, tokenParam)
+		if isUsed {
+			f.writer.WriteError(w, rest.NewConflictError(nil, MsgUserAlreadyActivated))
+			return
+		}
+		if err != nil {
+			f.writer.WriteError(w, rest.NewInternalServerError(err))
+			return
+		}
+
 		claims, errResp := jWTVerifier.VerifyJWT(tokenParam)
 		if errResp != nil {
 			f.writer.WriteError(w, errResp)
@@ -356,7 +384,7 @@ func (f *HandlerFactory) VerifyEmail(
 			return
 		}
 
-		if err := f.service.VerifyUser(context.Background(), id, claims.Email); err != nil {
+		if err := f.service.VerifyUser(ctx, id, claims.Email); err != nil {
 			if errors.Is(err, pg_error.ErrNotFound) {
 				f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 				return
@@ -379,10 +407,11 @@ func (f *HandlerFactory) VerifyEmail(
 	}
 }
 
-func (f *HandlerFactory) sendConfirmationLetter(verGenerator verifier.JWTGenerator, id string, email string, name string) error {
+func (f *HandlerFactory) sendConfirmationLetter(ctx context.Context, verGenerator verifier.JWTGenerator, id string, email string, name string) error {
 	jWT, err := verGenerator.GenerateJWT(id, email)
+
 	if err == nil {
-		if err := f.service.SendConfirmationLetter(jWT, email, name); err == nil {
+		if err := f.service.SendConfirmationLetter(ctx, jWT, email, name); err == nil {
 			f.logger.Infof("Confirmation letter sent to email: %s, user ID: %s", email, id)
 			return nil
 		}

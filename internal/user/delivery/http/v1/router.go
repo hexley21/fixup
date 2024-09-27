@@ -19,7 +19,7 @@ type RouterArgs struct {
 	UserService            service.UserService
 	MiddlewareFactory      *middleware.MiddlewareFactory
 	Logger                 logger.Logger
-	Binder                 binder.JSONBinder
+	Binder                 binder.FullBinder
 	Validator              validator.Validator
 	Writer                 writer.HTTPWriter
 	AccessJWTManager       auth_jwt.JWTManager
@@ -36,11 +36,19 @@ func MapV1Routes(args RouterArgs, router chi.Router) {
 		args.AuthService,
 	)
 
+	userHandlerFactory := user.NewFactory(
+		args.Logger,
+		args.Binder,
+		args.Validator,
+		args.Writer,
+		args.UserService,
+	)
+
 	accessJWTMiddleware := args.MiddlewareFactory.NewJWT(args.AccessJWTManager)
 	onlyVerifiedMiddleware := args.MiddlewareFactory.NewAllowVerified(true)
 
 	router.Route("/v1", func(r chi.Router) {
 		auth.MapRoutes(args.MiddlewareFactory, authHandlerFactory, args.AccessJWTManager, args.RefreshJWTManager, args.VerificationJWTManager, r)
-		user.MapRoutes(args.MiddlewareFactory, accessJWTMiddleware, onlyVerifiedMiddleware, r)
+		user.MapRoutes(args.MiddlewareFactory, userHandlerFactory, accessJWTMiddleware, onlyVerifiedMiddleware, r)
 	})
 }

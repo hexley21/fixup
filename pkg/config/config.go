@@ -62,13 +62,13 @@ type (
 	}
 
 	Redis struct {
-		Port        int    `yaml:"port"`
-		Host        string `yaml:"host"`
-		DBName      int    `yaml:"db_name"`
-		User        string
-		Password    string
-		SslMode     bool
-		DialTimeout time.Duration
+		Password     string
+		Addresses    string        `yaml:"addresses"`
+		MinIdleConn  int           `yaml:"min_idle_conn"`
+		PoolSize     int           `yaml:"pool_size"`
+		ReadTimeout  time.Duration `yaml:"read_timeout"`
+		WriteTimeout time.Duration `yaml:"write_timeout"`
+		PoolTimeout  time.Duration `yaml:"pool_timeout"`
 	}
 
 	AWS struct {
@@ -188,9 +188,7 @@ func parseEnv(cfg *Config) error {
 	cfg.Postgres.Password = os.Getenv("POSTGRES_PASSWORD")
 	cfg.Postgres.SslMode = os.Getenv("POSTGRES_SSL_MODE")
 
-	cfg.Redis.User = os.Getenv("REDIS_USER")
 	cfg.Redis.Password = os.Getenv("REDIS_PASSWORD")
-	cfg.Redis.SslMode = os.Getenv("REDIS_SSL_MODE") == "true"
 
 	cfg.AWS.AWSCfg.AccessKeyID = os.Getenv("AWS_AC_ID")
 	cfg.AWS.AWSCfg.SecretAccessKey = os.Getenv("AWS_SECRET_AC")
