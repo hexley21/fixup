@@ -36,7 +36,7 @@ type (
 	Server struct {
 		ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
 		InstanceId      int64         `yaml:"instance_id"`
-		Email           string        `yaml:"email"`
+		Email           string
 		IsProd          bool
 	}
 
@@ -205,6 +205,7 @@ func parseEnv(cfg *Config) error {
 	}
 
 	cfg.Mailer.User = os.Getenv("SMTP_USER")
+	cfg.Server.Email = cfg.Mailer.User
 	cfg.Mailer.Password = os.Getenv("SMTP_PASSWORD")
 
 	cfg.AesEncryptor.Key = os.Getenv("DATA_ENCRYPTION_KEY")

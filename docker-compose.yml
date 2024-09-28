@@ -178,19 +178,68 @@ services:
     image: docker.io/bitnami/redis-cluster:latest
     restart: unless-stopped
     volumes:
-      - ./docker-data/redis01/data:/bitnami/redis/data
+      - ./docker-data/redis01/data/:/bitnami/redis/data/
     environment:
       - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
-      - 'REDIS_NODES=redis01 redis02'
-  
+      - 'REDIS_NODES=redis01 redis02 redis03 redis04 redis05 redis06'
+
   redis02:
     image: docker.io/bitnami/redis-cluster:latest
     restart: unless-stopped
     volumes:
-      - ./docker-data/redis02/data:/bitnami/redis/data
+      - ./docker-data/redis02/data/:/bitnami/redis/data/
     environment:
       - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
-      - 'REDIS_NODES=redis01 redis02'
+      - 'REDIS_NODES=redis01 redis02 redis03 redis04 redis05 redis06'
+
+  redis03:
+    image: docker.io/bitnami/redis-cluster:latest
+    restart: unless-stopped
+    volumes:
+      - ./docker-data/redis03/data/:/bitnami/redis/data/
+    environment:
+      - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
+      - 'REDIS_NODES=redis01 redis02 redis03 redis04 redis05 redis06'
+
+  redis04:
+    image: docker.io/bitnami/redis-cluster:latest
+    restart: unless-stopped
+    volumes:
+      - ./docker-data/redis04/data/:/bitnami/redis/data/
+    environment:
+      - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
+      - 'REDIS_NODES=redis01 redis02 redis03 redis04 redis05 redis06'
+
+  redis05:
+    image: docker.io/bitnami/redis-cluster:latest
+    restart: unless-stopped
+    volumes:
+      - ./docker-data/redis05/data/:/bitnami/redis/data/
+    environment:
+      - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
+      - 'REDIS_NODES=redis01 redis02 redis03 redis04 redis05 redis06'
+  
+  redis06:
+    image: docker.io/bitnami/redis-cluster:latest
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./docker-data/redis06/data/:/bitnami/redis/data/
+    environment:
+      - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
+      - 'REDISCLI_AUTH=${REDIS_PASSWORD}'
+      - 'REDIS_CLUSTER_REPLICAS=1'
+      - 'REDIS_NODES=redis01 redis02 redis03 redis04 redis05 redis06'
+      - 'REDIS_CLUSTER_CREATOR=yes'
+    depends_on:
+      - redis01
+      - redis02
+      - redis03
+      - redis04
+      - redis05
+    healthcheck:
+      test: ["CMD", "redis-cli","ping"]
 
   user-db:
     image: postgres:latest
@@ -255,6 +304,8 @@ services:
       - "80"
     depends_on:
       user-db:
+        condition: service_healthy
+      redis06:
         condition: service_healthy
       # es01:
       #   condition: service_healthy

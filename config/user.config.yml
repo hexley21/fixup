@@ -20,9 +20,9 @@ postgres:
     healthcheck-period: 60s
 
 redis:
-    addresses: redis01:6379,redis02:6379
-    min_idle_conn: 3
-    pool_size: 50
+    addresses: redis01:6379,redis02:6379,redis03:6379,redis04:6379,redis05:6379,redis06:6379
+    min_idle_conn: 30
+    pool_size: 500
     read_timeout: 0.5s
     write_timeout: 0.5s
     pool_timeout: 5s
