@@ -34,5 +34,12 @@ func mapToClaim(mapClaims any) UserClaims {
 		return UserClaims{}
 	}
 
-	return NewClaims(claims["id"].(string), claims["role"].(string), claims["verified"].(bool), time.Duration(claims["exp"].(float64)))
+	return UserClaims{
+		ID: claims["id"].(string),
+		Role: enum.UserRole(claims["role"].(string)),
+		Verified: claims["verified"].(bool),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Unix(int64(claims["exp"].(float64)), 0)),
+		},
+	}
 }

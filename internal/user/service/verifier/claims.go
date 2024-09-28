@@ -28,5 +28,11 @@ func mapToClaim(mapClaims any) VerifyClaims {
 		return VerifyClaims{}
 	}
 
-	return newClaims(claims["id"].(string), claims["email"].(string), time.Duration(claims["exp"].(float64)))
+	return VerifyClaims{
+		ID: claims["id"].(string),
+		Email: claims["email"].(string),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Unix(int64(claims["exp"].(float64)), 0)),
+		},
+	}
 }
