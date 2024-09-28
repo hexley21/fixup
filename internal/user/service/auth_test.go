@@ -18,6 +18,7 @@ import (
 	mock_hasher "github.com/hexley21/fixup/pkg/hasher/mock"
 	mock_cdn "github.com/hexley21/fixup/pkg/infra/cdn/mock"
 	mock_postgres "github.com/hexley21/fixup/pkg/infra/postgres/mock"
+	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 	mock_mailer "github.com/hexley21/fixup/pkg/mailer/mock"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -36,30 +37,31 @@ var (
 	}
 
 	registerProviderDto = dto.RegisterProvider{
-		RegisterUser: registerUserDto,
+		RegisterUser:     registerUserDto,
 		PersonalIDNumber: "1234567890",
 	}
 
 	loginDto = dto.Login{
-		Email: "larry@page.com",
+		Email:    "larry@page.com",
 		Password: "12345678",
 	}
 
 	creds = repository.GetCredentialsByEmailRow{
-		ID: 1,
-		Role: enum.UserRoleADMIN,
-		Hash: newHash,
+		ID:         1,
+		Role:       enum.UserRoleADMIN,
+		Hash:       newHash,
 		UserStatus: pgtype.Bool{Bool: true, Valid: true},
 	}
 
 	emailAddress = "fixup@gmail.com"
-	newHash          = "hash"
-	newUrl           = "picture.png?signed=true"
+	newHash      = "hash"
+	newUrl       = "picture.png?signed=true"
 
 	confiramtionTemplate = template.New("confirmation")
 	verifiedTemplate     = template.New("verified")
 
 	verificationTTL = time.Hour
+	vrfToken = "poUnbbjqcnpaDBbK8nQfbxrx0ZJZBbFR"
 )
 
 func setupAuth(t *testing.T) (
@@ -187,17 +189,51 @@ func TestAuthenticateUser_PasswordMissmatch(t *testing.T) {
 	assert.Empty(t, credentialsDto)
 }
 
-func TestVerifyUser(t *testing.T) {
+func TestVerifyUser_Success(t *testing.T) {
 	ctx := context.Background()
 
-	ctrl, svc, mockUserRepo, _, _, _, _, _, _, _, _ := setupAuth(t)
+	ctrl, svc, mockUserRepo, _, mockVerificationRepo, _, _, _, _, _, _ := setupAuth(t)
 	defer ctrl.Finish()
 
+	mockVerificationRepo.EXPECT().SetTokenUsed(ctx, vrfToken, verificationTTL).Return(nil)
 	mockUserRepo.EXPECT().UpdateStatus(ctx, gomock.Any()).Return(nil)
 
-	assert.NoError(t, svc.VerifyUser(ctx, 1, ""))
+	assert.NoError(t, svc.VerifyUser(ctx, vrfToken, verificationTTL, 1, emailAddress))
+}
 
-	time.Sleep(100 * time.Millisecond)
+func TestVerifyUser_AlreadySet(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl, svc, _, _, mockVerificationRepo, _, _, _, _, _, _ := setupAuth(t)
+	defer ctrl.Finish()
+
+	mockVerificationRepo.EXPECT().SetTokenUsed(ctx, vrfToken, verificationTTL).Return(redis.TxFailedErr)
+
+	assert.ErrorIs(t, redis.TxFailedErr, svc.VerifyUser(ctx, vrfToken, verificationTTL, 1, emailAddress))
+}
+
+func TestVerifyUser_RepoError(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl, svc, mockUserRepo, _, mockVerificationRepo, _, _, _, _, _, _ := setupAuth(t)
+	defer ctrl.Finish()
+
+	mockVerificationRepo.EXPECT().SetTokenUsed(ctx, vrfToken, verificationTTL).Return(nil)
+	mockUserRepo.EXPECT().UpdateStatus(ctx, gomock.Any()).Return(errors.New(""))
+
+	assert.Error(t, svc.VerifyUser(ctx, vrfToken, verificationTTL, 1, emailAddress))
+}
+
+func TestVerifyUser_NotFound(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl, svc, mockUserRepo, _, mockVerificationRepo, _, _, _, _, _, _ := setupAuth(t)
+	defer ctrl.Finish()
+
+	mockVerificationRepo.EXPECT().SetTokenUsed(ctx, vrfToken, verificationTTL).Return(nil)
+	mockUserRepo.EXPECT().UpdateStatus(ctx, gomock.Any()).Return(pg_error.ErrNotFound)
+
+	assert.ErrorIs(t, pg_error.ErrNotFound, svc.VerifyUser(ctx, vrfToken, verificationTTL, 1, emailAddress))
 }
 
 func TestGetUserConfirmationDetails_Success(t *testing.T) {
@@ -207,9 +243,9 @@ func TestGetUserConfirmationDetails_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	args := repository.GetUserConfirmationDetailsRow{
-		ID: 1,
+		ID:         1,
 		UserStatus: pgtype.Bool{Bool: false, Valid: true},
-		FirstName: "Larry",
+		FirstName:  "Larry",
 	}
 
 	mockUserRepo.EXPECT().GetUserConfirmationDetails(ctx, gomock.Any()).Return(args, nil)
@@ -227,7 +263,7 @@ func TestSendConfirmationLetter_Success(t *testing.T) {
 	ctrl, svc, _, _, mockVerificationRepo, _, _, _, _, mockMailer, _ := setupAuth(t)
 	defer ctrl.Finish()
 
-	mockVerificationRepo.EXPECT().SetTokenUsed(ctx, gomock.Any(), verificationTTL)
+	mockVerificationRepo.EXPECT().IsTokenUsed(ctx, gomock.Any()).Return(false, nil)
 	mockMailer.EXPECT().SendHTML(emailAddress, gomock.Any(), gomock.Any(), confiramtionTemplate, gomock.Any()).Return(nil)
 
 	assert.NoError(t, svc.SendConfirmationLetter(ctx, "", "", ""))
@@ -239,9 +275,20 @@ func TestSendConfirmationLetter_AlreadySet(t *testing.T) {
 	ctrl, svc, _, _, mockVerificationRepo, _, _, _, _, _, _ := setupAuth(t)
 	defer ctrl.Finish()
 
-	mockVerificationRepo.EXPECT().SetTokenUsed(ctx, gomock.Any(), verificationTTL).Return(redis.TxFailedErr)
+	mockVerificationRepo.EXPECT().IsTokenUsed(ctx, gomock.Any()).Return(true, nil)
 
-	assert.ErrorIs(t, redis.TxFailedErr, svc.SendConfirmationLetter(ctx, "", "", ""))
+	assert.ErrorIs(t, service.ErrAlreadyVerified, svc.SendConfirmationLetter(ctx, "", "", ""))
+}
+
+func TestSendConfirmationLetter_RepoError(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl, svc, _, _, mockVerificationRepo, _, _, _, _, _, _ := setupAuth(t)
+	defer ctrl.Finish()
+
+	mockVerificationRepo.EXPECT().IsTokenUsed(ctx, gomock.Any()).Return(false, errors.New(""))
+
+	assert.Error(t, svc.SendConfirmationLetter(ctx, "", "", ""))
 }
 
 func TestSendVerifiedLetter_Success(t *testing.T) {
@@ -251,44 +298,4 @@ func TestSendVerifiedLetter_Success(t *testing.T) {
 	mockMailer.EXPECT().SendHTML(emailAddress, gomock.Any(), gomock.Any(), verifiedTemplate, gomock.Nil()).Return(nil)
 
 	assert.NoError(t, svc.SendVerifiedLetter(""))
-}
-
-
-func TestIsVerificationTokenUsed_Used(t *testing.T) {
-	ctx := context.Background()
-
-	ctrl, svc, _, _, mockVerificationRepo, _, _, _, _, _, _ := setupAuth(t)
-	defer ctrl.Finish()
-
-	mockVerificationRepo.EXPECT().IsTokenUsed(ctx, gomock.Any()).Return(true, nil)
-
-	isUsed, err := svc.IsVerificationTokenUsed(ctx, "")
-	assert.True(t, isUsed)
-	assert.NoError(t,err)
-}
-
-func TestIsVerificationTokenUsed_NotUsed(t *testing.T) {
-	ctx := context.Background()
-
-	ctrl, svc, _, _, mockVerificationRepo, _, _, _, _, _, _ := setupAuth(t)
-	defer ctrl.Finish()
-
-	mockVerificationRepo.EXPECT().IsTokenUsed(ctx, gomock.Any()).Return(false, nil)
-
-	isUsed, err := svc.IsVerificationTokenUsed(ctx, "")
-	assert.False(t, isUsed)
-	assert.NoError(t,err)
-}
-
-func TestIsVerificationTokenUsed_RepoError(t *testing.T) {
-	ctx := context.Background()
-
-	ctrl, svc, _, _, mockVerificationRepo, _, _, _, _, _, _ := setupAuth(t)
-	defer ctrl.Finish()
-
-	mockVerificationRepo.EXPECT().IsTokenUsed(ctx, gomock.Any()).Return(false, errors.New(""))
-
-	isUsed, err := svc.IsVerificationTokenUsed(ctx, "")
-	assert.False(t, isUsed)
-	assert.Error(t,err)
 }

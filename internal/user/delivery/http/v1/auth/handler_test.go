@@ -32,6 +32,7 @@ import (
 	mock_validator "github.com/hexley21/fixup/pkg/validator/mock"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -463,8 +464,8 @@ func TestResendConfirmationLetter_MailError(t *testing.T) {
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, app_error.MsgInvalidToken, errResp.Message)
+		assert.Equal(t, http.StatusUnauthorized, errResp.Status)
 	}
 }
 
@@ -713,9 +714,8 @@ func TestVerifyEmail_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockVerifyJWT.EXPECT().VerifyJWT(gomock.Any()).Return(verifyClaims, nil)
-	mockAuthService.EXPECT().VerifyUser(ctx, int64(1), verifyClaims.Email).Return(nil)
+	mockAuthService.EXPECT().VerifyUser(ctx, gomock.Any(), gomock.Any(), int64(1), verifyClaims.Email).Return(nil)
 	mockAuthService.EXPECT().SendVerifiedLetter(verifyClaims.Email).Return(nil)
-	mockAuthService.EXPECT().IsVerificationTokenUsed(ctx, gomock.Any()).Return(false, nil)
 
 	q := make(url.Values)
 	q.Set("token", token)
@@ -729,51 +729,10 @@ func TestVerifyEmail_Success(t *testing.T) {
 	time.Sleep(time.Microsecond)
 }
 
-func TestVerifyEmail_AlreadyActivated(t *testing.T) {
-	ctrl, mockAuthService, _, _, _, _, f := setup(t)
-	defer ctrl.Finish()
-
-	mockAuthService.EXPECT().IsVerificationTokenUsed(gomock.Any(), gomock.Any()).Return(true, nil)
-
-	q := make(url.Values)
-	q.Set("token", token)
-	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
-	rec := httptest.NewRecorder()
-
-	f.VerifyEmail(nil).ServeHTTP(rec, req)
-
-	var errResp rest.ErrorResponse
-	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-		assert.Equal(t, auth.MsgUserAlreadyActivated, errResp.Message)
-		assert.Equal(t, http.StatusConflict, errResp.Status)
-	}
-}
-
-func TestVerifyEmail_TokenCheckError(t *testing.T) {
-	ctrl, mockAuthService, _, _, _, _, f := setup(t)
-	defer ctrl.Finish()
-
-	mockAuthService.EXPECT().IsVerificationTokenUsed(gomock.Any(), gomock.Any()).Return(false, errors.New(""))
-
-	q := make(url.Values)
-	q.Set("token", token)
-	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
-	rec := httptest.NewRecorder()
-
-	f.VerifyEmail(nil).ServeHTTP(rec, req)
-
-	var errResp rest.ErrorResponse
-	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
-	}
-}
-
 func TestVerifyEmail_InvalidToken(t *testing.T) {
-	ctrl, mockAuthService, _, mockVerifyJWT, _, _, f := setup(t)
+	ctrl, _, _, mockVerifyJWT, _, _, f := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().IsVerificationTokenUsed(gomock.Any(), gomock.Any()).Return(false, nil)
 	mockVerifyJWT.EXPECT().VerifyJWT(token).Return(verifier.VerifyClaims{}, rest.NewUnauthorizedError(errors.New(""), app_error.MsgInvalidToken))
 
 	q := make(url.Values)
@@ -791,10 +750,9 @@ func TestVerifyEmail_InvalidToken(t *testing.T) {
 }
 
 func TestVerifyEmail_ParseIDError(t *testing.T) {
-	ctrl, mockAuthService, _, mockVerifyJWT, _, _, f := setup(t)
+	ctrl, _, _, mockVerifyJWT, _, _, f := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().IsVerificationTokenUsed(gomock.Any(), gomock.Any()).Return(false, nil)
 	mockVerifyJWT.EXPECT().VerifyJWT(token).Return(verifier.VerifyClaims{ID: "invalid-id"}, nil)
 
 	q := make(url.Values)
@@ -811,6 +769,29 @@ func TestVerifyEmail_ParseIDError(t *testing.T) {
 	}
 }
 
+func TestVerifyEmail_AlreadyActivated(t *testing.T) {
+	ctx := context.Background()
+
+	ctrl, mockAuthService, _, mockVerifyJWT, _, _, f := setup(t)
+	defer ctrl.Finish()
+
+	mockVerifyJWT.EXPECT().VerifyJWT(token).Return(verifyClaims, nil)
+	mockAuthService.EXPECT().VerifyUser(ctx, gomock.Any(), gomock.Any(), int64(1), verifyClaims.Email).Return(redis.TxFailedErr)
+
+	q := make(url.Values)
+	q.Set("token", token)
+	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
+	rec := httptest.NewRecorder()
+	
+	f.VerifyEmail(mockVerifyJWT).ServeHTTP(rec, req)
+
+	var errResp rest.ErrorResponse
+	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
+		assert.Equal(t, auth.MsgTokenAlreadyUsed, errResp.Message)
+		assert.Equal(t, http.StatusConflict, errResp.Status)
+	}
+}
+
 func TestVerifyEmail_NotFound(t *testing.T) {
 	ctx := context.Background()
 
@@ -818,9 +799,7 @@ func TestVerifyEmail_NotFound(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockVerifyJWT.EXPECT().VerifyJWT(token).Return(verifyClaims, nil)
-	mockAuthService.EXPECT().VerifyUser(ctx, int64(1), verifyClaims.Email).Return(pg_error.ErrNotFound)
-	mockAuthService.EXPECT().IsVerificationTokenUsed(gomock.Any(), gomock.Any()).Return(false, nil)
-
+	mockAuthService.EXPECT().VerifyUser(ctx, gomock.Any(), gomock.Any(), int64(1), verifyClaims.Email).Return(pg_error.ErrNotFound)
 
 	q := make(url.Values)
 	q.Set("token", token)
@@ -843,8 +822,7 @@ func TestVerifyEmail_ServiceError(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockVerifyJWT.EXPECT().VerifyJWT(token).Return(verifyClaims, nil)
-	mockAuthService.EXPECT().VerifyUser(ctx, int64(1), verifyClaims.Email).Return(errors.New(""))
-	mockAuthService.EXPECT().IsVerificationTokenUsed(gomock.Any(), gomock.Any()).Return(false, nil)
+	mockAuthService.EXPECT().VerifyUser(ctx, gomock.Any(), gomock.Any(), int64(1), verifyClaims.Email).Return(errors.New(""))
 
 	q := make(url.Values)
 	q.Set("token", token)
@@ -867,8 +845,7 @@ func TestVerifyEmail_MailError(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockVerifyJWT.EXPECT().VerifyJWT(gomock.Any()).Return(verifyClaims, nil)
-	mockAuthService.EXPECT().VerifyUser(ctx, int64(1), verifyClaims.Email).Return(nil)
-	mockAuthService.EXPECT().IsVerificationTokenUsed(gomock.Any(), gomock.Any()).Return(false, nil)
+	mockAuthService.EXPECT().VerifyUser(ctx, gomock.Any(), gomock.Any(), int64(1), verifyClaims.Email).Return(nil)
 	mockAuthService.EXPECT().SendVerifiedLetter(verifyClaims.Email).Return(errors.New(""))
 
 	q := make(url.Values)

@@ -12,6 +12,7 @@ package mock_service
 import (
 	context "context"
 	reflect "reflect"
+	time "time"
 
 	dto "github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	gomock "go.uber.org/mock/gomock"
@@ -68,21 +69,6 @@ func (m *MockAuthService) GetUserConfirmationDetails(ctx context.Context, email 
 func (mr *MockAuthServiceMockRecorder) GetUserConfirmationDetails(ctx, email any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserConfirmationDetails", reflect.TypeOf((*MockAuthService)(nil).GetUserConfirmationDetails), ctx, email)
-}
-
-// IsVerificationTokenUsed mocks base method.
-func (m *MockAuthService) IsVerificationTokenUsed(ctx context.Context, token string) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsVerificationTokenUsed", ctx, token)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// IsVerificationTokenUsed indicates an expected call of IsVerificationTokenUsed.
-func (mr *MockAuthServiceMockRecorder) IsVerificationTokenUsed(ctx, token any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsVerificationTokenUsed", reflect.TypeOf((*MockAuthService)(nil).IsVerificationTokenUsed), ctx, token)
 }
 
 // RegisterCustomer mocks base method.
@@ -144,15 +130,15 @@ func (mr *MockAuthServiceMockRecorder) SendVerifiedLetter(email any) *gomock.Cal
 }
 
 // VerifyUser mocks base method.
-func (m *MockAuthService) VerifyUser(ctx context.Context, id int64, email string) error {
+func (m *MockAuthService) VerifyUser(ctx context.Context, token string, ttl time.Duration, id int64, email string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "VerifyUser", ctx, id, email)
+	ret := m.ctrl.Call(m, "VerifyUser", ctx, token, ttl, id, email)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // VerifyUser indicates an expected call of VerifyUser.
-func (mr *MockAuthServiceMockRecorder) VerifyUser(ctx, id, email any) *gomock.Call {
+func (mr *MockAuthServiceMockRecorder) VerifyUser(ctx, token, ttl, id, email any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyUser", reflect.TypeOf((*MockAuthService)(nil).VerifyUser), ctx, id, email)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyUser", reflect.TypeOf((*MockAuthService)(nil).VerifyUser), ctx, token, ttl, id, email)
 }

@@ -374,8 +374,7 @@ func (f *HandlerFactory) VerifyEmail(
 			return
 		}
 
-		f.logger.Debug(claims.ExpiresAt.String())
-		if err := f.service.VerifyUser(ctx, tokenParam, claims.ExpiresAt.Sub(time.Now()), id, claims.Email); err != nil {
+		if err := f.service.VerifyUser(ctx, tokenParam, time.Until(claims.ExpiresAt.Time), id, claims.Email); err != nil {
 			f.logger.Debug()
 			if errors.Is(err, redis.TxFailedErr) {
 				f.writer.WriteError(w, rest.NewConflictError(err, MsgTokenAlreadyUsed))
