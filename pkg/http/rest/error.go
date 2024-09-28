@@ -24,7 +24,7 @@ const (
 type ErrorResponse struct {
 	Cause   error  `json:"-"`
 	Message string `json:"message"`
-	Status  int    `json:"status"`
+	Status  int    `json:"-"`
 }
 
 func (e *ErrorResponse) Error() string {

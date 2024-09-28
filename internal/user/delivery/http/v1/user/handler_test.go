@@ -122,7 +122,7 @@ func TestFindUserById_NotFound(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, app_error.MsgUserNotFound, errResp.Message)
-		assert.Equal(t, http.StatusNotFound, errResp.Status)
+		assert.Equal(t, http.StatusNotFound, rec.Code)
 	}
 }
 
@@ -142,7 +142,7 @@ func TestFindUserById_ServiceError(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -158,7 +158,7 @@ func TestFindUserById_IdParamNotSet(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -192,7 +192,7 @@ func TestUploadProfilePicture_MissingHeaders(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgFileReadError, errResp.Message)
-		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 
@@ -211,7 +211,7 @@ func TestUploadProfilePicture_MissingFile(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgFileReadError, errResp.Message)
-		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 
@@ -229,7 +229,7 @@ func TestUploadProfilePicture_WrongFormData(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgNoFile, errResp.Message)
-		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 
@@ -251,7 +251,7 @@ func TestUploadProfilePicture_NotFound(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, app_error.MsgUserNotFound, errResp.Message)
-		assert.Equal(t, http.StatusNotFound, errResp.Status)
+		assert.Equal(t, http.StatusNotFound, rec.Code)
 	}
 }
 
@@ -274,7 +274,7 @@ func TestUploadProfilePicture_ServiceError(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -290,7 +290,7 @@ func TestUploadProfilePicture_IdParamNotSet(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -324,7 +324,7 @@ func TestUpdateUserDataWith_BindError(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgUnsupportedMedia, errResp.Message)
-		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 
@@ -343,7 +343,7 @@ func TestUpdateUserData_InvalidValues(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInvalidArguments, errResp.Message)
-		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 
@@ -365,7 +365,7 @@ func TestUpdateUserData_NotFound(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, app_error.MsgUserNotFound, errResp.Message)
-		assert.Equal(t, http.StatusNotFound, errResp.Status)
+		assert.Equal(t, http.StatusNotFound, rec.Code)
 	}
 }
 
@@ -387,7 +387,7 @@ func TestUpdateUserData_NotChanges(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, app_error.MsgNoChanges, errResp.Message)
-		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 
@@ -409,7 +409,7 @@ func TestUpdateUserData_ServiceError(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -425,7 +425,7 @@ func TestUpdateUserData_IdParamNotSet(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -463,7 +463,7 @@ func TestDelete_NotFound(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, app_error.MsgUserNotFound, errResp.Message)
-		assert.Equal(t, http.StatusNotFound, errResp.Status)
+		assert.Equal(t, http.StatusNotFound, rec.Code)
 	}
 }
 
@@ -484,7 +484,7 @@ func TestDeleteUser_ServiceError(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -500,7 +500,7 @@ func TestTestDeleteUser_IdParamNotSet(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -534,7 +534,7 @@ func TestChangePassword_BindError(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgUnsupportedMedia, errResp.Message)
-		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 
@@ -553,7 +553,7 @@ func TestChangePassword_InvalidValues(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInvalidArguments, errResp.Message)
-		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 
@@ -575,7 +575,7 @@ func TestChangePassword_NotFound(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, app_error.MsgUserNotFound, errResp.Message)
-		assert.Equal(t, http.StatusNotFound, errResp.Status)
+		assert.Equal(t, http.StatusNotFound, rec.Code)
 	}
 }
 
@@ -597,7 +597,7 @@ func TestChangePassword_IncorrectPassword(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, app_error.MsgIncorrectPassword, errResp.Message)
-		assert.Equal(t, http.StatusUnauthorized, errResp.Status)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	}
 }
 
@@ -619,7 +619,7 @@ func TestChangePassword_ServiceError(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -635,6 +635,6 @@ func TestChangePassword_JwtNotSet(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }

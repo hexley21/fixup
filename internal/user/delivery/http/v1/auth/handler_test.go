@@ -135,7 +135,7 @@ func TestRegisterCustomer_BindError(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgUnsupportedMedia, errResp.Message)
-		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 
@@ -154,7 +154,7 @@ func TestRegisterCustomer_InvalidArguments(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInvalidArguments, errResp.Message)
-		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 
@@ -178,7 +178,7 @@ func TestRegisterCustomer_Conflict(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, auth.MsgUserAlreadyExists, errResp.Message)
-		assert.Equal(t, http.StatusConflict, errResp.Status)
+		assert.Equal(t, http.StatusConflict, rec.Code)
 	}
 }
 
@@ -200,7 +200,7 @@ func TestRegisterCustomer_ServiceError(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -237,7 +237,7 @@ func TestRegisterProvider_BindError(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgUnsupportedMedia, errResp.Message)
-		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 
@@ -256,7 +256,7 @@ func TestRegisterProvider_InvalidArguments(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInvalidArguments, errResp.Message)
-		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 
@@ -278,7 +278,7 @@ func TestRegisterProvider_Conflict(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, auth.MsgUserAlreadyExists, errResp.Message)
-		assert.Equal(t, http.StatusConflict, errResp.Status)
+		assert.Equal(t, http.StatusConflict, rec.Code)
 	}
 }
 
@@ -300,7 +300,7 @@ func TestRegisterProvider_ServiceError(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -336,7 +336,7 @@ func TestResendConfirmationLetter_BindError(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgUnsupportedMedia, errResp.Message)
-		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 
@@ -355,7 +355,7 @@ func TestResendConfirmationLetter_InvalidArguments(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInvalidArguments, errResp.Message)
-		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 
@@ -377,7 +377,7 @@ func TestResendConfirmationLetter_Conflict(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, auth.MsgUserAlreadyActivated, errResp.Message)
-		assert.Equal(t, http.StatusConflict, errResp.Status)
+		assert.Equal(t, http.StatusConflict, rec.Code)
 	}
 }
 
@@ -399,7 +399,7 @@ func TestResendConfirmationLetter_NotFound(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, app_error.MsgUserNotFound, errResp.Message)
-		assert.Equal(t, http.StatusNotFound, errResp.Status)
+		assert.Equal(t, http.StatusNotFound, rec.Code)
 	}
 }
 
@@ -421,7 +421,7 @@ func TestResendConfirmationLetter_Already(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, app_error.MsgUserNotFound, errResp.Message)
-		assert.Equal(t, http.StatusNotFound, errResp.Status)
+		assert.Equal(t, http.StatusNotFound, rec.Code)
 	}
 }
 
@@ -443,7 +443,7 @@ func TestResendConfirmationLetter_ServiceError(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -465,7 +465,7 @@ func TestResendConfirmationLetter_MailError(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, app_error.MsgInvalidToken, errResp.Message)
-		assert.Equal(t, http.StatusUnauthorized, errResp.Status)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	}
 }
 
@@ -504,7 +504,7 @@ func TestLogin_BindError(t *testing.T) {
     var errResp rest.ErrorResponse
     if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
         assert.Equal(t, rest.MsgUnsupportedMedia, errResp.Message)
-        assert.Equal(t, http.StatusBadRequest, errResp.Status)
+        assert.Equal(t, http.StatusBadRequest, rec.Code)
     }
 }
 
@@ -523,7 +523,7 @@ func TestLogin_InvalidArguments(t *testing.T) {
     var errResp rest.ErrorResponse
     if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInvalidArguments, errResp.Message)
-		assert.Equal(t, http.StatusBadRequest, errResp.Status)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 
@@ -545,7 +545,7 @@ func TestLogin_AuthError(t *testing.T) {
     var errResp rest.ErrorResponse
     if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, auth.MsgIncorrectEmailOrPass, errResp.Message)
-		assert.Equal(t, http.StatusUnauthorized, errResp.Status)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	}
 }
 
@@ -567,7 +567,7 @@ func TestLogin_ServiceError(t *testing.T) {
     var errResp rest.ErrorResponse
     if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -590,7 +590,7 @@ func TestLogin_AccessTokenError(t *testing.T) {
     var errResp rest.ErrorResponse
     if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -614,7 +614,7 @@ func TestLogin_RefreshTokenError(t *testing.T) {
     var errResp rest.ErrorResponse
     if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -670,7 +670,7 @@ func TestRefresh_JwtNotSet(t *testing.T) {
 		var errResp rest.ErrorResponse
 		if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+			assert.Equal(t, http.StatusInternalServerError, rec.Code)
 		}
 		assert.NotContains(t, rec.Header().Get("Set-Cookie"), fmt.Sprintf("access_token=%s; HttpOnly; Secure", token))
 	})
@@ -684,7 +684,7 @@ func TestRefresh_JwtNotSet(t *testing.T) {
 		var errResp rest.ErrorResponse
 		if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+			assert.Equal(t, http.StatusInternalServerError, rec.Code)
 		}
 		assert.NotContains(t, rec.Header().Get("Set-Cookie"), fmt.Sprintf("access_token=%s; HttpOnly; Secure", token))
 	})
@@ -701,7 +701,7 @@ func TestRefresh_JwtNotSet(t *testing.T) {
 		var errResp rest.ErrorResponse
 		if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+			assert.Equal(t, http.StatusInternalServerError, rec.Code)
 		}
 		assert.NotContains(t, rec.Header().Get("Set-Cookie"), fmt.Sprintf("access_token=%s; HttpOnly; Secure", token))
 	})
@@ -745,7 +745,7 @@ func TestVerifyEmail_InvalidToken(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, app_error.MsgInvalidToken, errResp.Message)
-		assert.Equal(t, http.StatusUnauthorized, errResp.Status)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	}
 }
 
@@ -765,7 +765,7 @@ func TestVerifyEmail_ParseIDError(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -788,7 +788,7 @@ func TestVerifyEmail_AlreadyActivated(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, auth.MsgTokenAlreadyUsed, errResp.Message)
-		assert.Equal(t, http.StatusConflict, errResp.Status)
+		assert.Equal(t, http.StatusConflict, rec.Code)
 	}
 }
 
@@ -811,7 +811,7 @@ func TestVerifyEmail_NotFound(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, app_error.MsgUserNotFound, errResp.Message)
-		assert.Equal(t, http.StatusNotFound, errResp.Status)
+		assert.Equal(t, http.StatusNotFound, rec.Code)
 	}
 }
 
@@ -834,7 +834,7 @@ func TestVerifyEmail_ServiceError(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 

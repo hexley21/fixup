@@ -44,7 +44,7 @@ func TestJWT_MissingAuthorizationHeader(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, middleware.MsgMissingAuthorizationHeader, errResp.Message)
-		assert.Equal(t, http.StatusUnauthorized, errResp.Status)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	}
 
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
@@ -65,7 +65,7 @@ func TestJWT_MissingBearerToken(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, middleware.MsgMissingBearerToken, errResp.Message)
-		assert.Equal(t, http.StatusUnauthorized, errResp.Status)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	}
 }
 
@@ -86,7 +86,7 @@ func TestJWT_InvalidToken(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, app_error.MsgInvalidToken, errResp.Message)
-		assert.Equal(t, http.StatusUnauthorized, errResp.Status)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	}
 }
 

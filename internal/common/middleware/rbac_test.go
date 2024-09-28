@@ -49,7 +49,7 @@ func TestAllowRoles_InsuffucientRights(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, middleware.MsgInsufficientRights, errResp.Message)
-		assert.Equal(t, http.StatusForbidden, errResp.Status)
+		assert.Equal(t, http.StatusForbidden, rec.Code)
 	}
 }
 
@@ -64,7 +64,7 @@ func TestAllowRole_JwtNotImplemented(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	}
 }
 
@@ -141,7 +141,7 @@ func TestAllowSelfOrRole_InsufficientRights(t *testing.T) {
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, middleware.MsgInsufficientRights, errResp.Message)
-		assert.Equal(t, http.StatusForbidden, errResp.Status)
+		assert.Equal(t, http.StatusForbidden, rec.Code)
 	}
 }
 
@@ -159,7 +159,7 @@ func TestAllowSelfOrRole_InsufficientRights(t *testing.T) {
 // 		if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
 // 			assert.Equal(t, ctx_util.ErrJwtNotImplemented, errResp.Cause)
 // 			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-// 			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+// 			assert.Equal(t, http.StatusInternalServerError, rec.Code)
 // 		}
 
 // 		id, err := ctx_util.GetParamId(c)
@@ -177,7 +177,7 @@ func TestAllowSelfOrRole_InsufficientRights(t *testing.T) {
 // 		if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
 // 			assert.Equal(t, ctx_util.ErrJwtNotImplemented, errResp.Cause)
 // 			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-// 			assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+// 			assert.Equal(t, http.StatusInternalServerError, rec.Code)
 // 		}
 
 // 		id, err := ctx_util.GetParamId(c)
@@ -214,7 +214,7 @@ func TestAllowSelfOrRole_InsufficientRights(t *testing.T) {
 // 	if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
 // 		assert.Equal(t, middleware.ErrUserNotVerified.Cause, errResp.Cause)
 // 		assert.Equal(t, rest.MsgUserIsNotVerified, errResp.Message)
-// 		assert.Equal(t, http.StatusForbidden, errResp.Status)
+// 		assert.Equal(t, http.StatusForbidden, rec.Code)
 // 	}
 // }
 
@@ -232,7 +232,7 @@ func TestAllowSelfOrRole_InsufficientRights(t *testing.T) {
 // 	if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
 // 		assert.Equal(t, middleware.ErrUserVerified.Cause, errResp.Cause)
 // 		assert.Equal(t, rest.MsgUserIsVerified, errResp.Message)
-// 		assert.Equal(t, http.StatusForbidden, errResp.Status)
+// 		assert.Equal(t, http.StatusForbidden, rec.Code)
 // 	}
 // }
 
@@ -248,6 +248,6 @@ func TestAllowSelfOrRole_InsufficientRights(t *testing.T) {
 // 	if assert.ErrorAs(t, mw(BasicHandler)(c), &errResp) {
 // 		assert.Equal(t, ctx_util.ErrJwtNotImplemented, errResp.Cause)
 // 		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-// 		assert.Equal(t, http.StatusInternalServerError, errResp.Status)
+// 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 // 	}
 // }
