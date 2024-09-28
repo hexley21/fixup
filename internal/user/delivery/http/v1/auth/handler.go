@@ -23,6 +23,7 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/redis/go-redis/v9"
 )
 
 const (
@@ -31,10 +32,10 @@ const (
 )
 
 const (
-	MsgUserAlreadyExists = "User already exists"
+	MsgUserAlreadyExists    = "User already exists"
 	MsgUserAlreadyActivated = "User already activated"
+	MsgTokenAlreadyUsed    = "Activation token already used"
 	MsgIncorrectEmailOrPass = "Email or Password is incorrect"
-
 )
 
 type HandlerFactory struct {
@@ -77,7 +78,6 @@ func eraseCookie(w http.ResponseWriter, cookieName string) {
 
 	http.SetCookie(w, &cookie)
 }
-
 
 // @Summary Register a new customer
 // @Description Register a new customer with the provided details
@@ -197,7 +197,7 @@ func (f *HandlerFactory) ResendConfirmationLetter(
 
 		if err := f.validator.Validate(dto); err != nil {
 			f.writer.WriteError(w, err)
-			return 
+			return
 		}
 
 		details, err := f.service.GetUserConfirmationDetails(context.Background(), dto.Email)
@@ -216,8 +216,8 @@ func (f *HandlerFactory) ResendConfirmationLetter(
 		}
 
 		if err := f.sendConfirmationLetter(ctx, verGenerator, details.ID, dto.Email, details.Firstname); err != nil {
-			f.writer.WriteError(w, rest.NewInternalServerError(err))
-			return 
+			f.writer.WriteError(w, err)
+			return
 		}
 
 		f.logger.Infof("Confirmation letter was resent to user with email: %s, ID: %s", dto.Email, details.ID)
@@ -361,16 +361,6 @@ func (f *HandlerFactory) VerifyEmail(
 		ctx := context.Background()
 
 		tokenParam := r.URL.Query().Get("token")
-		
-		isUsed, err := f.service.IsVerificationTokenUsed(ctx, tokenParam)
-		if isUsed {
-			f.writer.WriteError(w, rest.NewConflictError(nil, MsgUserAlreadyActivated))
-			return
-		}
-		if err != nil {
-			f.writer.WriteError(w, rest.NewInternalServerError(err))
-			return
-		}
 
 		claims, errResp := jWTVerifier.VerifyJWT(tokenParam)
 		if errResp != nil {
@@ -384,11 +374,19 @@ func (f *HandlerFactory) VerifyEmail(
 			return
 		}
 
-		if err := f.service.VerifyUser(ctx, id, claims.Email); err != nil {
+		f.logger.Debug(claims.ExpiresAt.String())
+		if err := f.service.VerifyUser(ctx, tokenParam, claims.ExpiresAt.Sub(time.Now()), id, claims.Email); err != nil {
+			f.logger.Debug()
+			if errors.Is(err, redis.TxFailedErr) {
+				f.writer.WriteError(w, rest.NewConflictError(err, MsgTokenAlreadyUsed))
+				return
+			}
+
 			if errors.Is(err, pg_error.ErrNotFound) {
 				f.writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 				return
 			}
+
 			f.writer.WriteError(w, rest.NewInternalServerError(err))
 			return
 		}
@@ -407,16 +405,19 @@ func (f *HandlerFactory) VerifyEmail(
 	}
 }
 
-func (f *HandlerFactory) sendConfirmationLetter(ctx context.Context, verGenerator verifier.JWTGenerator, id string, email string, name string) error {
+func (f *HandlerFactory) sendConfirmationLetter(ctx context.Context, verGenerator verifier.JWTGenerator, id string, email string, name string) *rest.ErrorResponse {
 	jWT, err := verGenerator.GenerateJWT(id, email)
-
-	if err == nil {
-		if err := f.service.SendConfirmationLetter(ctx, jWT, email, name); err == nil {
-			f.logger.Infof("Confirmation letter sent to email: %s, user ID: %s", email, id)
-			return nil
-		}
+	if err != nil {
+		f.logger.Error(err.Error())
+		return err
 	}
 
-	f.logger.Error(err.Error())
-	return err
+	if err := f.service.SendConfirmationLetter(ctx, jWT, email, name); err != nil {
+		errResp := rest.NewInternalServerError(err)
+		f.logger.Error(errResp.Error())
+		return errResp
+	}
+
+	f.logger.Infof("Confirmation letter sent to email: %s, user ID: %s", email, id)
+	return nil
 }

@@ -31,11 +31,11 @@ func MapRoutes(
 		r.Delete("/{id}", hf.DeleteUser)
 
 		r.Group(func(r chi.Router) {
-			r.Patch("/{id}/pfp", hf.UploadProfilePicture)
 			r.Use(
 				mf.NewAllowFilesAmount(maxFileSize, "image", 1),
 				mf.NewAllowContentType(maxFileSize, "image", "image/jpeg", "image/png"),
 			)
+			r.Patch("/{id}/pfp", hf.UploadProfilePicture)
 		})
 	})
 

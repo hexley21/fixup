@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"html/template"
 	"strconv"
 	"time"
@@ -19,6 +20,10 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+var (
+	ErrAlreadyVerified = errors.New("user is already activated")
+)
+
 type templates struct {
 	confirmation *template.Template
 	verified     *template.Template
@@ -32,8 +37,7 @@ type AuthService interface {
 	RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error)
 	RegisterProvider(ctx context.Context, registerDto dto.RegisterProvider) (dto.User, error)
 	AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.Credentials, error)
-	VerifyUser(ctx context.Context, id int64, email string) error
-	IsVerificationTokenUsed(ctx context.Context, token string) (bool, error)
+	VerifyUser(ctx context.Context, token string, ttl time.Duration, id int64, email string) error
 	GetUserConfirmationDetails(ctx context.Context, email string) (dto.UserConfirmationDetails, error)
 	SendConfirmationLetter(ctx context.Context, token string, email string, name string) error
 	SendVerifiedLetter(email string) error
@@ -197,15 +201,16 @@ func (s *authServiceImpl) AuthenticateUser(ctx context.Context, loginDto dto.Log
 	return dto, nil
 }
 
-func (s *authServiceImpl) VerifyUser(ctx context.Context, id int64, email string) error {
+func (s *authServiceImpl) VerifyUser(ctx context.Context, token string, ttl time.Duration, id int64, email string) error {
+	err := s.verificationRepository.SetTokenUsed(ctx, token, ttl)
+	if err != nil {
+		return err
+	}
+
 	return s.userRepository.UpdateStatus(ctx, repository.UpdateUserStatusParams{
 		ID:         id,
 		UserStatus: pgtype.Bool{Bool: true, Valid: true},
 	})
-}
-
-func (s *authServiceImpl) IsVerificationTokenUsed(ctx context.Context, token string) (bool, error) {
-	return s.verificationRepository.IsTokenUsed(ctx, token)
 }
 
 func (s *authServiceImpl) GetUserConfirmationDetails(ctx context.Context, email string) (dto.UserConfirmationDetails, error) {
@@ -223,9 +228,12 @@ func (s *authServiceImpl) GetUserConfirmationDetails(ctx context.Context, email 
 }
 
 func (s *authServiceImpl) SendConfirmationLetter(ctx context.Context, token string, email string, name string) error {
-	err := s.verificationRepository.SetTokenUsed(ctx, token, s.verificationTokenTTL)
+	isUsed, err := s.verificationRepository.IsTokenUsed(ctx, token)
 	if err != nil {
 		return err
+	}
+	if isUsed {
+		return ErrAlreadyVerified
 	}
 
 	return s.mailer.SendHTML(
