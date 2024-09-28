@@ -1,7 +1,9 @@
 import { ReactNode } from 'react'
 import { Home } from 'lucide-react'
 import LanguageSwitch from './Language'
-import SignIn from './SignIn'
+import { SignIn } from './SignIn'
+import { SignUp } from './SignUp'
+import { Link } from "react-router-dom";
 
 interface HeaderProps {
     children?: ReactNode
@@ -13,7 +15,7 @@ function Header({ children }: HeaderProps) {
             <div className="m-auto max-w-7xl px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                     <Home className="h-8 w-8 text-primary" />
-                    <a href="/" className="text-xl font-bold">fixup.com</a>
+                    <Link to="/" className="text-xl font-bold">fixup.com</Link>
                 </div>
                 <div className="flex items-center space-x-4">
                     {children}
@@ -26,8 +28,26 @@ function Header({ children }: HeaderProps) {
 export function LandingHeader() {
     return (
         <Header>
-            <LanguageSwitch/>
+            <LanguageSwitch />
             <SignIn />
+        </Header>
+    )
+}
+
+export function RegisterHeader() {
+    return (
+        <Header>
+            <LanguageSwitch />
+            <SignIn />
+        </Header>
+    )
+}
+
+export function LoginHeader() {
+    return (
+        <Header>
+            <LanguageSwitch />
+            <SignUp />
         </Header>
     )
 }

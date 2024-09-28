@@ -46,7 +46,14 @@ const registerFormSchema = z.object({
 
 type AccountFormValues = z.infer<typeof registerFormSchema>
 
-const defaultValues: Partial<AccountFormValues> = {}
+const defaultValues: AccountFormValues = {
+  first_name: "",
+  last_name: "",
+  email: "",
+  phone_number: "",
+  password: "",
+  repeat_password: "",
+}
 
 export default function RegisternForm() {
   const form = useForm<AccountFormValues>({
@@ -93,7 +100,8 @@ export default function RegisternForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center m-4">
+    <div className="flex flex-col items-center justify-center px-4 py-24 ">
+      <h2 className="w-full max-w-md text-4xl font-bold m-4">Register Provider</h2>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="w-full max-w-md space-y-4 bg-white p-6 rounded-lg shadow-md border border-gray-200">
           <div className="flex space-x-4">

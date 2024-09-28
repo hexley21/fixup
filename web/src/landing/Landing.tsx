@@ -30,7 +30,7 @@ export default function Component() {
     return (
         <div className="flex flex-col min-h-screen">
             <main>
-                <section className="py-12 px-12">
+                <section className="py-12 px-4">
                     <div className="max-w-4xl mx-auto">
                         <h1 className="font-semibold text-3xl xs:text-4xl sm:text-5xl text-muted-foreground mb-8">Your solution for all services.</h1>
                         <div className="flex w-full h-full h-12 items-center space-x-2">

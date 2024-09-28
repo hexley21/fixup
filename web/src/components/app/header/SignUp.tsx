@@ -1,7 +1,10 @@
 import { Button } from '@/components/ui/button'
+import { Link } from "react-router-dom";
 
-export default function SignIn() {
+export function SignUp() {
   return (
-    <Button size="sm">Sign Up</Button>
+    <Link to="/register">
+      <Button variant="outline">Sign Up</Button>
+    </Link>
   )
 }
