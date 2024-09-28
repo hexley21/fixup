@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-chi/chi/v5"
@@ -154,7 +155,13 @@ func (s *server) Run() error {
 		NoColor: false,
 	}
 
-	s.router.Use(cors.AllowAll().Handler)
+	s.router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   strings.Split(s.cfg.HTTP.CorsOrigins, ","),
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "Idempotency-Key", "X-CSRF-Token"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
 	s.router.Use(chi_middleware.Recoverer)
 	s.router.Use(chi_middleware.RequestLogger(chiLogger))
 

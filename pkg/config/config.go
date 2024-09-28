@@ -42,6 +42,7 @@ type (
 
 	HTTP struct {
 		Port         int           `yaml:"port"`
+		CorsOrigins  string        `yaml:"cors_origins"`
 		IdleTimeout  time.Duration `yaml:"idle_timeout"`
 		ReadTimeout  time.Duration `yaml:"read_timeout"`
 		WriteTimeout time.Duration `yaml:"write_timeout"`

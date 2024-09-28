@@ -5,6 +5,7 @@ server:
 
 http:
     port: 80
+    cors_origins: https://localhost:5173,http://localhost:5173,https://localhost:8081,http://localhost:8081   
     idle_timeout: 60s
     read_timeout: 10s
     write_timeout: 30s
