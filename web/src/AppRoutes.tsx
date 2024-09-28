@@ -17,34 +17,39 @@ export default function AppRoutes() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/" element={
-                    <div>
-                        <LandingHeader />
-                        <Layout>
-                            <Landing />
-                        </Layout>
-                    </div>}>
-                </Route>
-                <Route path="/register" element={
-                    <div>
-                        <RegisterHeader />
-                        <Layout>
-                            <RegisterForm />
-                        </Layout>
-                    </div>}>
-                </Route>
-                <Route path="/login" element={
-                    <div>
-                        <LoginHeader />
-                        <Layout>
-                            <LoginForm />
-                        </Layout>
-                    </div>}>
-                </Route>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/login" element={<LoginPage />} />
             </Routes>
             <Layout>
                 <Footer />
             </Layout>
         </BrowserRouter>
     );
-};
+}
+
+function LandingPage() {
+
+    return (<>
+        <LandingHeader />
+        <Landing />
+    </>);
+}
+
+function RegisterPage() {
+    return (<>
+        <RegisterHeader />
+        <Layout>
+            <RegisterForm />
+        </Layout>
+    </>);
+}
+
+function LoginPage() {
+    return (<>
+        <LoginHeader />
+        <Layout>
+            <LoginForm />
+        </Layout>
+    </>);
+}
