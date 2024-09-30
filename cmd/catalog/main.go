@@ -48,6 +48,7 @@ func main() {
 		zapLogger.Fatal(err)
 	}
 
+
 	server := server.NewServer(
 		cfg,
 		pgPool,
@@ -62,6 +63,8 @@ func main() {
 	if !errors.Is(server.Run(), http.ErrServerClosed) {
 		zapLogger.Fatal(err)
 	}
+
+	log.Print("Catalog service started...")
 
 	if err := <-shutdownError; err != nil {
 		zapLogger.Error(err)

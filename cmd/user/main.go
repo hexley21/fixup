@@ -94,6 +94,8 @@ func main() {
 		zapLogger.Fatal(err)
 	}
 
+	log.Print("User service started...")
+
 	if err := <-shutdownError; err != nil {
 		zapLogger.Error(err)
 	}

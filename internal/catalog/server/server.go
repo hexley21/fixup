@@ -29,7 +29,6 @@ type services struct {
 
 type jWTManagers struct {
 	accessJWTManager       auth_jwt.JWTManager
-	refreshJWTManager      auth_jwt.JWTManager
 }
 
 type requestComponents struct {
@@ -62,7 +61,6 @@ func NewServer(
 
 	jWTManagers := &jWTManagers{
 		accessJWTManager:       auth_jwt.NewJWTManager(cfg.JWT.AccessSecret, cfg.JWT.AccessTTL),
-		refreshJWTManager:      auth_jwt.NewJWTManager(cfg.JWT.RefreshSecret, cfg.JWT.RefreshTTL),
 	}
 
 	jsonManager := std_json.New()

@@ -195,5 +195,10 @@ func (s *server) Close() error {
 		return err
 	}
 
+	err = s.redisCluster.Close()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
