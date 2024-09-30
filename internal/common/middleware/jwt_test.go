@@ -12,7 +12,7 @@ import (
 	"github.com/hexley21/fixup/internal/common/auth_jwt"
 	mock_jwt "github.com/hexley21/fixup/internal/common/auth_jwt/mock"
 	"github.com/hexley21/fixup/internal/common/middleware"
-	"github.com/hexley21/fixup/internal/user/enum"
+	"github.com/hexley21/fixup/internal/common/enum"
 	"github.com/hexley21/fixup/pkg/http/rest"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"

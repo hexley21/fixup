@@ -18,7 +18,7 @@ import (
 	"github.com/hexley21/fixup/internal/common/util/ctx_util"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/auth"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
-	"github.com/hexley21/fixup/internal/user/enum"
+	"github.com/hexley21/fixup/internal/common/enum"
 	mock_service "github.com/hexley21/fixup/internal/user/service/mock"
 	"github.com/hexley21/fixup/internal/user/service/verifier"
 	mock_verifier "github.com/hexley21/fixup/internal/user/service/verifier/mock"

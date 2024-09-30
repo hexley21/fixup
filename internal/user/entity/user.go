@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"github.com/hexley21/fixup/internal/user/enum"
+	"github.com/hexley21/fixup/internal/common/enum"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 

@@ -8,7 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/hexley21/fixup/pkg/http/rest"
 	"github.com/hexley21/fixup/internal/common/util/ctx_util"
-	"github.com/hexley21/fixup/internal/user/enum"
+	"github.com/hexley21/fixup/internal/common/enum"
 )
 
 var (

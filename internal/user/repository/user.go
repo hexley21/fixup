@@ -7,7 +7,7 @@ import (
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/hexley21/fixup/internal/user/entity"
-	"github.com/hexley21/fixup/internal/user/enum"
+	"github.com/hexley21/fixup/internal/common/enum"
 	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 	"github.com/hexley21/fixup/pkg/infra/postgres"
 	"github.com/jackc/pgx/v5"

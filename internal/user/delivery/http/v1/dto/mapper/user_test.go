@@ -8,7 +8,7 @@ import (
 
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto/mapper"
 	"github.com/hexley21/fixup/internal/user/entity"
-	"github.com/hexley21/fixup/internal/user/enum"
+	"github.com/hexley21/fixup/internal/common/enum"
 	mock_cdn "github.com/hexley21/fixup/pkg/infra/cdn/mock"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/assert"

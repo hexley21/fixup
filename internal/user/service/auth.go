@@ -9,7 +9,7 @@ import (
 
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto/mapper"
-	"github.com/hexley21/fixup/internal/user/enum"
+	"github.com/hexley21/fixup/internal/common/enum"
 	"github.com/hexley21/fixup/internal/user/repository"
 	"github.com/hexley21/fixup/pkg/encryption"
 	"github.com/hexley21/fixup/pkg/hasher"
