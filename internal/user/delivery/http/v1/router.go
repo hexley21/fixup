@@ -8,20 +8,14 @@ import (
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/user"
 	"github.com/hexley21/fixup/internal/user/service"
 	"github.com/hexley21/fixup/internal/user/service/verifier"
-	"github.com/hexley21/fixup/pkg/http/binder"
-	"github.com/hexley21/fixup/pkg/http/writer"
-	"github.com/hexley21/fixup/pkg/logger"
-	"github.com/hexley21/fixup/pkg/validator"
+	"github.com/hexley21/fixup/pkg/http/handler"
 )
 
 type RouterArgs struct {
 	AuthService            service.AuthService
 	UserService            service.UserService
 	MiddlewareFactory      *middleware.MiddlewareFactory
-	Logger                 logger.Logger
-	Binder                 binder.FullBinder
-	Validator              validator.Validator
-	Writer                 writer.HTTPWriter
+	HandlerComponents      *handler.Components
 	AccessJWTManager       auth_jwt.JWTManager
 	RefreshJWTManager      auth_jwt.JWTManager
 	VerificationJWTManager verifier.JWTManager
@@ -29,18 +23,12 @@ type RouterArgs struct {
 
 func MapV1Routes(args RouterArgs, router chi.Router) {
 	authHandlerFactory := auth.NewFactory(
-		args.Logger,
-		args.Binder,
-		args.Validator,
-		args.Writer,
+		args.HandlerComponents,
 		args.AuthService,
 	)
 
 	userHandlerFactory := user.NewFactory(
-		args.Logger,
-		args.Binder,
-		args.Validator,
-		args.Writer,
+		args.HandlerComponents,
 		args.UserService,
 	)
 
