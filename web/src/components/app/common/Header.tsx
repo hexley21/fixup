@@ -1,9 +1,9 @@
 import { ReactNode } from 'react'
 import { Home } from 'lucide-react'
-import LanguageSwitch from './Language'
-import { SignIn } from './SignIn'
-import { SignUp } from './SignUp'
+import { Button } from '@/components/ui/button'
 import { Link } from "react-router-dom";
+import { Globe } from 'lucide-react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
 interface HeaderProps {
     children?: ReactNode
@@ -22,6 +22,40 @@ function Header({ children }: HeaderProps) {
                 </div>
             </div>
         </header>
+    )
+}
+
+function SignIn() {
+    return (
+        <Link to="/login">
+            <Button variant="outline">Sign In</Button>
+        </Link>
+    )
+}
+
+function SignUp() {
+    return (
+        <Link to="/register">
+            <Button variant="outline">Sign Up</Button>
+        </Link>
+    )
+}
+
+function LanguageSwitch() {
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                    <Globe className="h-4 w-4 mr-2" />
+                    EN
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+                <DropdownMenuItem>English</DropdownMenuItem>
+                <DropdownMenuItem>Español</DropdownMenuItem>
+                <DropdownMenuItem>Français</DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
     )
 }
 

@@ -5,15 +5,10 @@ import { useForm } from "react-hook-form"
 import { toast } from "@/hooks/use-toast"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { RegisterHeader } from "@/components/app/common/Header"
+import { ContentLayout } from "@/components/app/content-layout/content-layout"
 
 const registerFormSchema = z.object({
   first_name: z
@@ -55,7 +50,7 @@ const defaultValues: AccountFormValues = {
   repeat_password: "",
 }
 
-export default function RegisternForm() {
+function Component() {
   const form = useForm<AccountFormValues>({
     resolver: zodResolver(registerFormSchema),
     defaultValues,
@@ -69,7 +64,7 @@ export default function RegisternForm() {
       phone_number: data.phone_number.replace("+", ""),
       password: data.password,
     }
-    
+
     let body = JSON.stringify(dto)
     console.log(body)
 
@@ -189,4 +184,13 @@ export default function RegisternForm() {
       </Form>
     </div>
   )
+}
+
+export function Register() {
+  return (<>
+    <RegisterHeader />
+    <ContentLayout>
+      <Component />
+    </ContentLayout>
+  </>);
 }

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 
-export default function Footer() {
+export function Footer() {
     return (
         <footer className="bg-gray-100 py-8 px-4 md:px-6 lg:px-8">
             <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">

@@ -5,28 +5,36 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { ChevronDown, Home, Paintbrush, Wrench, Car, Leaf, Laptop, Shirt, Dog, Book } from "lucide-react"
 import DownloadMobile from "@/components/app/download/DownloadMobile"
+import { LandingHeader } from "../common/Header"
 
-export default function Component() {
-    const categories = [
-        { icon: <Home className="h-8 w-8" />, name: "Renovation", subcategories: ["• Kitchen", "• Bathroom", "• Living Room", "• Bedroom", "• Outdoor", "• Basement", "• Attic"] },
-        { icon: <Paintbrush className="h-8 w-8" />, name: "Cleaning", subcategories: ["• Deep Clean", "• Regular Clean", "• Window Cleaning", "• Carpet Cleaning", "• Post-Construction", "• Office Cleaning", "• Move-in/Move-out"] },
-        { icon: <Wrench className="h-8 w-8" />, name: "Repairs", subcategories: ["• Plumbing", "• Electrical", "• Appliance Repair", "• Furniture Assembly", "• Painting", "• Drywall Repair", "• Flooring"] },
-        { icon: <Car className="h-8 w-8" />, name: "Automotive", subcategories: ["• Oil Change", "• Tire Service", "• Brake Repair", "• Detailing", "• Battery Replacement", "• Engine Tune-up"] },
-        { icon: <Leaf className="h-8 w-8" />, name: "Landscaping", subcategories: ["• Lawn Mowing", "• Tree Trimming", "• Garden Design", "• Irrigation", "• Weed Control", "• Hardscaping"] },
-        { icon: <Laptop className="h-8 w-8" />, name: "Tech Support", subcategories: ["• Computer Repair", "• Network Setup", "• Virus Removal", "• Data Recovery", "• Smart Home Installation"] },
-        { icon: <Shirt className="h-8 w-8" />, name: "Laundry", subcategories: ["• Wash & Fold", "• Dry Cleaning", "• Alterations", "• Shoe Repair", "• Leather Care"] },
-        { icon: <Dog className="h-8 w-8" />, name: "Pet Care", subcategories: ["• Dog Walking", "• Pet Sitting", "• Grooming", "• Training", "• Veterinary Services"] },
-        { icon: <Book className="h-8 w-8" />, name: "Tutoring", subcategories: ["• Math", "• Science", "• Language", "• Test Prep", "• Music Lessons", "• Art Classes"] },
-    ]
+export function Landing() {
+    return (<>
+        <LandingHeader />
+        <Component />
+    </>);
+}
 
-    const userReviews = [
-        { name: "Alice", avatar: "A", rating: 5, comment: "Excellent service! The renovation team was professional and efficient.", time: "2023-07-15T14:30:00", service: "Renovation", provider: "Home Makeover Inc." },
-        { name: "Bob", avatar: "B", rating: 4, comment: "Great cleaning service. My house has never looked better.", time: "2023-07-14T10:15:00", service: "Cleaning", provider: "Sparkle Clean Co." },
-        { name: "Charlie", avatar: "C", rating: 5, comment: "The tech support was incredibly helpful. Fixed my computer issues in no time.", time: "2023-07-13T16:45:00", service: "Tech Support", provider: "Geek Squad" },
-        { name: "Diana", avatar: "D", rating: 4, comment: "Reliable pet care services. My dog loves the walker!", time: "2023-07-12T09:00:00", service: "Pet Care", provider: "Happy Paws" },
-        { name: "Ethan", avatar: "E", rating: 5, comment: "The tutoring service helped my daughter improve her grades significantly.", time: "2023-07-11T17:30:00", service: "Tutoring", provider: "Bright Minds Tutoring" },
-    ]
+const categories = [
+    { icon: <Home className="h-8 w-8" />, name: "Renovation", subcategories: ["• Kitchen", "• Bathroom", "• Living Room", "• Bedroom", "• Outdoor", "• Basement", "• Attic"] },
+    { icon: <Paintbrush className="h-8 w-8" />, name: "Cleaning", subcategories: ["• Deep Clean", "• Regular Clean", "• Window Cleaning", "• Carpet Cleaning", "• Post-Construction", "• Office Cleaning", "• Move-in/Move-out"] },
+    { icon: <Wrench className="h-8 w-8" />, name: "Repairs", subcategories: ["• Plumbing", "• Electrical", "• Appliance Repair", "• Furniture Assembly", "• Painting", "• Drywall Repair", "• Flooring"] },
+    { icon: <Car className="h-8 w-8" />, name: "Automotive", subcategories: ["• Oil Change", "• Tire Service", "• Brake Repair", "• Detailing", "• Battery Replacement", "• Engine Tune-up"] },
+    { icon: <Leaf className="h-8 w-8" />, name: "Landscaping", subcategories: ["• Lawn Mowing", "• Tree Trimming", "• Garden Design", "• Irrigation", "• Weed Control", "• Hardscaping"] },
+    { icon: <Laptop className="h-8 w-8" />, name: "Tech Support", subcategories: ["• Computer Repair", "• Network Setup", "• Virus Removal", "• Data Recovery", "• Smart Home Installation"] },
+    { icon: <Shirt className="h-8 w-8" />, name: "Laundry", subcategories: ["• Wash & Fold", "• Dry Cleaning", "• Alterations", "• Shoe Repair", "• Leather Care"] },
+    { icon: <Dog className="h-8 w-8" />, name: "Pet Care", subcategories: ["• Dog Walking", "• Pet Sitting", "• Grooming", "• Training", "• Veterinary Services"] },
+    { icon: <Book className="h-8 w-8" />, name: "Tutoring", subcategories: ["• Math", "• Science", "• Language", "• Test Prep", "• Music Lessons", "• Art Classes"] },
+]
 
+const userReviews = [
+    { name: "Alice", avatar: "A", rating: 5, comment: "Excellent service! The renovation team was professional and efficient.", time: "2023-07-15T14:30:00", service: "Renovation", provider: "Home Makeover Inc." },
+    { name: "Bob", avatar: "B", rating: 4, comment: "Great cleaning service. My house has never looked better.", time: "2023-07-14T10:15:00", service: "Cleaning", provider: "Sparkle Clean Co." },
+    { name: "Charlie", avatar: "C", rating: 5, comment: "The tech support was incredibly helpful. Fixed my computer issues in no time.", time: "2023-07-13T16:45:00", service: "Tech Support", provider: "Geek Squad" },
+    { name: "Diana", avatar: "D", rating: 4, comment: "Reliable pet care services. My dog loves the walker!", time: "2023-07-12T09:00:00", service: "Pet Care", provider: "Happy Paws" },
+    { name: "Ethan", avatar: "E", rating: 5, comment: "The tutoring service helped my daughter improve her grades significantly.", time: "2023-07-11T17:30:00", service: "Tutoring", provider: "Bright Minds Tutoring" },
+]
+
+function Component() {
     return (
         <div className="flex flex-col min-h-screen">
             <main>

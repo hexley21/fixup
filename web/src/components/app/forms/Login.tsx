@@ -5,15 +5,10 @@ import { useForm } from "react-hook-form"
 import { toast } from "@/hooks/use-toast"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { ContentLayout } from "@/components/app/content-layout/content-layout"
+import { LoginHeader } from "@/components/app/common/Header"
 
 const loginFormSchema = z.object({
   email: z
@@ -31,7 +26,7 @@ const defaultValues: LoginFormValues = {
   password: "",
 };
 
-export default function LoginForm() {
+function LoginForm() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues,
@@ -107,4 +102,13 @@ export default function LoginForm() {
       </Form>
     </div>
   )
+}
+
+export function Login() {
+  return (<>
+    <LoginHeader />
+    <ContentLayout>
+      <LoginForm />
+    </ContentLayout>
+  </>);
 }
