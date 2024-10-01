@@ -9,6 +9,7 @@ import (
 	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/catalog/service"
 	"github.com/hexley21/fixup/internal/common/app_error"
+	"github.com/hexley21/fixup/internal/common/util/request_util"
 	"github.com/hexley21/fixup/pkg/http/handler"
 	"github.com/hexley21/fixup/pkg/http/rest"
 	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
@@ -47,33 +48,69 @@ func NewCategoryTypeHandler(handlerComponents *handler.Components, service servi
 // @Router /category-types [post]
 // @Security access_token
 func (h *CategoryTypeHandler) CreateCategoryType(w http.ResponseWriter, r *http.Request) {
-    var dto dto.CreateCategoryTypeDTO
-    errResp := h.Binder.BindJSON(r, &dto)
+	var dto dto.CreateCategoryTypeDTO
+	errResp := h.Binder.BindJSON(r, &dto)
+	if errResp != nil {
+		h.Writer.WriteError(w, errResp)
+		return
+	}
+
+	errResp = h.Validator.Validate(dto)
+	if errResp != nil {
+		h.Writer.WriteError(w, errResp)
+		return
+	}
+
+	categoryType, err := h.service.CreateCategoryType(r.Context(), dto)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			h.Writer.WriteError(w, rest.NewConflictError(err, app_error.MsgNameAlreadyTaken))
+			return
+		}
+
+		h.Writer.WriteError(w, rest.NewInternalServerError(err))
+		return
+	}
+
+	h.Logger.Infof("Create category type: %s, ID: %d", categoryType.Name, categoryType.ID)
+	h.Writer.WriteData(w, http.StatusCreated, categoryType)
+}
+
+// GetCategoryTypes retrieves a category types list
+// @Summary Retrieve a category types
+// @Description Retrieves a category type range
+// @Tags CategoryType
+// @Param page query int false "Page number"
+// @Param per_page query int false "Number of items per page"
+// @Success 200 {object} rest.apiResponse[[]dto.CategoryTypeDTO] "OK - Successfully retrieved the category types"
+// @Failure 400 {object} rest.ErrorResponse "Bad Request"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized"
+// @Failure 403 {object} rest.ErrorResponse "Forbidden"
+// @Failure 404 {object} rest.ErrorResponse "Not Found"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error - An error occurred while retrieving the category type"
+// @Router /category-types [get]
+// @Security access_token
+func (h *CategoryTypeHandler) GetCategoryTypes(w http.ResponseWriter, r *http.Request) {
+    errResp, page, perPage := request_util.ParsePagination(r)
     if errResp != nil {
         h.Writer.WriteError(w, errResp)
         return
     }
 
-    errResp = h.Validator.Validate(dto)
-    if errResp != nil {
-        h.Writer.WriteError(w, errResp)
-        return
-    }
+	categoryTypes, err := h.service.GetCategoryTypes(r.Context(), int32(page), int32(perPage))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			h.Writer.WriteError(w, rest.NewNotFoundError(err, MsgCategoryTypeNotFound))
+			return
+		}
 
-    categoryType, err := h.service.CreateCategoryType(r.Context(), dto)
-    if err != nil {
-        var pgErr *pgconn.PgError
-        if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-            h.Writer.WriteError(w, rest.NewConflictError(err, app_error.MsgNameAlreadyTaken))
-            return
-        }
+		h.Writer.WriteError(w, rest.NewInternalServerError(err))
+		return
+	}
 
-        h.Writer.WriteError(w, rest.NewInternalServerError(err))
-        return
-    }
-
-    h.Logger.Infof("Create category type: %s, ID: %d", categoryType.Name, categoryType.ID)
-    h.Writer.WriteData(w, http.StatusCreated, categoryType)
+	h.Logger.Infof("Fetch category types - elements: %d", len(categoryTypes))
+	h.Writer.WriteData(w, http.StatusOK, categoryTypes)
 }
 
 // GetCategoryTypeById retrieves a category type by ID
@@ -98,10 +135,10 @@ func (h *CategoryTypeHandler) GetCategoryTypeById(w http.ResponseWriter, r *http
 
 	dto, err := h.service.GetCategoryTypeById(r.Context(), int32(id))
 	if err != nil {
-        if errors.Is(err, pgx.ErrNoRows) {
-            h.Writer.WriteError(w, rest.NewNotFoundError(err, MsgCategoryTypeNotFound))
-            return
-        }
+		if errors.Is(err, pgx.ErrNoRows) {
+			h.Writer.WriteError(w, rest.NewNotFoundError(err, MsgCategoryTypeNotFound))
+			return
+		}
 
 		h.Writer.WriteError(w, rest.NewInternalServerError(err))
 		return
@@ -127,44 +164,44 @@ func (h *CategoryTypeHandler) GetCategoryTypeById(w http.ResponseWriter, r *http
 // @Router /category-types/{id} [patch]
 // @Security access_token
 func (h *CategoryTypeHandler) PatchCategoryTypeById(w http.ResponseWriter, r *http.Request) {
-    id, err := strconv.Atoi(chi.URLParam(r, "id"))
-    if err != nil {
-        h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
-        return
-    }
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
+		return
+	}
 
-    var patchDto dto.PatchCategoryTypeDTO
-    errResp := h.Binder.BindJSON(r, &patchDto)
-    if errResp != nil {
-        h.Writer.WriteError(w, errResp)
-        return
-    }
+	var patchDto dto.PatchCategoryTypeDTO
+	errResp := h.Binder.BindJSON(r, &patchDto)
+	if errResp != nil {
+		h.Writer.WriteError(w, errResp)
+		return
+	}
 
-    errResp = h.Validator.Validate(patchDto)
-    if errResp != nil {
-        h.Writer.WriteError(w, errResp)
-        return
-    }
+	errResp = h.Validator.Validate(patchDto)
+	if errResp != nil {
+		h.Writer.WriteError(w, errResp)
+		return
+	}
 
-    err = h.service.UpdateCategoryTypeById(r.Context(), int32(id), patchDto)
-    if err != nil {
-        if errors.Is(err, pg_error.ErrNotFound) {
-            h.Writer.WriteError(w, rest.NewNotFoundError(err, MsgCategoryTypeNotFound))
-            return
-        }
+	err = h.service.UpdateCategoryTypeById(r.Context(), int32(id), patchDto)
+	if err != nil {
+		if errors.Is(err, pg_error.ErrNotFound) {
+			h.Writer.WriteError(w, rest.NewNotFoundError(err, MsgCategoryTypeNotFound))
+			return
+		}
 
-        var pgErr *pgconn.PgError
-        if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-            h.Writer.WriteError(w, rest.NewConflictError(err, app_error.MsgNameAlreadyTaken))
-            return
-        }
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			h.Writer.WriteError(w, rest.NewConflictError(err, app_error.MsgNameAlreadyTaken))
+			return
+		}
 
-        h.Writer.WriteError(w, rest.NewInternalServerError(err))
-        return
-    }
+		h.Writer.WriteError(w, rest.NewInternalServerError(err))
+		return
+	}
 
-    h.Logger.Infof("Patch category type: %s, ID: %d", patchDto.Name, id)
-    h.Writer.WriteData(w, http.StatusOK, dto.CategoryTypeDTO{ID: strconv.Itoa(id), Name: patchDto.Name})
+	h.Logger.Infof("Patch category type: %s, ID: %d", patchDto.Name, id)
+	h.Writer.WriteData(w, http.StatusOK, dto.CategoryTypeDTO{ID: strconv.Itoa(id), Name: patchDto.Name})
 }
 
 // DeleteCategoryTypeById deletes a category type by ID

@@ -1,6 +1,6 @@
 package app_error
 
-var (
+const (
 	MsgInvalidToken = "Invalid token"
 
 	MsgNameAlreadyTaken = "This name is already taken"
@@ -8,5 +8,8 @@ var (
 	MsgIncorrectPassword = "Password is incorrect"
 
 	MsgUserNotFound = "User not found"
-	MsgNoChanges = "No changes"
+	MsgNoChanges    = "No changes"
+
+	MsgInvalidPage    = "Invalid page parameter"
+	MsgInvalidPerPage = "Invalid per_page parameter"
 )

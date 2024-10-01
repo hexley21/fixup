@@ -8,11 +8,15 @@ import (
 	"github.com/hexley21/fixup/internal/catalog/repository"
 )
 
+const (
+	defaultPerPage = 50
+)
+
 type CategoryTypeService interface {
 	CreateCategoryType(ctx context.Context, dto dto.CreateCategoryTypeDTO) (categoryType dto.CategoryTypeDTO, err error)
 	DeleteCategoryTypeById(ctx context.Context, id int32) error
 	GetCategoryTypeById(ctx context.Context, id int32) (dto dto.CategoryTypeDTO, err error)
-	ListCategoryTypes(ctx context.Context) (dtos []dto.CategoryTypeDTO, err error)
+	GetCategoryTypes(ctx context.Context, page int32, per_page int32) (dtos []dto.CategoryTypeDTO, err error)
 	UpdateCategoryTypeById(ctx context.Context, id int32, dto dto.PatchCategoryTypeDTO) error
 }
 
@@ -48,8 +52,12 @@ func (s *categoryTypeServiceImpl) GetCategoryTypeById(ctx context.Context, id in
 	return mapper.MapCategoryTypeToDTO(entity), err
 }
 
-func (s *categoryTypeServiceImpl) ListCategoryTypes(ctx context.Context) (dtos []dto.CategoryTypeDTO, err error) {
-	entities, err := s.categoryTypeRepository.GetCategoryTypes(ctx)
+func (s *categoryTypeServiceImpl) GetCategoryTypes(ctx context.Context, page int32, per_page int32) (dtos []dto.CategoryTypeDTO, err error) {
+	if per_page == 0 {
+		per_page = defaultPerPage
+	}
+
+	entities, err := s.categoryTypeRepository.GetCategoryTypes(ctx, per_page*(page-1), per_page)
 	if err != nil {
 		return dtos, nil
 	}

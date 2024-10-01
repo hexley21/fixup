@@ -21,6 +21,7 @@ func MapRoutes(
 		)
 
 		r.Post("/", h.CreateCategoryType)
+		r.Get("/", h.GetCategoryTypes)
 		r.Get("/{id}", h.GetCategoryTypeById)
 		r.Patch("/{id}", h.PatchCategoryTypeById)
 		r.Delete("/{id}", h.DeleteCategoryTypeById)

@@ -14,7 +14,7 @@ type CategoryTypeRepository interface {
 	CreateCategoryType(ctx context.Context, name string) (entity.CategoryType, error)
 	DeleteCategoryTypeById(ctx context.Context, id int32) error
 	GetCategoryTypeById(ctx context.Context, id int32) (entity.CategoryType, error)
-	GetCategoryTypes(ctx context.Context) ([]entity.CategoryType, error)
+	GetCategoryTypes(ctx context.Context, offset int32, limit int32) ([]entity.CategoryType, error)
 	UpdateCategoryTypeById(ctx context.Context, arg UpdateCategoryTypeByIdParams) error
 }
 
@@ -71,30 +71,6 @@ func (r *categoryTypeRepositoryImpl) GetCategoryTypeById(ctx context.Context, id
 	return i, err
 }
 
-const getCategoryTypes = `-- name: GetCategoryTypes :many
-SELECT id, name FROM category_types
-`
-
-func (r *categoryTypeRepositoryImpl) GetCategoryTypes(ctx context.Context) ([]entity.CategoryType, error) {
-	rows, err := r.db.Query(ctx, getCategoryTypes)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []entity.CategoryType
-	for rows.Next() {
-		var i entity.CategoryType
-		if err := rows.Scan(&i.ID, &i.Name); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const updateCategoryTypeById = `-- name: UpdateCategoryTypeById :exec
 UPDATE category_types SET name = $2 WHERE id = $1 Returning id, name
 `
@@ -115,4 +91,28 @@ func (r *categoryTypeRepositoryImpl) UpdateCategoryTypeById(ctx context.Context,
 	}
 
 	return nil
+}
+
+const getCategoryTypes = `-- name: GetCategoryTypes :many
+SELECT id, name FROM category_types ORDER BY id DESC OFFSET $1 LIMIT $2
+`
+
+func (r *categoryTypeRepositoryImpl) GetCategoryTypes(ctx context.Context, offset int32, limit int32) ([]entity.CategoryType, error) {
+	rows, err := r.db.Query(ctx, getCategoryTypes, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []entity.CategoryType
+	for rows.Next() {
+		var i entity.CategoryType
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
