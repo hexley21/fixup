@@ -175,17 +175,17 @@ func (s *server) Close() error {
 
 	err := s.mux.Shutdown(ctx)
 	if err != nil {
-		return err
+		s.handlerComponents.Logger.Error(err)
 	}
 
 	err = postgres.Close(s.dbPool)
 	if err != nil {
-		return err
+		s.handlerComponents.Logger.Error(err)
 	}
 
 	err = s.redisCluster.Close()
 	if err != nil {
-		return err
+		s.handlerComponents.Logger.Error(err)
 	}
 
 	return nil

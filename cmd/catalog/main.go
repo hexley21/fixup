@@ -54,16 +54,12 @@ func main() {
 		playgroundValidator,
 	)
 
-	shutdownError := make(chan error)
-	go shutdown.NotifyShutdown(server, zapLogger, shutdownError)
+	shutdownChan := make(chan struct{})
+	go shutdown.NotifyShutdown(server, zapLogger, shutdownChan)
 
 	log.Print("Catalog service started...")
 	if !errors.Is(server.Run(), http.ErrServerClosed) {
 		zapLogger.Fatal(err)
-	}
-
-	if err := <-shutdownError; err != nil {
-		zapLogger.Error(err)
 	}
 
 	zapLogger.Info("Catalog service stopped...")
