@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-chi/chi/v5"
@@ -11,12 +12,15 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	v1 "github.com/hexley21/fixup/internal/catalog/delivery/http/v1"
+	"github.com/hexley21/fixup/internal/catalog/repository"
+	"github.com/hexley21/fixup/internal/catalog/service"
 	"github.com/hexley21/fixup/internal/common/auth_jwt"
+	"github.com/hexley21/fixup/internal/common/middleware"
 	"github.com/hexley21/fixup/pkg/config"
-	"github.com/hexley21/fixup/pkg/http/binder"
 	"github.com/hexley21/fixup/pkg/http/binder/std_binder"
+	"github.com/hexley21/fixup/pkg/http/handler"
 	"github.com/hexley21/fixup/pkg/http/json/std_json"
-	"github.com/hexley21/fixup/pkg/http/writer"
 	"github.com/hexley21/fixup/pkg/http/writer/json_writer"
 	"github.com/hexley21/fixup/pkg/infra/postgres"
 	"github.com/hexley21/fixup/pkg/logger"
@@ -25,17 +29,11 @@ import (
 )
 
 type services struct {
+	categoryTypes service.CategoryTypeService
 }
 
 type jWTManagers struct {
-	accessJWTManager       auth_jwt.JWTManager
-}
-
-type requestComponents struct {
-	logger     logger.Logger
-	binder     binder.FullBinder
-	validator  validator.Validator
-	httpWriter writer.HTTPWriter
+	accessJWTManager auth_jwt.JWTManager
 }
 
 type server struct {
@@ -43,7 +41,7 @@ type server struct {
 	mux               *http.Server
 	cfg               *config.Config
 	dbPool            *pgxpool.Pool
-	requestComponents *requestComponents
+	handlerComponents *handler.Components
 	jWTManagers       *jWTManagers
 	services          *services
 }
@@ -55,21 +53,22 @@ func NewServer(
 	snowflakeNode *snowflake.Node,
 	validator validator.Validator,
 ) *server {
-	// cdnURLSigner := cdn.NewCloudFrontURLSigner(cfg.AWS.CDN)
+	categoryTypeRepository := repository.NewCategoryTypeRepository(dbPool)
 
-	services := &services{}
+	services := &services{
+		categoryTypes: service.NewCategoryTypeService(categoryTypeRepository),
+	}
 
 	jWTManagers := &jWTManagers{
-		accessJWTManager:       auth_jwt.NewJWTManager(cfg.JWT.AccessSecret, cfg.JWT.AccessTTL),
+		accessJWTManager: auth_jwt.NewJWTManager(cfg.JWT.AccessSecret, cfg.JWT.AccessTTL),
 	}
 
 	jsonManager := std_json.New()
-
-	requestComponents := &requestComponents{
-		logger:     logger,
-		binder:     std_binder.New(jsonManager),
-		validator:  playground_validator.New(),
-		httpWriter: json_writer.New(logger, jsonManager),
+	handlerComponents := &handler.Components{
+		Logger:    logger,
+		Binder:    std_binder.New(jsonManager),
+		Validator: playground_validator.New(),
+		Writer:    json_writer.New(logger, jsonManager),
 	}
 
 	router := chi.NewMux()
@@ -86,22 +85,35 @@ func NewServer(
 		mux:               mux,
 		cfg:               cfg,
 		dbPool:            dbPool,
-		requestComponents: requestComponents,
+		handlerComponents: handlerComponents,
 		jWTManagers:       jWTManagers,
 		services:          services,
 	}
 }
 
 func (s *server) Run() error {
-	// middlewareFactory := middleware.NewMiddlewareFactory(s.requestComponents.binder, s.requestComponents.httpWriter)
+	middlewareFactory := middleware.NewMiddlewareFactory(s.handlerComponents.Binder, s.handlerComponents.Writer)
 	chiLogger := &chi_middleware.DefaultLogFormatter{
-		Logger:  s.requestComponents.logger,
+		Logger:  s.handlerComponents.Logger,
 		NoColor: false,
 	}
 
-	s.router.Use(cors.AllowAll().Handler)
+	s.router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   strings.Split(s.cfg.HTTP.CorsOrigins, ","),
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "Idempotency-Key", "X-CSRF-Token"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
 	s.router.Use(chi_middleware.Recoverer)
 	s.router.Use(chi_middleware.RequestLogger(chiLogger))
+
+	v1.MapV1Routes(v1.RouterArgs{
+		CategoryTypeService: s.services.categoryTypes,
+		MiddlewareFactory:   middlewareFactory,
+		HandlerComponents:   s.handlerComponents,
+		AccessJWTManager:    s.jWTManagers.accessJWTManager,
+	}, s.router)
 
 	return s.mux.ListenAndServe()
 }

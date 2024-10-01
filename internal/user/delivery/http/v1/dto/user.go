@@ -24,7 +24,7 @@ type Profile struct {
 	Role        string    `json:"role"`
 	UserStatus  bool      `json:"user_status"`
 	CreatedAt   time.Time `json:"created_at"`
-} // @name profile
+} // @name Profile
 
 type UpdateUser struct {
 	Email       *string `json:"email,omitempty" validate:"omitempty,email,max=40"`

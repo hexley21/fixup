@@ -90,15 +90,14 @@ func main() {
 	shutdownError := make(chan error)
 	go shutdown.NotifyShutdown(server, zapLogger, shutdownError)
 
+	log.Print("User service started...")
 	if !errors.Is(server.Run(), http.ErrServerClosed) {
 		zapLogger.Fatal(err)
 	}
-
-	log.Print("User service started...")
 
 	if err := <-shutdownError; err != nil {
 		zapLogger.Error(err)
 	}
 
-	zapLogger.Info("Server stopped")
+	zapLogger.Info("User service stopped...")
 }

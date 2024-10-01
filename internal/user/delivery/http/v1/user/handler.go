@@ -66,7 +66,7 @@ func (f *HandlerFactory) FindUserById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	f.Logger.Infof("Fetch user by ID: %d", id)
+	f.Logger.Infof("Fetch user - U-ID: %d", id)
 	f.Writer.WriteData(w, http.StatusOK, user)
 }
 
@@ -104,7 +104,7 @@ func (f *HandlerFactory) FindUserProfileById(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	f.Logger.Infof("Find user profile by ID: %d", id)
+	f.Logger.Infof("Fetch user profile - U-ID: %d", id)
 	f.Writer.WriteData(w, http.StatusOK, profile)
 }
 
@@ -162,7 +162,7 @@ func (f *HandlerFactory) UploadProfilePicture(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	f.Logger.Infof("Upload profile picture for user with ID: %d", id)
+	f.Logger.Infof("Upload user profile picture - U-ID: %d", id)
 	f.Writer.WriteNoContent(w, http.StatusNoContent)
 }
 
@@ -194,7 +194,7 @@ func (f *HandlerFactory) UpdateUserData(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if errResp := f.Validator.Validate(errResp); errResp != nil {
+	if errResp := f.Validator.Validate(dto); errResp != nil {
 		f.Writer.WriteError(w, errResp)
 		return
 	}
@@ -215,7 +215,7 @@ func (f *HandlerFactory) UpdateUserData(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	f.Logger.Infof("Update data for user with id ID: %d", id)
+	f.Logger.Infof("Update user data - U-ID: %d", id)
 	f.Writer.WriteData(w, http.StatusOK, user)
 }
 
@@ -251,7 +251,7 @@ func (f *HandlerFactory) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	f.Logger.Infof("Delete user with ID: %d", id)
+	f.Logger.Infof("Delete user - U-ID: %d", id)
 	f.Writer.WriteNoContent(w, http.StatusNoContent)
 }
 
@@ -309,6 +309,6 @@ func (f *HandlerFactory) ChangePassword(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	f.Logger.Infof("Change password for user with ID: %d", userId)
+	f.Logger.Infof("Change user password - U-ID: %d", userId)
 	f.Writer.WriteNoContent(w, http.StatusNoContent)
 }

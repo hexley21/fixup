@@ -110,7 +110,7 @@ func (f *HandlerFactory) RegisterCustomer(
 
 		go f.sendConfirmationLetter(r.Context(), verGenerator, user.ID, user.Email, user.FirstName)
 
-		f.Logger.Infof("Customer was registered with ID: %s, Email: %s", user.ID, user.Email)
+		f.Logger.Infof("Register customer - Email: %s, U-ID: %d", user.Email, user.ID)
 		f.Writer.WriteNoContent(w, http.StatusCreated)
 	}
 }
@@ -155,7 +155,7 @@ func (f *HandlerFactory) RegisterProvider(
 
 		go f.sendConfirmationLetter(r.Context(), verGenerator, user.ID, user.Email, user.FirstName)
 
-		f.Logger.Infof("Provider was registered with ID: %s, Email: %s", user.ID, user.Email)
+		f.Logger.Infof("Register provider - Email: %s, U-ID: %d", user.Email, user.ID)
 		f.Writer.WriteNoContent(w, http.StatusCreated)
 	}
 }
@@ -206,7 +206,7 @@ func (f *HandlerFactory) ResendConfirmationLetter(
 			return
 		}
 
-		f.Logger.Infof("Confirmation letter was resent to user with email: %s, ID: %s", dto.Email, details.ID)
+		f.Logger.Infof("Resend user confirmation letter - Email %s, U-ID: %d", dto.Email, details.ID)
 		f.Writer.WriteNoContent(w, http.StatusNoContent)
 	}
 }
@@ -267,7 +267,7 @@ func (f *HandlerFactory) Login(
 		setCookies(w, accessToken, access_token_cookie)
 		setCookies(w, refreshToken, refresh_token_cookie)
 
-		f.Logger.Infof("User logged in, user ID: %d, role: %s", user.ID, user.Role)
+		f.Logger.Infof("Login user - Role: %s, U-ID: %d", user.Role, user.ID)
 		f.Writer.WriteNoContent(w, http.StatusOK)
 	}
 }
@@ -281,7 +281,7 @@ func (f *HandlerFactory) Logout(w http.ResponseWriter, r *http.Request) {
 	eraseCookie(w, access_token_cookie)
 	eraseCookie(w, refresh_token_cookie)
 
-	f.Logger.Info("User logged out, cookies erased")
+	f.Logger.Info("Logout user")
 	f.Writer.WriteNoContent(w, http.StatusOK)
 }
 
@@ -323,7 +323,7 @@ func (f *HandlerFactory) Refresh(
 
 		setCookies(w, accessToken, access_token_cookie)
 
-		f.Logger.Infof("JWT refreshed for user ID: %s, Role: %s, UserStatus: %s", id, role, userStatus)
+		f.Logger.Infof("Rotate JWT - Role: %s, UserStatus: %v, U-ID: %d", role, userStatus, id)
 		f.Writer.WriteNoContent(w, http.StatusOK)
 	}
 }
@@ -359,7 +359,6 @@ func (f *HandlerFactory) VerifyEmail(
 		}
 
 		if err := f.service.VerifyUser(r.Context(), tokenParam, time.Until(claims.ExpiresAt.Time), id, claims.Email); err != nil {
-			f.Logger.Debug()
 			if errors.Is(err, redis.TxFailedErr) {
 				f.Writer.WriteError(w, rest.NewConflictError(err, MsgTokenAlreadyUsed))
 				return
@@ -376,14 +375,14 @@ func (f *HandlerFactory) VerifyEmail(
 
 		go func() {
 			if err := f.service.SendVerifiedLetter(claims.Email); err != nil {
-				f.Logger.Errorf("Failed to send verified letter to Email: %s, user ID: %s - cause: %w", claims.Email, id, err)
+				f.Logger.Errorf("Fail send verified letter - Email: %s, U-ID: %d - cause: %v", claims.Email, id, err)
 				return
 			}
 
-			f.Logger.Infof("Verified letter sent to Email: %s, user ID: %s", claims.Email, id)
+			f.Logger.Infof("Send verified letter - Email: %s, U-ID: %d", claims.Email, id)
 		}()
 
-		f.Logger.Infof("Email verification successful for user ID: %d, Email: %s", id, claims.Email)
+		f.Logger.Infof("Verify user - Email: %s, U-ID: %d", claims.Email, id)
 		f.Writer.WriteNoContent(w, http.StatusOK)
 	}
 }
@@ -401,6 +400,6 @@ func (f *HandlerFactory) sendConfirmationLetter(ctx context.Context, verGenerato
 		return errResp
 	}
 
-	f.Logger.Infof("Confirmation letter sent to email: %s, user ID: %s", email, id)
+	f.Logger.Infof("Send confirmation letter - Email: %s, U-ID: %d", email, id)
 	return nil
 }

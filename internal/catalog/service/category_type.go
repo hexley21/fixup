@@ -4,15 +4,16 @@ import (
 	"context"
 
 	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto"
+	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto/mapper"
 	"github.com/hexley21/fixup/internal/catalog/repository"
 )
 
 type CategoryTypeService interface {
-	CreateCategoryType(ctx context.Context, name string) (dto dto.CategoryTypeDTO, err error)
+	CreateCategoryType(ctx context.Context, dto dto.CreateCategoryTypeDTO) (categoryType dto.CategoryTypeDTO, err error)
 	DeleteCategoryTypeById(ctx context.Context, id int32) error
 	GetCategoryTypeById(ctx context.Context, id int32) (dto dto.CategoryTypeDTO, err error)
 	ListCategoryTypes(ctx context.Context) (dtos []dto.CategoryTypeDTO, err error)
-	UpdateCategoryTypeById(ctx context.Context, id int32, name string) error
+	UpdateCategoryTypeById(ctx context.Context, id int32, dto dto.PatchCategoryTypeDTO) error
 }
 
 type categoryTypeServiceImpl struct {
@@ -25,14 +26,13 @@ func NewCategoryTypeService(categoryTypeRepository repository.CategoryTypeReposi
 	}
 }
 
-func (s *categoryTypeServiceImpl) CreateCategoryType(ctx context.Context, name string) (dto dto.CategoryTypeDTO, err error) {
-	entity, err := s.categoryTypeRepository.CreateCategoryType(ctx, name)
+func (s *categoryTypeServiceImpl) CreateCategoryType(ctx context.Context, dto dto.CreateCategoryTypeDTO) (categoryType dto.CategoryTypeDTO, err error) {
+	entity, err := s.categoryTypeRepository.CreateCategoryType(ctx, dto.Name)
 	if err != nil {
-		return dto, err
+		return categoryType, err
 	}
 
-	dto.CategoryType = entity
-	return
+	return mapper.MapCategoryTypeToDTO(entity), err
 }
 
 func (s *categoryTypeServiceImpl) DeleteCategoryTypeById(ctx context.Context, id int32) error {
@@ -44,8 +44,8 @@ func (s *categoryTypeServiceImpl) GetCategoryTypeById(ctx context.Context, id in
 	if err != nil {
 		return dto, err
 	}
-	dto.CategoryType = entity
-	return
+
+	return mapper.MapCategoryTypeToDTO(entity), err
 }
 
 func (s *categoryTypeServiceImpl) ListCategoryTypes(ctx context.Context) (dtos []dto.CategoryTypeDTO, err error) {
@@ -55,12 +55,12 @@ func (s *categoryTypeServiceImpl) ListCategoryTypes(ctx context.Context) (dtos [
 	}
 
 	for _, e := range entities {
-		dtos = append(dtos, dto.CategoryTypeDTO{CategoryType: e})
+		dtos = append(dtos, mapper.MapCategoryTypeToDTO(e))
 	}
 
 	return
 }
 
-func (s *categoryTypeServiceImpl) UpdateCategoryTypeById(ctx context.Context, id int32, name string) error {
-	return s.categoryTypeRepository.UpdateCategoryTypeById(ctx, repository.UpdateCategoryTypeByIdParams{ID: id, Name: name})
+func (s *categoryTypeServiceImpl) UpdateCategoryTypeById(ctx context.Context, id int32, dto dto.PatchCategoryTypeDTO) error {
+	return s.categoryTypeRepository.UpdateCategoryTypeById(ctx, repository.UpdateCategoryTypeByIdParams{ID: id, Name: dto.Name})
 }
