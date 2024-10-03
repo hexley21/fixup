@@ -22,7 +22,7 @@ func MapV1Routes(args RouterArgs, router chi.Router) {
 	onlyVerifiedMiddleware := args.MiddlewareFactory.NewAllowVerified(true)
 	onlyAdminMiddleware := args.MiddlewareFactory.NewAllowRoles(enum.UserRoleADMIN)
 
-	categoryTypesHandler := category_type.NewCategoryTypeHandler(
+	categoryTypesHandler := category_type.NewHandler(
 		args.HandlerComponents,
 		args.CategoryTypeService,
 	)

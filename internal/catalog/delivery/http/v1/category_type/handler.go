@@ -27,19 +27,18 @@ type CategoryTypeHandler struct {
 	service service.CategoryTypeService
 }
 
-func NewCategoryTypeHandler(handlerComponents *handler.Components, service service.CategoryTypeService) *CategoryTypeHandler {
+func NewHandler(handlerComponents *handler.Components, service service.CategoryTypeService) *CategoryTypeHandler {
 	return &CategoryTypeHandler{
 		Components: handlerComponents,
 		service:    service,
 	}
 }
 
-// CreateCategoryType creates a new category type
 // @Summary Create a new category type
 // @Description Creates a new category type with the provided data.
 // @Tags CategoryType
 // @Param dto body dto.CreateCategoryTypeDTO true "Category type data"
-// @Success 201 {object} rest.apiResponse[dto.CategoryTypeDTO] "Created - Successfully created the category type"
+// @Success 201 {object} rest.ApiResponse[dto.CategoryTypeDTO] "Created - Successfully created the category type"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"
 // @Failure 403 {object} rest.ErrorResponse "Forbidden"
@@ -77,13 +76,12 @@ func (h *CategoryTypeHandler) CreateCategoryType(w http.ResponseWriter, r *http.
 	h.Writer.WriteData(w, http.StatusCreated, categoryType)
 }
 
-// GetCategoryTypes retrieves a category types list
 // @Summary Retrieve a category types
 // @Description Retrieves a category type range
 // @Tags CategoryType
 // @Param page query int false "Page number"
 // @Param per_page query int false "Number of items per page"
-// @Success 200 {object} rest.apiResponse[[]dto.CategoryTypeDTO] "OK - Successfully retrieved the category types"
+// @Success 200 {object} rest.ApiResponse[[]dto.CategoryTypeDTO] "OK - Successfully retrieved the category types"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"
 // @Failure 403 {object} rest.ErrorResponse "Forbidden"
@@ -113,12 +111,11 @@ func (h *CategoryTypeHandler) GetCategoryTypes(w http.ResponseWriter, r *http.Re
 	h.Writer.WriteData(w, http.StatusOK, categoryTypes)
 }
 
-// GetCategoryTypeById retrieves a category type by ID
 // @Summary Retrieve a category type by ID
 // @Description Retrieves a category type specified by the ID.
 // @Tags CategoryType
 // @Param id path int true "The ID of the category type to retrieve"
-// @Success 200 {object} rest.apiResponse[dto.CategoryTypeDTO] "OK - Successfully retrieved the category type"
+// @Success 200 {object} rest.ApiResponse[dto.CategoryTypeDTO] "OK - Successfully retrieved the category type"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"
 // @Failure 403 {object} rest.ErrorResponse "Forbidden"
@@ -148,13 +145,12 @@ func (h *CategoryTypeHandler) GetCategoryTypeById(w http.ResponseWriter, r *http
 	h.Writer.WriteData(w, http.StatusOK, dto)
 }
 
-// PatchCategoryTypeById updates a category type by ID
 // @Summary Update a category type by ID
 // @Description Updates a category type specified by the ID.
 // @Tags CategoryType
 // @Param id path int true "The ID of the category type to update"
 // @Param dto body dto.PatchCategoryTypeDTO true "Category type data"
-// @Success 200 {object} rest.apiResponse[dto.CategoryTypeDTO] "OK - Successfully updated the category type"
+// @Success 200 {object} rest.ApiResponse[dto.CategoryTypeDTO] "OK - Successfully updated the category type"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"
 // @Failure 403 {object} rest.ErrorResponse "Forbidden"
@@ -204,7 +200,6 @@ func (h *CategoryTypeHandler) PatchCategoryTypeById(w http.ResponseWriter, r *ht
 	h.Writer.WriteData(w, http.StatusOK, dto.CategoryTypeDTO{ID: strconv.Itoa(id), Name: patchDto.Name})
 }
 
-// DeleteCategoryTypeById deletes a category type by ID
 // @Summary Delete a category type by ID
 // @Description Deletes a category type specified by the ID.
 // @Tags CategoryType

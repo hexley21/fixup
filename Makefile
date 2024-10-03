@@ -33,7 +33,7 @@ test:
 	go test -cover ./internal/user/repository/ -mp="${CURDIR}/sql/user/migrations"
 
 compose: build
-	@docker-compose up --build --remove-orphans
+	@docker compose up --build --remove-orphans
 
 sqlc:
 	@sqlc generate -f ./sql/$(db)/sqlc.yml

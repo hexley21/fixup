@@ -40,7 +40,7 @@ func NewFactory(components *handler.Components, service service.UserService) *Ha
 // @Accept json
 // @Produce json
 // @Param id path string true "User ID"
-// @Success 200 {object} rest.apiResponse[dto.User] "OK"
+// @Success 200 {object} rest.ApiResponse[dto.User] "OK"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"
 // @Failure 403 {object} rest.ErrorResponse "Forbidden"
@@ -76,7 +76,7 @@ func (f *HandlerFactory) FindUserById(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "User ID"
-// @Success 200 {object} rest.apiResponse[dto.Profile] "OK"
+// @Success 200 {object} rest.ApiResponse[dto.Profile] "OK"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"
 // @Failure 403 {object} rest.ErrorResponse "Forbidden"
@@ -173,7 +173,7 @@ func (f *HandlerFactory) UploadProfilePicture(w http.ResponseWriter, r *http.Req
 // @Produce json
 // @Param id path string true "User ID"
 // @Param user body dto.UpdateUser true "User data"
-// @Success 200 {object} rest.apiResponse[dto.User] "OK"
+// @Success 200 {object} rest.ApiResponse[dto.User] "OK"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"
 // @Failure 403 {object} rest.ErrorResponse "Forbidden"
