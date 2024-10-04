@@ -9,7 +9,7 @@ import (
 	"github.com/hexley21/fixup/internal/common/middleware"
 	"github.com/hexley21/fixup/pkg/http/handler"
 )
-
+	
 type RouterArgs struct {
 	CategoryTypeService service.CategoryTypeService
 	MiddlewareFactory   *middleware.MiddlewareFactory
