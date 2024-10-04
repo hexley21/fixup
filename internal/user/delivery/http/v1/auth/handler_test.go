@@ -115,7 +115,7 @@ func TestRegisterCustomer_Success(t *testing.T) {
 	assert.Empty(t, rec.Body.String())
 	assert.Equal(t, http.StatusCreated, rec.Code)
 
-	time.Sleep(time.Microsecond)
+	time.Sleep(500*time.Millisecond)
 }
 
 func TestRegisterCustomer_BindError(t *testing.T) {
@@ -212,7 +212,7 @@ func TestRegisterProvider_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusCreated, rec.Code)
 
-	time.Sleep(time.Microsecond)
+	time.Sleep(500*time.Millisecond)
 }
 
 func TestRegisterProvider_BindError(t *testing.T) {
@@ -690,7 +690,7 @@ func TestVerifyEmail_Success(t *testing.T) {
 	f.VerifyEmail(mockVerifyJWT).ServeHTTP(rec, req)
 	assert.Equal(t, http.StatusOK, rec.Code)
 
-	time.Sleep(time.Microsecond)
+	time.Sleep(500*time.Millisecond)
 }
 
 func TestVerifyEmail_InvalidToken(t *testing.T) {
@@ -813,5 +813,5 @@ func TestVerifyEmail_MailError(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, rec.Code)
 
-	time.Sleep(time.Microsecond)
+	time.Sleep(500*time.Millisecond)
 }

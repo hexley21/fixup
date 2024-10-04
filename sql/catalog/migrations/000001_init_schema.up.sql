@@ -1,7 +1,7 @@
 -- Category Types Table
 CREATE TABLE category_types (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(30) NOT NULL UNIQUE
+    name VARCHAR(30) NOT NULL UNIQUE CHECK (LENGTH(name) > 1)
 );
 
 -- Categories Table

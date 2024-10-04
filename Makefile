@@ -30,7 +30,9 @@ endif
 
 test: 
 	go test -cover ./internal/...
+	@echo "REPOSITORY TESTS:"
 	go test -cover ./internal/user/repository/ -mp="${CURDIR}/sql/user/migrations"
+	go test -cover ./internal/catalog/repository -mp="${CURDIR}/sql/catalog/migrations"
 
 compose: build
 	@docker compose up --build --remove-orphans

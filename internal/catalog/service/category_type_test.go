@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	categoryName = "Home"
+	categoryTypeName = "Home"
 	id = int32(1)
 
 	page     int32 = 1
@@ -25,10 +25,10 @@ const (
 var (
 	categoryTypeEntity = entity.CategoryType{
 		ID: id,
-		Name: categoryName,
+		Name: categoryTypeName,
 	}
 	createCategoryTypeDTO = dto.CreateCategoryTypeDTO{
-		Name: categoryName,
+		Name: categoryTypeName,
 	}
 
 	categoryTypeEntities = []entity.CategoryType{
@@ -37,7 +37,7 @@ var (
     }
 
 	patchCategoryTypeDTO = dto.PatchCategoryTypeDTO{
-		Name: categoryName,
+		Name: categoryTypeName,
 	}
 )
 
@@ -60,7 +60,7 @@ func TestCreateCategoryType_Success(t *testing.T) {
     ctrl, ctx, svc, mockCategoryTypeRepo := setup(t)
 	defer ctrl.Finish()
 
-    mockCategoryTypeRepo.EXPECT().CreateCategoryType(ctx, categoryName).Return(categoryTypeEntity, nil)
+    mockCategoryTypeRepo.EXPECT().CreateCategoryType(ctx, categoryTypeName).Return(categoryTypeEntity, nil)
 
     result, err := svc.CreateCategoryType(ctx, createCategoryTypeDTO)
 
@@ -73,7 +73,7 @@ func TestCreateCategoryType_RepositoryError(t *testing.T) {
     ctrl, ctx, svc, mockCategoryTypeRepo := setup(t)
     defer ctrl.Finish()
 
-    mockCategoryTypeRepo.EXPECT().CreateCategoryType(ctx, categoryName).Return(entity.CategoryType{}, errors.New(""))
+    mockCategoryTypeRepo.EXPECT().CreateCategoryType(ctx, categoryTypeName).Return(entity.CategoryType{}, errors.New(""))
 
     result, err := svc.CreateCategoryType(ctx, createCategoryTypeDTO)
 
@@ -160,7 +160,7 @@ func TestUpdateCategoryTypeById_Success(t *testing.T) {
     ctrl, ctx, svc, mockRepo := setup(t)
     defer ctrl.Finish()
 
-    mockRepo.EXPECT().UpdateCategoryTypeById(ctx, repository.UpdateCategoryTypeByIdParams{ID: id, Name: categoryName}).Return(nil)
+    mockRepo.EXPECT().UpdateCategoryTypeById(ctx, repository.UpdateCategoryTypeByIdParams{ID: id, Name: categoryTypeName}).Return(nil)
 
     err := svc.UpdateCategoryTypeById(ctx, id, patchCategoryTypeDTO)
 
@@ -171,7 +171,7 @@ func TestUpdateCategoryTypeById_RepositoryError(t *testing.T) {
     ctrl, ctx, svc, mockRepo := setup(t)
     defer ctrl.Finish()
 
-    mockRepo.EXPECT().UpdateCategoryTypeById(ctx, repository.UpdateCategoryTypeByIdParams{ID: id, Name: categoryName}).Return(errors.New(""))
+    mockRepo.EXPECT().UpdateCategoryTypeById(ctx, repository.UpdateCategoryTypeByIdParams{ID: id, Name: categoryTypeName}).Return(errors.New(""))
 
     err := svc.UpdateCategoryTypeById(ctx, id, patchCategoryTypeDTO)
 
