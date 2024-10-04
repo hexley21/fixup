@@ -52,21 +52,23 @@ func (s *categoryTypeServiceImpl) GetCategoryTypeById(ctx context.Context, id in
 	return mapper.MapCategoryTypeToDTO(entity), err
 }
 
-func (s *categoryTypeServiceImpl) GetCategoryTypes(ctx context.Context, page int32, per_page int32) (dtos []dto.CategoryTypeDTO, err error) {
+func (s *categoryTypeServiceImpl) GetCategoryTypes(ctx context.Context, page int32, per_page int32) ([]dto.CategoryTypeDTO, error) {
+	var dtos []dto.CategoryTypeDTO
+	
 	if per_page == 0 {
 		per_page = defaultPerPage
 	}
 
 	entities, err := s.categoryTypeRepository.GetCategoryTypes(ctx, per_page*(page-1), per_page)
 	if err != nil {
-		return dtos, nil
+		return dtos, err
 	}
 
 	for _, e := range entities {
 		dtos = append(dtos, mapper.MapCategoryTypeToDTO(e))
 	}
 
-	return
+	return dtos, err
 }
 
 func (s *categoryTypeServiceImpl) UpdateCategoryTypeById(ctx context.Context, id int32, dto dto.PatchCategoryTypeDTO) error {
