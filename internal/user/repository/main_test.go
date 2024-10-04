@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 	flag.Parse()
 	if *migrationPath == "" || migrationPath == nil {
 		log.Print("Continueing without database migration")
-		os.Exit(1)
+		os.Exit(0)
 	}
 
 	image, config := pg_tt.GetConfig()

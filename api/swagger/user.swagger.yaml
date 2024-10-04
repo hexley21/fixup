@@ -20,6 +20,27 @@ definitions:
     - email
     - password
     type: object
+  Profile:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      phone_number:
+        type: string
+      picture_url:
+        type: string
+      role:
+        type: string
+      user_status:
+        type: boolean
+    type: object
   RegisterProviderInput:
     properties:
       email:
@@ -122,43 +143,20 @@ definitions:
       user_status:
         type: boolean
     type: object
-  profile:
-    properties:
-      created_at:
-        type: string
-      email:
-        type: string
-      first_name:
-        type: string
-      id:
-        type: string
-      last_name:
-        type: string
-      phone_number:
-        type: string
-      picture_url:
-        type: string
-      role:
-        type: string
-      user_status:
-        type: boolean
-    type: object
   rest.ErrorResponse:
     properties:
       message:
         type: string
-      status:
-        type: integer
+    type: object
+  rest.apiResponse-Profile:
+    properties:
+      data:
+        $ref: '#/definitions/Profile'
     type: object
   rest.apiResponse-User:
     properties:
       data:
         $ref: '#/definitions/User'
-    type: object
-  rest.apiResponse-profile:
-    properties:
-      data:
-        $ref: '#/definitions/profile'
     type: object
 host: localhost:8080
 info:
@@ -387,7 +385,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.apiResponse-profile'
+            $ref: '#/definitions/rest.apiResponse-Profile'
         "400":
           description: Bad Request
           schema:

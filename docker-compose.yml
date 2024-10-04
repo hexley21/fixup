@@ -3,7 +3,7 @@ services:
   setup-elk:
     image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_VERSION}
     volumes:
-      - ./keys/elk:/usr/share/elasticsearch/config/certs
+      - certs:/usr/share/elasticsearch/config/certs
     user: "0"
     command: >
       bash -c '
@@ -56,8 +56,8 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_VERSION}
     restart: unless-stopped
     volumes:
-      - ./keys/elk:/usr/share/elasticsearch/config/certs
-      - ./docker-data/es01/data:/usr/share/elasticsearch/data
+      - certs:/usr/share/elasticsearch/config/certs
+      - esdata01:/usr/share/elasticsearch/data
     ports:
       - ${ES_PORT}:9200
     environment:
@@ -96,8 +96,8 @@ services:
     image: docker.elastic.co/kibana/kibana:${ELK_VERSION}
     restart: unless-stopped
     volumes:
-      - ./keys/elk:/usr/share/kibana/config/certs
-      - ./docker-data/kibana/data:/usr/share/kibana/data
+      - certs:/usr/share/kibana/config/certs
+      - kibanadata:/usr/share/kibana/data
     ports:
       - ${KIBANA_PORT}:5601
     environment:
@@ -119,8 +119,6 @@ services:
 
   metricbeat01:
     depends_on:
-      es01:
-        condition: service_healthy
       kibana:
         condition: service_healthy
     image: docker.elastic.co/beats/metricbeat:${ELK_VERSION}
@@ -128,8 +126,8 @@ services:
       - --strict.perms=false
     user: root
     volumes:
-      - ./keys/elk:/usr/share/metricbeat/certs
-      - ./docker-data/metricbeat01/data:/usr/share/metricbeat/data
+      - certs:/usr/share/metricbeat/certs
+      - metricbeatdata01:/usr/share/metricbeat/data
       - ./config/elk/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro"
     environment:
       - ELASTIC_USER=elastic
@@ -147,9 +145,9 @@ services:
     command:
       - --strict.perms=false
     volumes:
-      - ./docker-data/filebeat01/data:/usr/share/filebeat/data
+      - filebeatdata01:/usr/share/filebeat/data
+      - certs:/usr/share/filebeat/certs
       - ./config/elk/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      - ./keys/elk:/usr/share/filebeat/certs
       - ./log/:/log/:ro
     environment:
       - ELASTIC_USER=elastic
@@ -165,8 +163,8 @@ services:
     image: docker.elastic.co/logstash/logstash:${ELK_VERSION}
     user: root
     volumes:
-      - ./keys/elk:/usr/share/logstash/certs
-      - ./docker-data/logstashdata01/data:/usr/share/logstash/data
+      - certs:/usr/share/logstash/certs
+      - logstashdata01:/usr/share/logstash/data
       - ./config/elk/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
     environment:
       - xpack.monitoring.enabled=false
@@ -178,7 +176,7 @@ services:
     image: docker.io/bitnami/redis-cluster:latest
     restart: unless-stopped
     volumes:
-      - ./docker-data/redis01/data/:/bitnami/redis/data/
+      - redisdata01:/bitnami/redis/data
     environment:
       - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
       - 'REDIS_NODES=redis01 redis02 redis03 redis04 redis05 redis06'
@@ -187,7 +185,7 @@ services:
     image: docker.io/bitnami/redis-cluster:latest
     restart: unless-stopped
     volumes:
-      - ./docker-data/redis02/data/:/bitnami/redis/data/
+      - redisdata02:/bitnami/redis/data
     environment:
       - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
       - 'REDIS_NODES=redis01 redis02 redis03 redis04 redis05 redis06'
@@ -196,7 +194,7 @@ services:
     image: docker.io/bitnami/redis-cluster:latest
     restart: unless-stopped
     volumes:
-      - ./docker-data/redis03/data/:/bitnami/redis/data/
+      - redisdata03:/bitnami/redis/data
     environment:
       - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
       - 'REDIS_NODES=redis01 redis02 redis03 redis04 redis05 redis06'
@@ -205,7 +203,7 @@ services:
     image: docker.io/bitnami/redis-cluster:latest
     restart: unless-stopped
     volumes:
-      - ./docker-data/redis04/data/:/bitnami/redis/data/
+      - redisdata04:/bitnami/redis/data
     environment:
       - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
       - 'REDIS_NODES=redis01 redis02 redis03 redis04 redis05 redis06'
@@ -214,7 +212,7 @@ services:
     image: docker.io/bitnami/redis-cluster:latest
     restart: unless-stopped
     volumes:
-      - ./docker-data/redis05/data/:/bitnami/redis/data/
+      - redisdata05:/bitnami/redis/data
     environment:
       - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
       - 'REDIS_NODES=redis01 redis02 redis03 redis04 redis05 redis06'
@@ -225,7 +223,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - ./docker-data/redis06/data/:/bitnami/redis/data/
+      - redisdata06:/bitnami/redis/data
     environment:
       - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
       - 'REDISCLI_AUTH=${REDIS_PASSWORD}'
@@ -246,7 +244,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - ./docker-data/user/postgres-data:/var/lib/postgresql/data
+      - userdb:/var/lib/postgresql/data
     restart: unless-stopped
     env_file: .env
     environment:
@@ -264,7 +262,7 @@ services:
     ports:
       - "5434:5432"
     volumes:
-      - ./docker-data/catalog/postgres-data:/var/lib/postgresql/data
+      - catalogdb:/var/lib/postgresql/data
     restart: unless-stopped
     env_file: .env
     environment:
@@ -282,7 +280,7 @@ services:
     ports:
       - "5435:5432"
     volumes:
-      - ./docker-data/order/postgres-data:/var/lib/postgresql/data
+      - orderdb:/var/lib/postgresql/data
     restart: unless-stopped
     env_file: .env
     environment:
@@ -307,8 +305,8 @@ services:
         condition: service_healthy
       redis06:
         condition: service_healthy
-      # es01:
-      #   condition: service_healthy
+      es01:
+        condition: service_healthy
     env_file: .env
     volumes:
       - ./log/user.log:/root/log/user.log
@@ -323,8 +321,8 @@ services:
     depends_on:
       catalog-db:
         condition: service_healthy
-      # es01:
-      #   condition: service_healthy
+      es01:
+        condition: service_healthy
     env_file: .env
     volumes:
       - ./log/catalog.log:/root/log/catalog.log
@@ -369,7 +367,7 @@ services:
       - order-service
       - chat-service
     volumes:
-      - ./docker-data/nginx/logs:/var/log/nginx/
+      - nginxdata:/var/log/nginx
 
   swagger-ui:
     build:
@@ -378,3 +376,37 @@ services:
     restart: unless-stopped
     ports:
       - "8081:8080"
+
+volumes:
+  certs:
+    driver: local
+  esdata01:
+    driver: local
+  metricbeatdata01:
+    driver: local
+  filebeatdata01:
+    driver: local
+  logstashdata01:
+    driver: local
+  kibanadata:
+    driver: local
+  orderdb:
+    driver: local
+  catalogdb:
+    driver: local
+  userdb:
+    driver: local
+  redisdata01:
+    driver: local
+  redisdata02:
+    driver: local
+  redisdata03:
+    driver: local
+  redisdata04:
+    driver: local
+  redisdata05:
+    driver: local
+  redisdata06:
+    driver: local
+  nginxdata:
+    driver: local

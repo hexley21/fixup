@@ -22,10 +22,9 @@ import (
 	"github.com/hexley21/fixup/pkg/config"
 	"github.com/hexley21/fixup/pkg/encryption"
 	"github.com/hexley21/fixup/pkg/hasher"
-	"github.com/hexley21/fixup/pkg/http/binder"
 	"github.com/hexley21/fixup/pkg/http/binder/std_binder"
+	"github.com/hexley21/fixup/pkg/http/handler"
 	"github.com/hexley21/fixup/pkg/http/json/std_json"
-	"github.com/hexley21/fixup/pkg/http/writer"
 	"github.com/hexley21/fixup/pkg/http/writer/json_writer"
 	"github.com/hexley21/fixup/pkg/infra/cdn"
 	"github.com/hexley21/fixup/pkg/infra/postgres"
@@ -46,21 +45,13 @@ type jWTManagers struct {
 	refreshJWTManager      auth_jwt.JWTManager
 	verificationJWTManager verifier.JWTManager
 }
-
-type requestComponents struct {
-	logger     logger.Logger
-	binder     binder.FullBinder
-	validator  validator.Validator
-	httpWriter writer.HTTPWriter
-}
-
 type server struct {
 	router            chi.Router
 	mux               *http.Server
 	cfg               *config.Config
 	dbPool            *pgxpool.Pool
 	redisCluster      *redis.ClusterClient
-	requestComponents *requestComponents
+	handlerComponents *handler.Components
 	jWTManagers       *jWTManagers
 	services          *services
 }
@@ -121,11 +112,11 @@ func NewServer(
 
 	jsonManager := std_json.New()
 
-	requestComponents := &requestComponents{
-		logger:     logger,
-		binder:     std_binder.New(jsonManager),
-		validator:  plaground_validator.New(),
-		httpWriter: json_writer.New(logger, jsonManager),
+	handlerComponents := &handler.Components{
+		Logger:     logger,
+		Binder:     std_binder.New(jsonManager),
+		Validator:  plaground_validator.New(),
+		Writer: json_writer.New(logger, jsonManager),
 	}
 
 	router := chi.NewMux()
@@ -142,16 +133,16 @@ func NewServer(
 		mux:               mux,
 		cfg:               cfg,
 		dbPool:            dbPool,
-		requestComponents: requestComponents,
+		handlerComponents: handlerComponents,
 		jWTManagers:       jWTManagers,
 		services:          services,
 	}
 }
 
 func (s *server) Run() error {
-	middlewareFactory := middleware.NewMiddlewareFactory(s.requestComponents.binder, s.requestComponents.httpWriter)
+	middlewareFactory := middleware.NewMiddlewareFactory(s.handlerComponents.Binder, s.handlerComponents.Writer)
 	chiLogger := &chi_middleware.DefaultLogFormatter{
-		Logger:  s.requestComponents.logger,
+		Logger:  s.handlerComponents.Logger,
 		NoColor: false,
 	}
 
@@ -169,10 +160,7 @@ func (s *server) Run() error {
 		AuthService:            s.services.authService,
 		UserService:            s.services.userService,
 		MiddlewareFactory:      middlewareFactory,
-		Logger:                 s.requestComponents.logger,
-		Binder:                 s.requestComponents.binder,
-		Validator:              s.requestComponents.validator,
-		Writer:                 s.requestComponents.httpWriter,
+		HandlerComponents:      s.handlerComponents,
 		AccessJWTManager:       s.jWTManagers.accessJWTManager,
 		RefreshJWTManager:      s.jWTManagers.refreshJWTManager,
 		VerificationJWTManager: s.jWTManagers.verificationJWTManager,
@@ -187,17 +175,17 @@ func (s *server) Close() error {
 
 	err := s.mux.Shutdown(ctx)
 	if err != nil {
-		return err
+		s.handlerComponents.Logger.Error(err)
 	}
 
 	err = postgres.Close(s.dbPool)
 	if err != nil {
-		return err
+		s.handlerComponents.Logger.Error(err)
 	}
 
 	err = s.redisCluster.Close()
 	if err != nil {
-		return err
+		s.handlerComponents.Logger.Error(err)
 	}
 
 	return nil
