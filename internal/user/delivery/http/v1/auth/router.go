@@ -20,7 +20,7 @@ func MapRoutes(
 		auth.Post("/register/provider", hf.RegisterProvider(vrfJWTManager))
 		auth.Post("/resend-confirmation", hf.ResendConfirmationLetter(vrfJWTManager))
 
-		auth.With(mf.NewJWT(refreshJWTManager)).Post("/refresh", hf.Refresh(refreshJWTManager))
+		auth.With(mf.NewJWT(refreshJWTManager)).Post("/refresh", hf.Refresh(accessJwtManager))
 		auth.Post("/login", hf.Login(accessJwtManager, refreshJWTManager))
 		auth.Post("/logout", hf.Logout)
 

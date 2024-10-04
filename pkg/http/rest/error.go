@@ -8,6 +8,7 @@ import (
 
 const (
 	MsgInvalidArguments = "Invalid arguments"
+	MsgInvalidId = "Invalid ID"
 
 	MsgFileReadError = "Failed read file"
 

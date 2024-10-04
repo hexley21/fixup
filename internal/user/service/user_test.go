@@ -10,7 +10,7 @@ import (
 
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/entity"
-	"github.com/hexley21/fixup/internal/user/enum"
+	"github.com/hexley21/fixup/internal/common/enum"
 	"github.com/hexley21/fixup/internal/user/repository"
 	mock_repository "github.com/hexley21/fixup/internal/user/repository/mock"
 	"github.com/hexley21/fixup/internal/user/service"

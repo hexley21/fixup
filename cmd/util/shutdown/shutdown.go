@@ -9,16 +9,16 @@ import (
 	"github.com/hexley21/fixup/pkg/logger"
 )
 
-func NotifyShutdown(serverCloser io.Closer, logger logger.Logger, shutdownError chan<- error) {
+func NotifyShutdown(serverCloser io.Closer, logger logger.Logger, shutdownError chan<- struct{}) {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 
 	logger.Info("caught signal", "signal", (<-sig).String())
 
 	if err := serverCloser.Close(); err != nil {
-		shutdownError <- err
+		shutdownError <- struct{}{}
 		return
 	}
 
-	shutdownError <- nil
+	shutdownError <- struct{}{}
 }

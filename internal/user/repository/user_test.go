@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/hexley21/fixup/internal/user/entity"
-	"github.com/hexley21/fixup/internal/user/enum"
+	"github.com/hexley21/fixup/internal/common/enum"
 	"github.com/hexley21/fixup/internal/user/repository"
 	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 	"github.com/jackc/pgerrcode"
