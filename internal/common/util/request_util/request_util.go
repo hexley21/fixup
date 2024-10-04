@@ -22,7 +22,7 @@ func ParsePagination(r *http.Request) (*rest.ErrorResponse, int, int) {
 
 	if perPageParam != "" {
 		perPage, err = strconv.Atoi(perPageParam)
-		if err != nil || perPage < 0{
+		if err != nil || perPage < 1{
 			return rest.NewBadRequestError(err, app_error.MsgInvalidPerPage), 0, 0
 		}
 	}

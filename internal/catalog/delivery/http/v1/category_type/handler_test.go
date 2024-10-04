@@ -193,6 +193,45 @@ func TestGetCategoryTypes_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
 
+func TestGetCategoryTypes_InvalidPage(t *testing.T) {
+	ctrl, _, _, h := setup(t)
+	defer ctrl.Finish()
+
+	q := make(url.Values)
+	q.Set("page", "0")
+
+	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
+	rec := httptest.NewRecorder()
+
+	h.GetCategoryTypes(rec, req)
+
+	var errResp rest.ErrorResponse
+	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
+		assert.Equal(t, app_error.MsgInvalidPage, errResp.Message)
+	}
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestGetCategoryTypes_InvalidPerPage(t *testing.T) {
+	ctrl, _, _, h := setup(t)
+	defer ctrl.Finish()
+
+	q := make(url.Values)
+	q.Set("page", "1")
+	q.Set("per_page", "0")
+
+	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
+	rec := httptest.NewRecorder()
+
+	h.GetCategoryTypes(rec, req)
+
+	var errResp rest.ErrorResponse
+	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
+		assert.Equal(t, app_error.MsgInvalidPerPage, errResp.Message)
+	}
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
 func TestGetCategoryTypes_NotFound(t *testing.T) {
 	ctrl, mockService, _, h := setup(t)
 	defer ctrl.Finish()
