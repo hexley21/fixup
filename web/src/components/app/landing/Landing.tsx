@@ -4,13 +4,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { ChevronDown, Home, Paintbrush, Wrench, Car, Leaf, Laptop, Shirt, Dog, Book } from "lucide-react"
-import DownloadMobile from "@/components/app/download/DownloadMobile"
 import { LandingHeader } from "../common/Header"
+import { DownloadMobile } from "./DownloadMobile"
+import { ContentLayout } from "../common/ContentLayout"
 
 export function Landing() {
     return (<>
         <LandingHeader />
-        <Component />
+        <ContentLayout>
+            <Component />
+        </ContentLayout>
     </>);
 }
 
@@ -36,7 +39,7 @@ const userReviews = [
 
 function Component() {
     return (
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col min-h-screen bg-white ">
             <main>
                 <section className="py-12 px-4">
                     <div className="max-w-4xl mx-auto">

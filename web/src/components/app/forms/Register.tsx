@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { RegisterHeader } from "@/components/app/common/Header"
-import { ContentLayout } from "@/components/app/content-layout/content-layout"
+import { ContentLayout } from "../common/ContentLayout"
 
 const registerFormSchema = z.object({
   first_name: z
@@ -194,3 +194,4 @@ export function Register() {
     </ContentLayout>
   </>);
 }
+

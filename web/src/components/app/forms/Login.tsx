@@ -7,8 +7,8 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { ContentLayout } from "@/components/app/content-layout/content-layout"
 import { LoginHeader } from "@/components/app/common/Header"
+import { ContentLayout } from "../common/ContentLayout"
 
 const loginFormSchema = z.object({
   email: z
