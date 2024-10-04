@@ -19,7 +19,7 @@ const (
 	categoryTypeId = int32(1)
 )
 
-func setupCategoryType(t *testing.T)(
+func setupCategoryType()(
 	ctx context.Context,
 	pgPool *pgxpool.Pool,
 	repo repository.CategoryTypeRepository,
@@ -33,7 +33,7 @@ func setupCategoryType(t *testing.T)(
 }
 
 func TestCreateCategoryType_Success(t *testing.T) {
-	ctx, pgPool, repo := setupCategoryType(t)
+	ctx, pgPool, repo := setupCategoryType()
 	defer cleanupPostgres(ctx, pgPool)
 
 	entity, err := repo.CreateCategoryType(ctx, categoryTypeName)
@@ -43,7 +43,7 @@ func TestCreateCategoryType_Success(t *testing.T) {
 }
 
 func TestCreateCategoryType_InvalidArgs(t *testing.T) {
-	ctx, pgPool, repo := setupCategoryType(t)
+	ctx, pgPool, repo := setupCategoryType()
 	defer cleanupPostgres(ctx, pgPool)
 
 	entity, err := repo.CreateCategoryType(ctx, "")
@@ -57,7 +57,7 @@ func TestCreateCategoryType_InvalidArgs(t *testing.T) {
 }
 
 func TestCreateCategoryType_Conflict(t *testing.T) {
-	ctx, pgPool, repo := setupCategoryType(t)
+	ctx, pgPool, repo := setupCategoryType()
 	defer cleanupPostgres(ctx, pgPool)
 
 	entity, err := repo.CreateCategoryType(ctx, categoryTypeName)
@@ -76,7 +76,7 @@ func TestCreateCategoryType_Conflict(t *testing.T) {
 }
 
 func TestDeleteCategoryTypeById_Success(t *testing.T) {
-	ctx, pgPool, repo := setupCategoryType(t)
+	ctx, pgPool, repo := setupCategoryType()
 	defer cleanupPostgres(ctx, pgPool)
 
 	insert, err := insertCategoryType(pgPool, ctx, categoryTypeName)
@@ -93,7 +93,7 @@ func TestDeleteCategoryTypeById_Success(t *testing.T) {
 }
 
 func TestDeleteCategoryTypeById_NotFound(t *testing.T) {
-	ctx, pgPool, repo := setupCategoryType(t)
+	ctx, pgPool, repo := setupCategoryType()
 	defer cleanupPostgres(ctx, pgPool)
 
 	err := repo.DeleteCategoryTypeById(ctx, categoryTypeId)
@@ -101,7 +101,7 @@ func TestDeleteCategoryTypeById_NotFound(t *testing.T) {
 }
 
 func TestGetCategoryTypeById_Success(t *testing.T) {
-	ctx, pgPool, repo := setupCategoryType(t)
+	ctx, pgPool, repo := setupCategoryType()
 	defer cleanupPostgres(ctx, pgPool)
 
 	insert, err := insertCategoryType(pgPool, ctx, categoryTypeName)
@@ -115,7 +115,7 @@ func TestGetCategoryTypeById_Success(t *testing.T) {
 }
 
 func TestGetCategoryTypeById_NotFound(t *testing.T) {
-	ctx, pgPool, repo := setupCategoryType(t)
+	ctx, pgPool, repo := setupCategoryType()
 	defer cleanupPostgres(ctx, pgPool)
 
 	entity, err := repo.GetCategoryTypeById(ctx, -1)
@@ -124,7 +124,7 @@ func TestGetCategoryTypeById_NotFound(t *testing.T) {
 }
 
 func TestGetCategoryTypes_Success(t *testing.T) {
-	ctx, pgPool, repo := setupCategoryType(t)
+	ctx, pgPool, repo := setupCategoryType()
 	defer cleanupPostgres(ctx, pgPool)
 
 	_, err := insertCategoryType(pgPool, ctx, categoryTypeName)
@@ -140,7 +140,7 @@ func TestGetCategoryTypes_Success(t *testing.T) {
 }
 
 func TestGetCategoryTypes_NotFound(t *testing.T) {
-	ctx, pgPool, repo := setupCategoryType(t)
+	ctx, pgPool, repo := setupCategoryType()
 	defer cleanupPostgres(ctx, pgPool)
 
 	entities, err := repo.GetCategoryTypes(ctx, 0, 1)
@@ -152,7 +152,7 @@ func TestGetCategoryTypes_NotFound(t *testing.T) {
 
 	
 func TestUpdateCategoryTypeById_Success(t *testing.T) {
-	ctx, pgPool, repo := setupCategoryType(t)
+	ctx, pgPool, repo := setupCategoryType()
 	defer cleanupPostgres(ctx, pgPool)
 
 	insert, err := insertCategoryType(pgPool, ctx, categoryTypeName)
@@ -166,7 +166,7 @@ func TestUpdateCategoryTypeById_Success(t *testing.T) {
 }
 
 func TestUpdateCategoryTypeById_NotFound(t *testing.T) {
-	ctx, pgPool, repo := setupCategoryType(t)
+	ctx, pgPool, repo := setupCategoryType()
 	defer cleanupPostgres(ctx, pgPool)
 
 	err := repo.UpdateCategoryTypeById(ctx, repository.UpdateCategoryTypeByIdParams{ID: categoryTypeId, Name: categoryTypeName})
