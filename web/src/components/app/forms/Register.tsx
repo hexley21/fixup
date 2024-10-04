@@ -9,6 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, } from 
 import { Input } from "@/components/ui/input"
 import { RegisterHeader } from "@/components/app/common/Header"
 import { ContentLayout } from "../common/ContentLayout"
+import { registerCustomer } from "@/api/auth_service"
 
 const registerFormSchema = z.object({
   first_name: z
@@ -77,21 +78,7 @@ function Component() {
       ),
     })
 
-    fetch('http://localhost:8080/v1/auth/register/customer', {
-      method: 'POST',
-      headers: {
-        'Allow-Access-Control-Origin': 'http://localhost:5173',
-        'Content-Type': 'application/json'
-      },
-      body: body,
-    })
-      .then(response => response.json())
-      .then(result => {
-        console.log('Success:', result);
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      })
+    registerCustomer(body)
   }
 
   return (

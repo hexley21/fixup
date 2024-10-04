@@ -9,6 +9,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { LoginHeader } from "@/components/app/common/Header"
 import { ContentLayout } from "../common/ContentLayout"
+import { loginUser } from "@/api/auth_service"
+import { ErrorResponse } from "react-router-dom"
 
 const loginFormSchema = z.object({
   email: z
@@ -50,20 +52,7 @@ function LoginForm() {
       ),
     })
 
-    fetch('http://localhost:8080/v1/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: body,
-      credentials: 'include',
-    })
-      .then(response => {
-        console.log(response)
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
+    loginUser(body)
   }
 
   return (
