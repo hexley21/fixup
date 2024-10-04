@@ -23,6 +23,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// TODO: refactor refresh logic, to include actual user data
+
 const (
 	access_token_cookie  = "access_token"
 	refresh_token_cookie = "refresh_token"
