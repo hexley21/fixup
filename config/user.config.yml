@@ -5,10 +5,13 @@ server:
 
 http:
     port: 80
-    cors_origins: https://localhost:5173,http://localhost:5173,https://localhost:8081,http://localhost:8081
+    cors_origins: https://localhost:5173,http://localhost:5173,https://localhost:8080,http://localhost:8080
     idle_timeout: 60s
     read_timeout: 10s
     write_timeout: 30s
+
+metrics:
+    port: 8081
 
 postgres:
     port: 5432

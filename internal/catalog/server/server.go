@@ -39,7 +39,9 @@ type jWTManagers struct {
 
 type server struct {
 	router            chi.Router
+	metricsRouter     chi.Router
 	mux               *http.Server
+	metricsMux        *http.Server
 	cfg               *config.Config
 	dbPool            *pgxpool.Pool
 	handlerComponents *handler.Components
@@ -81,9 +83,22 @@ func NewServer(
 		WriteTimeout: cfg.HTTP.WriteTimeout,
 	}
 
+	metricsRouter := chi.NewMux()
+	metricsMux := &http.Server{
+		Addr:         fmt.Sprintf(":%d", cfg.Metrics.Port),
+		Handler:      metricsRouter,
+		IdleTimeout:  cfg.HTTP.IdleTimeout,
+		ReadTimeout:  cfg.HTTP.ReadTimeout,
+		WriteTimeout: cfg.HTTP.WriteTimeout,
+	}
+
+	logger.Info(cfg.Metrics.Port)
+
 	return &server{
 		router:            router,
+		metricsRouter:     metricsRouter,
 		mux:               mux,
+		metricsMux:        metricsMux,
 		cfg:               cfg,
 		dbPool:            dbPool,
 		handlerComponents: handlerComponents,
@@ -109,8 +124,6 @@ func (s *server) Run() error {
 	s.router.Use(chi_middleware.Recoverer)
 	s.router.Use(chi_middleware.RequestLogger(chiLogger))
 
-	s.router.Handle("/metrics", promhttp.Handler())
-
 	v1.MapV1Routes(v1.RouterArgs{
 		CategoryTypeService: s.services.categoryTypes,
 		MiddlewareFactory:   middlewareFactory,
@@ -118,7 +131,27 @@ func (s *server) Run() error {
 		AccessJWTManager:    s.jWTManagers.accessJWTManager,
 	}, s.router)
 
-	return s.mux.ListenAndServe()
+	s.metricsRouter.Use(chi_middleware.Recoverer)
+	s.metricsRouter.Use(chi_middleware.RequestLogger(chiLogger))
+	s.metricsRouter.Handle("/metrics", promhttp.Handler())
+
+	mainErrChan := make(chan error, 1)
+    metricsErrChan := make(chan error, 1)
+
+	go func() {
+        mainErrChan <- s.mux.ListenAndServe()
+    }()
+
+    go func() {
+        metricsErrChan <- s.metricsMux.ListenAndServe()
+    }()
+
+    select {
+    case mainErr := <-mainErrChan:
+        return mainErr
+    case metricsErr := <-metricsErrChan:
+        return metricsErr
+    }
 }
 
 func (s *server) Close() error {
@@ -128,6 +161,13 @@ func (s *server) Close() error {
 	err := s.mux.Shutdown(ctx)
 	if err != nil {
 		s.handlerComponents.Logger.Error(err)
+		err = nil
+	}
+
+	err = s.metricsMux.Shutdown(ctx)
+	if err != nil {
+		s.handlerComponents.Logger.Error(err)
+		err = nil
 	}
 
 	err = postgres.Close(s.dbPool)

@@ -310,8 +310,6 @@ services:
       context: .
       dockerfile: ./docker/Dockerfile.user
     restart: unless-stopped
-    expose:
-      - "80"
     depends_on:
       user-db:
         condition: service_healthy
@@ -328,8 +326,6 @@ services:
       context: .
       dockerfile: ./docker/Dockerfile.catalog
     restart: unless-stopped
-    expose:
-      - "80"
     depends_on:
       catalog-db:
         condition: service_healthy
@@ -344,8 +340,6 @@ services:
       context: .
       dockerfile: ./docker/Dockerfile.order
     restart: unless-stopped
-    expose:
-      - "80"
     depends_on:
       order-db:
         condition: service_healthy
@@ -360,8 +354,6 @@ services:
       context: .
       dockerfile: ./docker/Dockerfile.chat
     restart: unless-stopped
-    expose:
-      - "80"
     env_file: .env
     volumes:
       - ./log/chat.log:/root/log/chat.log
@@ -372,7 +364,7 @@ services:
       dockerfile: ./docker/Dockerfile.nginx
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "80:80"
     depends_on:
       - user-service
       - catalog-service
@@ -387,7 +379,7 @@ services:
       dockerfile: ./docker/Dockerfile.swagger
     restart: unless-stopped
     ports:
-      - "8081:8080"
+      - "8080:8080"
 
 volumes:
   certs:

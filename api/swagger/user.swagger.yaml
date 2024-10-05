@@ -143,22 +143,22 @@ definitions:
       user_status:
         type: boolean
     type: object
+  rest.ApiResponse-Profile:
+    properties:
+      data:
+        $ref: '#/definitions/Profile'
+    type: object
+  rest.ApiResponse-User:
+    properties:
+      data:
+        $ref: '#/definitions/User'
+    type: object
   rest.ErrorResponse:
     properties:
       message:
         type: string
     type: object
-  rest.apiResponse-Profile:
-    properties:
-      data:
-        $ref: '#/definitions/Profile'
-    type: object
-  rest.apiResponse-User:
-    properties:
-      data:
-        $ref: '#/definitions/User'
-    type: object
-host: localhost:8080
+host: localhost:80
 info:
   contact: {}
   description: Handles user and authentication operations
@@ -385,7 +385,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.apiResponse-Profile'
+            $ref: '#/definitions/rest.ApiResponse-Profile'
         "400":
           description: Bad Request
           schema:
@@ -510,7 +510,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.apiResponse-User'
+            $ref: '#/definitions/rest.ApiResponse-User'
         "400":
           description: Bad Request
           schema:
@@ -558,7 +558,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.apiResponse-User'
+            $ref: '#/definitions/rest.ApiResponse-User'
         "400":
           description: Bad Request
           schema:
