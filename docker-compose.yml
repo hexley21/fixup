@@ -239,6 +239,18 @@ services:
     healthcheck:
       test: ["CMD", "redis-cli","ping"]
 
+  prometheus:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.prometheus
+    depends_on:
+      - catalog-service
+      - user-service
+    restart: unless-stopped
+    ports:
+      - 9090:9090
+    
+
   user-db:
     image: postgres:latest
     ports:
