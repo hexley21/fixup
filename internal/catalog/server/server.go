@@ -11,6 +11,7 @@ import (
 	chi_middleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	v1 "github.com/hexley21/fixup/internal/catalog/delivery/http/v1"
 	"github.com/hexley21/fixup/internal/catalog/repository"
@@ -107,6 +108,8 @@ func (s *server) Run() error {
 	}))
 	s.router.Use(chi_middleware.Recoverer)
 	s.router.Use(chi_middleware.RequestLogger(chiLogger))
+
+	s.router.Handle("/metrics", promhttp.Handler())
 
 	v1.MapV1Routes(v1.RouterArgs{
 		CategoryTypeService: s.services.categoryTypes,

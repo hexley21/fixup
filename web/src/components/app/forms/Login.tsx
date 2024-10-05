@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input"
 import { LoginHeader } from "@/components/app/common/Header"
 import { ContentLayout } from "../common/ContentLayout"
 import { loginUser } from "@/api/auth_service"
-import { ErrorResponse } from "react-router-dom"
 
 const loginFormSchema = z.object({
   email: z
