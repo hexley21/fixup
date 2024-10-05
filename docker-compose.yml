@@ -242,7 +242,7 @@ services:
   prometheus:
     build:
       context: .
-      dockerfile: ./docker/Dockerfile.prometheus
+      dockerfile: ./docker/metrics/Dockerfile.prometheus
     depends_on:
       - catalog-service
       - user-service
@@ -250,6 +250,19 @@ services:
     ports:
       - 9090:9090
     
+  grafana:
+    build:
+      context: .
+      dockerfile: ./docker/metrics/Dockerfile.grafana
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+    volumes:
+      - grafana:/var/lib/grafana
 
   user-db:
     image: postgres:latest
@@ -258,7 +271,6 @@ services:
     volumes:
       - userdb:/var/lib/postgresql/data
     restart: unless-stopped
-    env_file: .env
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -276,7 +288,6 @@ services:
     volumes:
       - catalogdb:/var/lib/postgresql/data
     restart: unless-stopped
-    env_file: .env
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -294,7 +305,6 @@ services:
     volumes:
       - orderdb:/var/lib/postgresql/data
     restart: unless-stopped
-    env_file: .env
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -317,7 +327,6 @@ services:
         condition: service_healthy
       es01:
         condition: service_healthy
-    env_file: .env
     volumes:
       - ./log/user.log:/root/log/user.log
 
@@ -331,7 +340,6 @@ services:
         condition: service_healthy
       es01:
         condition: service_healthy
-    env_file: .env
     volumes:
       - ./log/catalog.log:/root/log/catalog.log
 
@@ -343,9 +351,8 @@ services:
     depends_on:
       order-db:
         condition: service_healthy
-      # es01:
-      #   condition: service_healthy
-    env_file: .env
+      es01:
+        condition: service_healthy
     volumes:
       - ./log/order.log:/root/log/order.log
 
@@ -354,7 +361,9 @@ services:
       context: .
       dockerfile: ./docker/Dockerfile.chat
     restart: unless-stopped
-    env_file: .env
+    depends_on:
+      es01:
+        condition: service_healthy
     volumes:
       - ./log/chat.log:/root/log/chat.log
 
@@ -412,5 +421,5 @@ volumes:
     driver: local
   redisdata06:
     driver: local
-  nginxdata:
+  grafana:
     driver: local
