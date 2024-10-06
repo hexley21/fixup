@@ -249,6 +249,8 @@ services:
     restart: unless-stopped
     ports:
       - 9090:9090
+    volumes:
+      - prometheus:/prometheus
   
   grafana:
     build:
@@ -446,6 +448,8 @@ volumes:
   redisdata05:
     driver: local
   redisdata06:
+    driver: local
+  prometheus:
     driver: local
   grafana:
     driver: local
