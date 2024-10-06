@@ -10,6 +10,9 @@ SELECT hash FROM users WHERE id = $1;
 -- name: GetUserConfirmationDetails :one
 SELECT id, user_status, first_name FROM users WHERE email = $1;
 
+-- name: GetUserRoleAndStatus :one
+SELECT role, user_status FROM users WHERE id = $1;
+
 -- name: CreateUser :one
 INSERT INTO users (
   id, first_name, last_name, phone_number, email, hash, role

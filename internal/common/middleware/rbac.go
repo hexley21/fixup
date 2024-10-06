@@ -54,24 +54,24 @@ func (f *MiddlewareFactory) NewAllowSelfOrRole(roles ...enum.UserRole) func(http
 			}
 
 			if idParam == "me" {
-				userId, err := strconv.ParseInt(jwtId, 10, 64)
+				id, err := strconv.ParseInt(jwtId, 10, 64)
 				if err != nil {
 					f.writer.WriteError(w, rest.NewInternalServerError(err))
 					return
 				}
 
-				next.ServeHTTP(w, r.WithContext(ctx_util.SetParamId(r.Context(), userId)))
+				next.ServeHTTP(w, r.WithContext(ctx_util.SetParamId(r.Context(), id)))
 				return
 			}
 
 			if (idParam == jwtId) || slices.Contains(roles, role) {
-				userId, err := strconv.ParseInt(idParam, 10, 64)
+				id, err := strconv.ParseInt(idParam, 10, 64)
 				if err != nil {
 					f.writer.WriteError(w, rest.NewInternalServerError(err))
 					return
 				}
 
-				r = r.WithContext(ctx_util.SetParamId(r.Context(), userId))
+				r = r.WithContext(ctx_util.SetParamId(r.Context(), id))
 				next.ServeHTTP(w, r)
 				return
 			}

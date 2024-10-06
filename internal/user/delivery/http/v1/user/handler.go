@@ -269,13 +269,13 @@ func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} rest.ErrorResponse "Internal server error"
 // @Router /user/me/change-password [patch]
 func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
-	id, errResp := ctx_util.GetJWTId(r.Context())
+	idStr, errResp := ctx_util.GetJWTId(r.Context())
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	userId, err := strconv.ParseInt(id, 10, 64)
+	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		h.Writer.WriteError(w, rest.NewInternalServerError(err))
 		return
@@ -294,7 +294,7 @@ func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.ChangePassword(r.Context(), userId, *dto)
+	err = h.service.ChangePassword(r.Context(), id, *dto)
 	if err != nil {
 		if errors.Is(err, pg_error.ErrNotFound) || errors.Is(err, pgx.ErrNoRows) {
 			h.Writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
@@ -309,6 +309,6 @@ func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Change user password - U-ID: %d", userId)
+	h.Logger.Infof("Change user password - U-ID: %d", id)
 	h.Writer.WriteNoContent(w, http.StatusNoContent)
 }

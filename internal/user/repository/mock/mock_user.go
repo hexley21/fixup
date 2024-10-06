@@ -131,6 +131,21 @@ func (mr *MockUserRepositoryMockRecorder) GetUserConfirmationDetails(ctx, email 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserConfirmationDetails", reflect.TypeOf((*MockUserRepository)(nil).GetUserConfirmationDetails), ctx, email)
 }
 
+// GetUserRoleAndStatus mocks base method.
+func (m *MockUserRepository) GetUserRoleAndStatus(ctx context.Context, id int64) (repository.GetUserRoleAndStatusRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserRoleAndStatus", ctx, id)
+	ret0, _ := ret[0].(repository.GetUserRoleAndStatusRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserRoleAndStatus indicates an expected call of GetUserRoleAndStatus.
+func (mr *MockUserRepositoryMockRecorder) GetUserRoleAndStatus(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserRoleAndStatus", reflect.TypeOf((*MockUserRepository)(nil).GetUserRoleAndStatus), ctx, id)
+}
+
 // Update mocks base method.
 func (m *MockUserRepository) Update(ctx context.Context, arg repository.UpdateUserParams) (entity.User, error) {
 	m.ctrl.T.Helper()

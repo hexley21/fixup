@@ -296,37 +296,40 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security refresh_token
 // @Router /auth/refresh [post]
-func (h *Handler) Refresh(
-	accessGenerator auth_jwt.JWTGenerator,
-) http.HandlerFunc {
+func (h *Handler) Refresh(accessGenerator auth_jwt.JWTGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := ctx_util.GetJWTId(r.Context())
-		if err != nil {
-			h.Writer.WriteError(w, err)
+		idStr, errResp := ctx_util.GetJWTId(r.Context())
+		if errResp != nil {
+			h.Writer.WriteError(w, errResp)
 			return
 		}
 
-		role, err := ctx_util.GetJWTRole(r.Context())
+		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
-			h.Writer.WriteError(w, err)
+			h.Writer.WriteError(w, rest.NewInvalidArgumentsError(err))
 			return
 		}
 
-		userStatus, err := ctx_util.GetJWTUserStatus(r.Context())
+		creds, err := h.service.GetUserRoleAndStatus(r.Context(), id)
 		if err != nil {
-			h.Writer.WriteError(w, err)
+			if errors.Is(err, pgx.ErrNoRows) {
+				h.Writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
+				return
+			}
+
+			h.Writer.WriteError(w, rest.NewInternalServerError(err))
 			return
 		}
 
-		accessToken, err := accessGenerator.GenerateJWT(id, string(role), userStatus)
-		if err != nil {
-			h.Writer.WriteError(w, err)
+		accessToken, errResp := accessGenerator.GenerateJWT(idStr, creds.Role, creds.UserStatus)
+		if errResp != nil {
+			h.Writer.WriteError(w, errResp)
 			return
 		}
 
 		setCookies(w, accessToken, access_token_cookie)
 
-		h.Logger.Infof("Rotate JWT - Role: %s, UserStatus: %v, U-ID: %d", role, userStatus, id)
+		h.Logger.Infof("Rotate JWT - Role: %s, UserStatus: %v, U-ID: %d", creds.Role, creds.UserStatus, id)
 		h.Writer.WriteNoContent(w, http.StatusOK)
 	}
 }

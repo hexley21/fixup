@@ -32,6 +32,7 @@ import (
 	"github.com/hexley21/fixup/pkg/logger/std_logger"
 	mock_validator "github.com/hexley21/fixup/pkg/validator/mock"
 	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
@@ -610,9 +611,10 @@ func TestLogout_Success(t *testing.T) {
 }
 
 func TestRefresh_Success(t *testing.T) {
-	ctrl, _, _, _, mockAccessGenerator, _, h := setup(t)
+	ctrl, mockAuthService, _, _, mockAccessGenerator, _, h := setup(t)
 	defer ctrl.Finish()
 
+	mockAuthService.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(credentialsDto, nil)
 	mockAccessGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Role, userDto.UserStatus).Return(token, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
@@ -628,7 +630,53 @@ func TestRefresh_Success(t *testing.T) {
 	assert.Contains(t, rec.Header().Get("Set-Cookie"), fmt.Sprintf("access_token=%s; HttpOnly; Secure", token))
 }
 
-func TestRefresh_JwtNotSet(t *testing.T) {
+func TestRefresh_NotFound(t *testing.T) {
+	ctrl, mockAuthService, _, _, _, _, h := setup(t)
+	defer ctrl.Finish()
+
+	mockAuthService.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(dto.Credentials{}, pgx.ErrNoRows)
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rec := httptest.NewRecorder()
+
+	ctx := ctx_util.SetJWTId(req.Context(), userDto.ID)
+	ctx = ctx_util.SetJWTRole(ctx, enum.UserRole(userDto.Role))
+	ctx = ctx_util.SetJWTUserStatus(ctx, userDto.UserStatus)
+
+	h.Refresh(nil).ServeHTTP(rec, req.WithContext(ctx))
+
+	var errResp rest.ErrorResponse
+	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
+		assert.Equal(t, app_error.MsgUserNotFound, errResp.Message)
+	}
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+	assert.NotContains(t, rec.Header().Get("Set-Cookie"), fmt.Sprintf("access_token=%s; HttpOnly; Secure", token))
+}
+
+func TestRefresh_ServiceError(t *testing.T) {
+	ctrl, mockAuthService, _, _, _, _, h := setup(t)
+	defer ctrl.Finish()
+
+	mockAuthService.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(dto.Credentials{}, errors.New(""))
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rec := httptest.NewRecorder()
+
+	ctx := ctx_util.SetJWTId(req.Context(), userDto.ID)
+	ctx = ctx_util.SetJWTRole(ctx, enum.UserRole(userDto.Role))
+	ctx = ctx_util.SetJWTUserStatus(ctx, userDto.UserStatus)
+
+	h.Refresh(nil).ServeHTTP(rec, req.WithContext(ctx))
+
+	var errResp rest.ErrorResponse
+	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
+		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
+	}
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	assert.NotContains(t, rec.Header().Get("Set-Cookie"), fmt.Sprintf("access_token=%s; HttpOnly; Secure", token))
+}
+
+func TestRefresh_JwtIdNotSet(t *testing.T) {
 	t.Parallel()
 
 	ctrl, _, _, _, _, _, h := setup(t)
@@ -636,50 +684,17 @@ func TestRefresh_JwtNotSet(t *testing.T) {
 
 	handler := h.Refresh(nil)
 
-	t.Run("JWT id", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/", nil)
-		rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rec := httptest.NewRecorder()
 
-		handler.ServeHTTP(rec, req)
+	handler.ServeHTTP(rec, req)
 
-		var errResp rest.ErrorResponse
-		if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-			assert.Equal(t, http.StatusInternalServerError, rec.Code)
-		}
-		assert.NotContains(t, rec.Header().Get("Set-Cookie"), fmt.Sprintf("access_token=%s; HttpOnly; Secure", token))
-	})
-
-	t.Run("JWT role", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/", nil)
-		rec := httptest.NewRecorder()
-
-		handler.ServeHTTP(rec, req.WithContext(ctx_util.SetJWTId(req.Context(), userDto.ID)))
-
-		var errResp rest.ErrorResponse
-		if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-			assert.Equal(t, http.StatusInternalServerError, rec.Code)
-		}
-		assert.NotContains(t, rec.Header().Get("Set-Cookie"), fmt.Sprintf("access_token=%s; HttpOnly; Secure", token))
-	})
-
-	t.Run("JWT user status", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/", nil)
-		rec := httptest.NewRecorder()
-
-		ctx := ctx_util.SetJWTId(req.Context(), userDto.ID)
-		ctx = ctx_util.SetJWTRole(ctx, enum.UserRole(userDto.Role))
-
-		handler.ServeHTTP(rec, req.WithContext(ctx))
-
-		var errResp rest.ErrorResponse
-		if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-			assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
-			assert.Equal(t, http.StatusInternalServerError, rec.Code)
-		}
-		assert.NotContains(t, rec.Header().Get("Set-Cookie"), fmt.Sprintf("access_token=%s; HttpOnly; Secure", token))
-	})
+	var errResp rest.ErrorResponse
+	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
+		assert.Equal(t, rest.MsgInternalServerError, errResp.Message)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	}
+	assert.NotContains(t, rec.Header().Get("Set-Cookie"), fmt.Sprintf("access_token=%s; HttpOnly; Secure", token))
 }
 
 func TestVerifyEmail_Success(t *testing.T) {

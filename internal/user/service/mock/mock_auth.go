@@ -71,6 +71,21 @@ func (mr *MockAuthServiceMockRecorder) GetUserConfirmationDetails(ctx, email any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserConfirmationDetails", reflect.TypeOf((*MockAuthService)(nil).GetUserConfirmationDetails), ctx, email)
 }
 
+// GetUserRoleAndStatus mocks base method.
+func (m *MockAuthService) GetUserRoleAndStatus(ctx context.Context, id int64) (dto.Credentials, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserRoleAndStatus", ctx, id)
+	ret0, _ := ret[0].(dto.Credentials)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserRoleAndStatus indicates an expected call of GetUserRoleAndStatus.
+func (mr *MockAuthServiceMockRecorder) GetUserRoleAndStatus(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserRoleAndStatus", reflect.TypeOf((*MockAuthService)(nil).GetUserRoleAndStatus), ctx, id)
+}
+
 // RegisterCustomer mocks base method.
 func (m *MockAuthService) RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error) {
 	m.ctrl.T.Helper()
