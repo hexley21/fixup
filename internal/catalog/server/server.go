@@ -130,7 +130,6 @@ func (s *server) Run() error {
 	}, s.router)
 
 	s.metricsRouter.Use(chi_middleware.Recoverer)
-	s.metricsRouter.Use(chi_middleware.RequestLogger(chiLogger))
 	s.metricsRouter.Handle("/metrics", promhttp.Handler())
 
 	mainErrChan := make(chan error, 1)
