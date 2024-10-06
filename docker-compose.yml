@@ -328,7 +328,7 @@ services:
       es01:
         condition: service_healthy
     volumes:
-      - ./log/user.log:/root/log/user.log
+      - ./log/user.log:/log/user.log
 
   catalog-service:
     build:
@@ -341,7 +341,7 @@ services:
       es01:
         condition: service_healthy
     volumes:
-      - ./log/catalog.log:/root/log/catalog.log
+      - ./log/catalog.log:/log/catalog.log
 
   order-service:
     build:
@@ -354,7 +354,7 @@ services:
       es01:
         condition: service_healthy
     volumes:
-      - ./log/order.log:/root/log/order.log
+      - ./log/order.log:/log/order.log
 
   chat-service:
     build:
@@ -365,7 +365,7 @@ services:
       es01:
         condition: service_healthy
     volumes:
-      - ./log/chat.log:/root/log/chat.log
+      - ./log/chat.log:/log/chat.log
 
   nginx:
     build:
@@ -394,6 +394,19 @@ services:
     - 9150:9150
     volumes:
       - ./log/access.log:/var/log/nginx/access.log
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    ports: 
+      - "8081:8080"
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    volumes: 
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
 
   swagger-ui:
     build:
