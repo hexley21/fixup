@@ -1,11 +1,32 @@
-FROM alpine:latest
+FROM golang:1.23.2-bookworm AS build
 
-RUN apk --no-cache add ca-certificates
-WORKDIR /root/
+WORKDIR /app
+
+COPY ./go.mod ./
+COPY ./go.sum ./
+
+RUN go mod download && go mod verify
+
+COPY ./cmd/catalog ./cmd/catalog
+COPY ./cmd/util ./cmd/util
+COPY ./internal/common ./internal/common
+COPY ./internal/catalog ./internal/catalog
+COPY ./pkg ./pkg
+
+WORKDIR /app/cmd/catalog
+
+RUN go generate
+
+WORKDIR /app
+
+RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -installsuffix cgo -o server cmd/catalog/main.go
+
+FROM scratch
 
 COPY ./config/catalog.config.yml ./config/config.yml
-COPY ./bin/catalog ./app
 COPY ./.env ./.env
 COPY ./keys/cdn/private_key.pem ./keys/cdn/private_key.pem
 
-CMD ["./app"]
+COPY --from=build /app/server /server
+
+ENTRYPOINT ["/server"]

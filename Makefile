@@ -6,14 +6,6 @@ SWAGGER_CONF=./configs/swagger-config.yaml
 
 SVCS=user catalog order chat
 
-
-build:
-ifeq ($(OS),Windows_NT) 
-	@$(MAKE) build/batch
-else
-	@$(MAKE) build/bash
-endif
-
 swag-config:
 ifeq ($(OS),Windows_NT) 
 	@$(MAKE) swag-config/batch
@@ -54,16 +46,6 @@ migrate-init:
 
 
 # PLATFORM SPECIFIC
-
-build/batch:
-	@for %%s in ($(SVCS)) do ( \
-		set CGO_ENABLED=0&& set GOOS=linux&& go build -o ./bin/%%s ./cmd/%%s/main.go \
-	)
-
-build/bash:
-	@for svc in $(SVCS); do \
-		CGO_ENABLED=0 GOOS=linux go build -o ./bin/$$svc ./cmd/$$svc/main.go; \
-	done
 
 swag-gen/bash:
 	@swag init --dir cmd/$(svc)/,internal/$(svc)/delivery/http,pkg/http/rest,internal/common --parseDependency --output ./api/swagger --outputTypes yaml
