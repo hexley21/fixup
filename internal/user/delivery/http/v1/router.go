@@ -7,7 +7,7 @@ import (
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/auth"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/user"
 	"github.com/hexley21/fixup/internal/user/service"
-	"github.com/hexley21/fixup/internal/user/service/verifier"
+	"github.com/hexley21/fixup/internal/user/jwt/verifier"
 	"github.com/hexley21/fixup/pkg/http/handler"
 )
 

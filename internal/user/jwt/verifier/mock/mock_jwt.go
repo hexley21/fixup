@@ -12,7 +12,7 @@ package mock_verifier
 import (
 	reflect "reflect"
 
-	verifier "github.com/hexley21/fixup/internal/user/service/verifier"
+	verifier "github.com/hexley21/fixup/internal/user/jwt/verifier"
 	rest "github.com/hexley21/fixup/pkg/http/rest"
 	gomock "go.uber.org/mock/gomock"
 )

@@ -44,7 +44,7 @@ func setup(t *testing.T) (
 	ctrl *gomock.Controller,
 	mockService *mock_service.MockCategoryTypeService,
 	mockValidator *mock_validator.MockValidator,
-	h *category_type.CategoryTypeHandler,
+	h *category_type.Handler,
 ) {
 	ctrl = gomock.NewController(t)
 	mockService = mock_service.NewMockCategoryTypeService(ctrl)

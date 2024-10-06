@@ -19,7 +19,7 @@ import (
 	v1 "github.com/hexley21/fixup/internal/user/delivery/http/v1"
 	"github.com/hexley21/fixup/internal/user/repository"
 	"github.com/hexley21/fixup/internal/user/service"
-	"github.com/hexley21/fixup/internal/user/service/verifier"
+	"github.com/hexley21/fixup/internal/user/jwt/verifier"
 	"github.com/hexley21/fixup/pkg/config"
 	"github.com/hexley21/fixup/pkg/encryption"
 	"github.com/hexley21/fixup/pkg/hasher"
