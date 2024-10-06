@@ -17,19 +17,19 @@ func MapRoutes(
 	accessJwtManager auth_jwt.JWTManager,
 	refreshJwtManager refresh_jwt.JWTManager,
 	vrfJWTManager verify_jwt.JWTManager,
-	r chi.Router,
+	router chi.Router,
 ) chi.Router {
-	r.Route("/auth", func(auth chi.Router) {
-		auth.Post("/register/customer", h.RegisterCustomer(vrfJWTManager))
-		auth.Post("/register/provider", h.RegisterProvider(vrfJWTManager))
-		auth.Post("/resend-confirmation", h.ResendConfirmationLetter(vrfJWTManager))
+	router.Route("/auth", func(r chi.Router) {
+		r.Post("/register/customer", h.RegisterCustomer(vrfJWTManager))
+		r.Post("/register/provider", h.RegisterProvider(vrfJWTManager))
+		r.Post("/resend-confirmation", h.ResendConfirmationLetter(vrfJWTManager))
 
-		auth.With(refreshJWTMiddleware).Post("/refresh", h.Refresh(accessJwtManager))
-		auth.Post("/login", h.Login(accessJwtManager, refreshJwtManager))
-		auth.Post("/logout", h.Logout)
+		r.With(refreshJWTMiddleware).Post("/refresh", h.Refresh(accessJwtManager))
+		r.Post("/login", h.Login(accessJwtManager, refreshJwtManager))
+		r.Post("/logout", h.Logout)
 
-		auth.Get("/verify", h.VerifyEmail(vrfJWTManager))
+		r.Get("/verify", h.VerifyEmail(vrfJWTManager))
 	})
 
-	return r
+	return router
 }

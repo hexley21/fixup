@@ -16,14 +16,18 @@ func MapRoutes(
 	router.Route("/category-types", func(r chi.Router) {
 		r.Use(
 			jWTAccessMiddleware,
-			onlyAdminMiddleware,
+			onlyVerifiedMiddleware,
 			onlyAdminMiddleware,
 		)
 
 		r.Post("/", h.CreateCategoryType)
-		r.Get("/", h.GetCategoryTypes)
-		r.Get("/{id}", h.GetCategoryTypeById)
 		r.Patch("/{id}", h.PatchCategoryTypeById)
 		r.Delete("/{id}", h.DeleteCategoryTypeById)
+	})
+
+	router.Route("/category-types", func(r chi.Router) {
+		r.Use(jWTAccessMiddleware)
+		r.Get("/", h.GetCategoryTypes)
+		r.Get("/{id}", h.GetCategoryTypeById)
 	})
 }
