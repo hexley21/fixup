@@ -19,8 +19,8 @@ import (
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/auth"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	mock_service "github.com/hexley21/fixup/internal/user/service/mock"
-	"github.com/hexley21/fixup/internal/user/jwt/verifier"
-	mock_verifier "github.com/hexley21/fixup/internal/user/jwt/verifier/mock"
+	"github.com/hexley21/fixup/internal/user/jwt/verify_jwt"
+	mock_verify_jwt "github.com/hexley21/fixup/internal/user/jwt/verify_jwt/mock"
 	"github.com/hexley21/fixup/pkg/hasher"
 	"github.com/hexley21/fixup/pkg/http/binder/std_binder"
 	"github.com/hexley21/fixup/pkg/http/handler"
@@ -62,7 +62,7 @@ var (
 		UserStatus: true,
 	}
 
-	verifyClaims = verifier.VerifyClaims{
+	verifyClaims = verify_jwt.VerifyClaims{
 		ID:    "1",
 		Email: "larry@page.com",
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -82,7 +82,7 @@ func setup(t *testing.T) (
 	ctrl *gomock.Controller,
 	mockAuthService *mock_service.MockAuthService,
 	mockValidator *mock_validator.MockValidator,
-	mockVerifierGenerator *mock_verifier.MockJWTManager,
+	mockverify_jwtGenerator *mock_verify_jwt.MockJWTManager,
 	mockAccessGenerator *mock_jwt.MockJWTGenerator,
 	mockRefreshGenerator *mock_jwt.MockJWTGenerator,
 	h *auth.Handler,
@@ -90,7 +90,7 @@ func setup(t *testing.T) (
 	ctrl = gomock.NewController(t)
 	mockAuthService = mock_service.NewMockAuthService(ctrl)
 	mockValidator = mock_validator.NewMockValidator(ctrl)
-	mockVerifierGenerator = mock_verifier.NewMockJWTManager(ctrl)
+	mockverify_jwtGenerator = mock_verify_jwt.NewMockJWTManager(ctrl)
 	mockAccessGenerator = mock_jwt.NewMockJWTGenerator(ctrl)
 	mockRefreshGenerator = mock_jwt.NewMockJWTGenerator(ctrl)
 
@@ -106,19 +106,19 @@ func setup(t *testing.T) (
 }
 
 func TestRegisterCustomer_Success(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, mockVerifierGenerator, _, _, h := setup(t)
+	ctrl, mockAuthService, mockValidator, mockverify_jwtGenerator, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	mockAuthService.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).Return(userDto, nil)
 	mockAuthService.EXPECT().SendConfirmationLetter(gomock.Any(), token, userDto.Email, userDto.FirstName).Return(nil)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockVerifierGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Email).Return(token, nil)
+	mockverify_jwtGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Email).Return(token, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(registerCustomerJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.RegisterCustomer(mockVerifierGenerator).ServeHTTP(rec, req)
+	h.RegisterCustomer(mockverify_jwtGenerator).ServeHTTP(rec, req)
 
 	assert.Empty(t, rec.Body.String())
 	assert.Equal(t, http.StatusCreated, rec.Code)
@@ -204,19 +204,19 @@ func TestRegisterCustomer_ServiceError(t *testing.T) {
 }
 
 func TestRegisterProvider_Success(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, mockVerifierGenerator, _, _, h := setup(t)
+	ctrl, mockAuthService, mockValidator, mockverify_jwtGenerator, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	mockAuthService.EXPECT().RegisterProvider(gomock.Any(), gomock.Any()).Return(userDto, nil)
 	mockAuthService.EXPECT().SendConfirmationLetter(gomock.Any(), token, userDto.Email, userDto.FirstName).Return(nil)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockVerifierGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Email).Return(token, nil)
+	mockverify_jwtGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Email).Return(token, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(registerProviderJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.RegisterProvider(mockVerifierGenerator).ServeHTTP(rec, req)
+	h.RegisterProvider(mockverify_jwtGenerator).ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusCreated, rec.Code)
 
@@ -299,19 +299,19 @@ func TestRegisterProvider_ServiceError(t *testing.T) {
 }
 
 func TestResendConfirmationLetter_Success(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, mockVerifierGenerator, _, _, h := setup(t)
+	ctrl, mockAuthService, mockValidator, mockverify_jwtGenerator, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(userConfirmationDetailsDTO, nil)
 	mockAuthService.EXPECT().SendConfirmationLetter(gomock.Any(), token, userDto.Email, userDto.FirstName).Return(nil)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockVerifierGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Email).Return(token, nil)
+	mockverify_jwtGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Email).Return(token, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(emailJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.ResendConfirmationLetter(mockVerifierGenerator).ServeHTTP(rec, req)
+	h.ResendConfirmationLetter(mockverify_jwtGenerator).ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusNoContent, rec.Code)
 }
@@ -372,7 +372,7 @@ func TestResendConfirmationLetter_Conflict(t *testing.T) {
 }
 
 func TestResendConfirmationLetter_NotFound(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, mockVerifierGenerator, _, _, h := setup(t)
+	ctrl, mockAuthService, mockValidator, mockverify_jwtGenerator, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(dto.UserConfirmationDetails{}, pg_error.ErrNotFound)
@@ -382,7 +382,7 @@ func TestResendConfirmationLetter_NotFound(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.ResendConfirmationLetter(mockVerifierGenerator).ServeHTTP(rec, req)
+	h.ResendConfirmationLetter(mockverify_jwtGenerator).ServeHTTP(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -392,7 +392,7 @@ func TestResendConfirmationLetter_NotFound(t *testing.T) {
 }
 
 func TestResendConfirmationLetter_Already(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, mockVerifierGenerator, _, _, h := setup(t)
+	ctrl, mockAuthService, mockValidator, mockverify_jwtGenerator, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(dto.UserConfirmationDetails{}, pg_error.ErrNotFound)
@@ -402,7 +402,7 @@ func TestResendConfirmationLetter_Already(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.ResendConfirmationLetter(mockVerifierGenerator).ServeHTTP(rec, req)
+	h.ResendConfirmationLetter(mockverify_jwtGenerator).ServeHTTP(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -433,18 +433,18 @@ func TestResendConfirmationLetter_ServiceError(t *testing.T) {
 
 func TestResendConfirmationLetter_MailError(t *testing.T) {
 	
-	ctrl, mockAuthService, mockValidator, mockVerifierGenerator, _, _, h := setup(t)
+	ctrl, mockAuthService, mockValidator, mockverify_jwtGenerator, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(userConfirmationDetailsDTO, nil)
-	mockVerifierGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Email).Return("", rest.NewUnauthorizedError(errors.New(""), app_error.MsgInvalidToken))
+	mockverify_jwtGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Email).Return("", rest.NewUnauthorizedError(errors.New(""), app_error.MsgInvalidToken))
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(emailJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.ResendConfirmationLetter(mockVerifierGenerator).ServeHTTP(rec, req)
+	h.ResendConfirmationLetter(mockverify_jwtGenerator).ServeHTTP(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -705,7 +705,7 @@ func TestVerifyEmail_InvalidToken(t *testing.T) {
 	ctrl, _, _, mockVerifyJWT, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockVerifyJWT.EXPECT().VerifyJWT(token).Return(verifier.VerifyClaims{}, rest.NewUnauthorizedError(errors.New(""), app_error.MsgInvalidToken))
+	mockVerifyJWT.EXPECT().VerifyJWT(token).Return(verify_jwt.VerifyClaims{}, rest.NewUnauthorizedError(errors.New(""), app_error.MsgInvalidToken))
 
 	q := make(url.Values)
 	q.Set("token", token)
@@ -725,7 +725,7 @@ func TestVerifyEmail_ParseIDError(t *testing.T) {
 	ctrl, _, _, mockVerifyJWT, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockVerifyJWT.EXPECT().VerifyJWT(token).Return(verifier.VerifyClaims{ID: "invalid-id"}, nil)
+	mockVerifyJWT.EXPECT().VerifyJWT(token).Return(verify_jwt.VerifyClaims{ID: "invalid-id"}, nil)
 
 	q := make(url.Values)
 	q.Set("token", token)

@@ -4,7 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/hexley21/fixup/internal/common/auth_jwt"
 	"github.com/hexley21/fixup/internal/common/middleware"
-	"github.com/hexley21/fixup/internal/user/jwt/verifier"
+	"github.com/hexley21/fixup/internal/user/jwt/verify_jwt"
 )
 
 func MapRoutes(
@@ -12,7 +12,7 @@ func MapRoutes(
 	h *Handler,
 	accessJwtManager auth_jwt.JWTManager,
 	refreshJWTManager auth_jwt.JWTManager,
-	vrfJWTManager verifier.JWTManager,
+	vrfJWTManager verify_jwt.JWTManager,
 	r chi.Router,
 ) chi.Router {
 	r.Route("/auth", func(auth chi.Router) {

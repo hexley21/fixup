@@ -19,7 +19,7 @@ import (
 	v1 "github.com/hexley21/fixup/internal/user/delivery/http/v1"
 	"github.com/hexley21/fixup/internal/user/repository"
 	"github.com/hexley21/fixup/internal/user/service"
-	"github.com/hexley21/fixup/internal/user/jwt/verifier"
+	"github.com/hexley21/fixup/internal/user/jwt/verify_jwt"
 	"github.com/hexley21/fixup/pkg/config"
 	"github.com/hexley21/fixup/pkg/encryption"
 	"github.com/hexley21/fixup/pkg/hasher"
@@ -44,7 +44,7 @@ type services struct {
 type jWTManagers struct {
 	accessJWTManager       auth_jwt.JWTManager
 	refreshJWTManager      auth_jwt.JWTManager
-	verificationJWTManager verifier.JWTManager
+	verificationJWTManager verify_jwt.JWTManager
 }
 type server struct {
 	router            chi.Router
@@ -110,7 +110,7 @@ func NewServer(
 	jWTManagers := &jWTManagers{
 		accessJWTManager:       auth_jwt.NewJWTManager(cfg.JWT.AccessSecret, cfg.JWT.AccessTTL),
 		refreshJWTManager:      auth_jwt.NewJWTManager(cfg.JWT.RefreshSecret, cfg.JWT.RefreshTTL),
-		verificationJWTManager: verifier.NewJWTManager(cfg.JWT.VerificationSecret, cfg.JWT.VerificationTTL),
+		verificationJWTManager: verify_jwt.NewJWTManager(cfg.JWT.VerificationSecret, cfg.JWT.VerificationTTL),
 	}
 
 	jsonManager := std_json.New()

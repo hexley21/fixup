@@ -7,7 +7,7 @@ import (
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/auth"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/user"
 	"github.com/hexley21/fixup/internal/user/service"
-	"github.com/hexley21/fixup/internal/user/jwt/verifier"
+	"github.com/hexley21/fixup/internal/user/jwt/verify_jwt"
 	"github.com/hexley21/fixup/pkg/http/handler"
 )
 
@@ -18,7 +18,7 @@ type RouterArgs struct {
 	HandlerComponents      *handler.Components
 	AccessJWTManager       auth_jwt.JWTManager
 	RefreshJWTManager      auth_jwt.JWTManager
-	VerificationJWTManager verifier.JWTManager
+	VerificationJWTManager verify_jwt.JWTManager
 }
 
 func MapV1Routes(args RouterArgs, router chi.Router) {

@@ -12,7 +12,7 @@ import (
 	"github.com/hexley21/fixup/internal/common/util/ctx_util"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/service"
-	"github.com/hexley21/fixup/internal/user/jwt/verifier"
+	"github.com/hexley21/fixup/internal/user/jwt/verify_jwt"
 	"github.com/hexley21/fixup/pkg/hasher"
 	"github.com/hexley21/fixup/pkg/http/handler"
 	"github.com/hexley21/fixup/pkg/http/rest"
@@ -85,7 +85,7 @@ func eraseCookie(w http.ResponseWriter, cookieName string) {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/register/customer [post]
 func (h *Handler) RegisterCustomer(
-	verGenerator verifier.JWTGenerator,
+	verGenerator verify_jwt.JWTGenerator,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		dto := new(dto.RegisterUser)
@@ -129,7 +129,7 @@ func (h *Handler) RegisterCustomer(
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/register/provider [post]
 func (h *Handler) RegisterProvider(
-	verGenerator verifier.JWTGenerator,
+	verGenerator verify_jwt.JWTGenerator,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		dto := new(dto.RegisterProvider)
@@ -174,7 +174,7 @@ func (h *Handler) RegisterProvider(
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/resend-confirmation [post]
 func (h *Handler) ResendConfirmationLetter(
-	verGenerator verifier.JWTGenerator,
+	verGenerator verify_jwt.JWTGenerator,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		dto := new(dto.Email)
@@ -343,12 +343,12 @@ func (h *Handler) Refresh(
 // @Failure 500 {object} rest.ErrorResponse "Internal server error"
 // @Router /auth/verify-email [get]
 func (h *Handler) VerifyEmail(
-	jWTVerifier verifier.JWTVerifier,
+	jWTverify_jwt verify_jwt.JWTVerifier,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenParam := r.URL.Query().Get("token")
 
-		claims, errResp := jWTVerifier.VerifyJWT(tokenParam)
+		claims, errResp := jWTverify_jwt.VerifyJWT(tokenParam)
 		if errResp != nil {
 			h.Writer.WriteError(w, errResp)
 			return
@@ -389,7 +389,7 @@ func (h *Handler) VerifyEmail(
 	}
 }
 
-func (h *Handler) sendConfirmationLetter(ctx context.Context, verGenerator verifier.JWTGenerator, id string, email string, name string) *rest.ErrorResponse {
+func (h *Handler) sendConfirmationLetter(ctx context.Context, verGenerator verify_jwt.JWTGenerator, id string, email string, name string) *rest.ErrorResponse {
 	jWT, err := verGenerator.GenerateJWT(id, email)
 	if err != nil {
 		h.Logger.Error(err.Error())
