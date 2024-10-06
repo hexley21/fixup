@@ -110,7 +110,7 @@ func (f *HandlerFactory) RegisterCustomer(
 			return
 		}
 
-		go f.sendConfirmationLetter(verGenerator, user.ID, user.Email, user.FirstName)
+		go f.sendConfirmationLetter(context.Background(), verGenerator, user.ID, user.Email, user.FirstName)
 
 		f.Logger.Infof("Register customer - Email: %s, U-ID: %d", user.Email, user.ID)
 		f.Writer.WriteNoContent(w, http.StatusCreated)
@@ -155,7 +155,7 @@ func (f *HandlerFactory) RegisterProvider(
 			return
 		}
 
-		go f.sendConfirmationLetter(verGenerator, user.ID, user.Email, user.FirstName)
+		go f.sendConfirmationLetter(context.Background(), verGenerator, user.ID, user.Email, user.FirstName)
 
 		f.Logger.Infof("Register provider - Email: %s, U-ID: %d", user.Email, user.ID)
 		f.Writer.WriteNoContent(w, http.StatusCreated)
@@ -203,7 +203,7 @@ func (f *HandlerFactory) ResendConfirmationLetter(
 			return
 		}
 
-		if err := f.sendConfirmationLetter(verGenerator, details.ID, dto.Email, details.Firstname); err != nil {
+		if err := f.sendConfirmationLetter(r.Context(), verGenerator, details.ID, dto.Email, details.Firstname); err != nil {
 			f.Writer.WriteError(w, err)
 			return
 		}
@@ -389,14 +389,14 @@ func (f *HandlerFactory) VerifyEmail(
 	}
 }
 
-func (f *HandlerFactory) sendConfirmationLetter(verGenerator verifier.JWTGenerator, id string, email string, name string) *rest.ErrorResponse {
+func (f *HandlerFactory) sendConfirmationLetter(ctx context.Context, verGenerator verifier.JWTGenerator, id string, email string, name string) *rest.ErrorResponse {
 	jWT, err := verGenerator.GenerateJWT(id, email)
 	if err != nil {
 		f.Logger.Error(err.Error())
 		return err
 	}
 
-	if err := f.service.SendConfirmationLetter(context.Background(), jWT, email, name); err != nil {
+	if err := f.service.SendConfirmationLetter(ctx, jWT, email, name); err != nil {
 		errResp := rest.NewInternalServerError(err)
 		f.Logger.Error(errResp.Error())
 		return errResp
