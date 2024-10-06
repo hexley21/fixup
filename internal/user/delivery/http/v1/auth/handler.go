@@ -11,8 +11,9 @@ import (
 	"github.com/hexley21/fixup/internal/common/auth_jwt"
 	"github.com/hexley21/fixup/internal/common/util/ctx_util"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
-	"github.com/hexley21/fixup/internal/user/service"
+	"github.com/hexley21/fixup/internal/user/jwt/refresh_jwt"
 	"github.com/hexley21/fixup/internal/user/jwt/verify_jwt"
+	"github.com/hexley21/fixup/internal/user/service"
 	"github.com/hexley21/fixup/pkg/hasher"
 	"github.com/hexley21/fixup/pkg/http/handler"
 	"github.com/hexley21/fixup/pkg/http/rest"
@@ -226,7 +227,7 @@ func (h *Handler) ResendConfirmationLetter(
 // @Router /auth/login [post]
 func (h *Handler) Login(
 	accessGenerator auth_jwt.JWTGenerator,
-	refreshGenerator auth_jwt.JWTGenerator,
+	refreshGenerator refresh_jwt.JWTGenerator,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var dto dto.Login
@@ -260,7 +261,7 @@ func (h *Handler) Login(
 			h.Writer.WriteError(w, jWTErr)
 			return
 		}
-		refreshToken, jWTErr := refreshGenerator.GenerateJWT(user.ID, user.Role, user.UserStatus)
+		refreshToken, jWTErr := refreshGenerator.GenerateJWT(user.ID)
 		if jWTErr != nil {
 			h.Writer.WriteError(w, jWTErr)
 			return
