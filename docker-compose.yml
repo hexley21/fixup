@@ -249,7 +249,7 @@ services:
     restart: unless-stopped
     ports:
       - 9090:9090
-    
+  
   grafana:
     build:
       context: .
@@ -380,7 +380,20 @@ services:
       - order-service
       - chat-service
     volumes:
-      - nginxdata:/var/log/nginx
+      - ./log/access.log:/var/log/nginx/access.log
+
+  prometheus-nginx-exporter:
+    build:
+      context: .
+      dockerfile: ./docker/metrics/Dockerfile.nginx-exporter
+    command: --target.host=nginx
+    depends_on:
+      - nginx
+      - prometheus
+    ports:
+    - 9150:9150
+    volumes:
+      - ./log/access.log:/var/log/nginx/access.log
 
   swagger-ui:
     build:

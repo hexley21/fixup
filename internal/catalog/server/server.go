@@ -92,8 +92,6 @@ func NewServer(
 		WriteTimeout: cfg.HTTP.WriteTimeout,
 	}
 
-	logger.Info(cfg.Metrics.Port)
-
 	return &server{
 		router:            router,
 		metricsRouter:     metricsRouter,
