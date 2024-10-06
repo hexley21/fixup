@@ -1,4 +1,4 @@
-package verifier
+package refresh_jwt
 
 import (
 	"time"
@@ -6,31 +6,28 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type VerifyClaims struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
+type RefreshClaims struct {
+	ID       string        `json:"id"`
 	jwt.RegisteredClaims
 }
 
-func newClaims(id string, email string, expiry time.Duration) VerifyClaims {
-	return VerifyClaims{
-		ID:    id,
-		Email: email,
+func NewClaims(id string, expiry time.Duration) RefreshClaims {
+	return RefreshClaims{
+		ID:       id,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
 		},
 	}
 }
 
-func mapToClaim(mapClaims any) VerifyClaims {
+func mapToClaim(mapClaims any) RefreshClaims {
 	claims, ok := mapClaims.(jwt.MapClaims)
 	if !ok {
-		return VerifyClaims{}
+		return RefreshClaims{}
 	}
 
-	return VerifyClaims{
+	return RefreshClaims{
 		ID: claims["id"].(string),
-		Email: claims["email"].(string),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Unix(int64(claims["exp"].(float64)), 0)),
 		},

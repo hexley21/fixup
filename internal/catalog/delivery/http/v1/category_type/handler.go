@@ -22,13 +22,13 @@ const (
 	MsgCategoryTypeNotFound = "Category type not found"
 )
 
-type CategoryTypeHandler struct {
+type Handler struct {
 	*handler.Components
 	service service.CategoryTypeService
 }
 
-func NewHandler(handlerComponents *handler.Components, service service.CategoryTypeService) *CategoryTypeHandler {
-	return &CategoryTypeHandler{
+func NewHandler(handlerComponents *handler.Components, service service.CategoryTypeService) *Handler {
+	return &Handler{
 		Components: handlerComponents,
 		service:    service,
 	}
@@ -46,7 +46,7 @@ func NewHandler(handlerComponents *handler.Components, service service.CategoryT
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error - An error occurred while creating the category type"
 // @Router /category-types [post]
 // @Security access_token
-func (h *CategoryTypeHandler) CreateCategoryType(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateCategoryType(w http.ResponseWriter, r *http.Request) {
 	var dto dto.CreateCategoryTypeDTO
 	errResp := h.Binder.BindJSON(r, &dto)
 	if errResp != nil {
@@ -89,7 +89,7 @@ func (h *CategoryTypeHandler) CreateCategoryType(w http.ResponseWriter, r *http.
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error - An error occurred while retrieving the category type"
 // @Router /category-types [get]
 // @Security access_token
-func (h *CategoryTypeHandler) GetCategoryTypes(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetCategoryTypes(w http.ResponseWriter, r *http.Request) {
     errResp, page, perPage := request_util.ParsePagination(r)
     if errResp != nil {
         h.Writer.WriteError(w, errResp)
@@ -123,7 +123,7 @@ func (h *CategoryTypeHandler) GetCategoryTypes(w http.ResponseWriter, r *http.Re
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error - An error occurred while retrieving the category type"
 // @Router /category-types/{id} [get]
 // @Security access_token
-func (h *CategoryTypeHandler) GetCategoryTypeById(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetCategoryTypeById(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
@@ -159,7 +159,7 @@ func (h *CategoryTypeHandler) GetCategoryTypeById(w http.ResponseWriter, r *http
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error - An error occurred while updating the category type"
 // @Router /category-types/{id} [patch]
 // @Security access_token
-func (h *CategoryTypeHandler) PatchCategoryTypeById(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PatchCategoryTypeById(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
@@ -212,7 +212,7 @@ func (h *CategoryTypeHandler) PatchCategoryTypeById(w http.ResponseWriter, r *ht
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error - An error occurred while deleting the category type"
 // @Router /category-types/{id} [delete]
 // @Security access_token
-func (h *CategoryTypeHandler) DeleteCategoryTypeById(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteCategoryTypeById(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))

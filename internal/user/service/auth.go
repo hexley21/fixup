@@ -39,6 +39,7 @@ type AuthService interface {
 	AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.Credentials, error)
 	VerifyUser(ctx context.Context, token string, ttl time.Duration, id int64, email string) error
 	GetUserConfirmationDetails(ctx context.Context, email string) (dto.UserConfirmationDetails, error)
+	GetUserRoleAndStatus(ctx context.Context, id int64) (dto.Credentials, error)
 	SendConfirmationLetter(ctx context.Context, token string, email string, name string) error
 	SendVerifiedLetter(email string) error
 }
@@ -225,6 +226,19 @@ func (s *authServiceImpl) GetUserConfirmationDetails(ctx context.Context, email 
 	dto.Firstname = res.FirstName
 
 	return dto, nil
+}
+
+func (s *authServiceImpl) GetUserRoleAndStatus(ctx context.Context, id int64) (dto dto.Credentials, err error) {
+	res, err := s.userRepository.GetUserRoleAndStatus(ctx, id)
+	if err != nil {
+		return dto, err
+	}
+
+	dto.ID = strconv.FormatInt(int64(id), 10)
+	dto.Role = string(res.Role)
+	dto.UserStatus = res.UserStatus.Bool
+
+	return dto, err
 }
 
 func (s *authServiceImpl) SendConfirmationLetter(ctx context.Context, token string, email string, name string) error {

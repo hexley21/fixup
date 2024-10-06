@@ -50,20 +50,25 @@ var (
 	fileContent = []byte("fake file content")
 )
 
-func setup(t *testing.T) (*gomock.Controller, *mock_service.MockUserService, *mock_validator.MockValidator, *user.HandlerFactory) {
-	ctrl := gomock.NewController(t)
-	mockUserService := mock_service.NewMockUserService(ctrl)
-	mockValidator := mock_validator.NewMockValidator(ctrl)
+func setup(t *testing.T) (
+	ctrl *gomock.Controller,
+	mockUserService *mock_service.MockUserService,
+	mockValidator *mock_validator.MockValidator,
+	h *user.Handler,
+) {
+	ctrl = gomock.NewController(t)
+	mockUserService = mock_service.NewMockUserService(ctrl)
+	mockValidator = mock_validator.NewMockValidator(ctrl)
 
 	logger := std_logger.New()
 	jsonManager := std_json.New()
 
-	f := user.NewFactory(
+	h = user.NewFactory(
 		handler.NewComponents(logger, std_binder.New(jsonManager), mockValidator, json_writer.New(logger, jsonManager)),
 		mockUserService,
 	)
 
-	return ctrl, mockUserService, mockValidator, f
+	return
 }
 
 func createMultipartFormData(t *testing.T, fieldName, fileName string, fileContent []byte) (*bytes.Buffer, string) {
@@ -89,7 +94,7 @@ func createMultipartFormData(t *testing.T, fieldName, fileName string, fileConte
 }
 
 func TestFindUserById_Success(t *testing.T) {
-	ctrl, mockUserService, _, f := setup(t)
+	ctrl, mockUserService, _, h := setup(t)
 	defer ctrl.Finish()
 
 	mockUserService.EXPECT().FindUserById(gomock.Any(), int64(1)).Return(userDto, nil)
@@ -97,13 +102,13 @@ func TestFindUserById_Success(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
 
-	f.FindUserById(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.FindUserById(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
 
 func TestFindUserById_NotFound(t *testing.T) {
-	ctrl, mockUserService, _, f := setup(t)
+	ctrl, mockUserService, _, h := setup(t)
 	defer ctrl.Finish()
 
 	mockUserService.EXPECT().FindUserById(gomock.Any(), int64(1)).Return(dto.User{}, pg_error.ErrNotFound)
@@ -111,7 +116,7 @@ func TestFindUserById_NotFound(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
 
-	f.FindUserById(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.FindUserById(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, app_error.MsgUserNotFound, errResp.Message)
@@ -120,7 +125,7 @@ func TestFindUserById_NotFound(t *testing.T) {
 }
 
 func TestFindUserById_ServiceError(t *testing.T) {
-	ctrl, mockUserService, _, f := setup(t)
+	ctrl, mockUserService, _, h := setup(t)
 	defer ctrl.Finish()
 
 	mockUserService.EXPECT().FindUserById(gomock.Any(), int64(1)).Return(dto.User{}, rest.NewInternalServerError(errors.New("")))
@@ -128,7 +133,7 @@ func TestFindUserById_ServiceError(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
 
-	f.FindUserById(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.FindUserById(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -138,13 +143,13 @@ func TestFindUserById_ServiceError(t *testing.T) {
 }
 
 func TestFindUserById_IdParamNotSet(t *testing.T) {
-	ctrl, _, _, f := setup(t)
+	ctrl, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
 
-	f.FindUserById(rec, req)
+	h.FindUserById(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -154,7 +159,7 @@ func TestFindUserById_IdParamNotSet(t *testing.T) {
 }
 
 func TestUploadProfilePicture_Success(t *testing.T) {
-	ctrl, mockUserService, _, f := setup(t)
+	ctrl, mockUserService, _, h := setup(t)
 	defer ctrl.Finish()
 
 	mockUserService.EXPECT().SetProfilePicture(gomock.Any(), int64(1), gomock.Any(), "", gomock.Any(), gomock.Any()).Return(nil)
@@ -164,19 +169,19 @@ func TestUploadProfilePicture_Success(t *testing.T) {
 	req.Header.Set("Content-Type", contentType)
 	rec := httptest.NewRecorder()
 
-	f.UploadProfilePicture(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.UploadProfilePicture(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	assert.Equal(t, http.StatusNoContent, rec.Code)
 }
 
 func TestUploadProfilePicture_MissingHeaders(t *testing.T) {
-	ctrl, _, _, f := setup(t)
+	ctrl, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
 
-	f.UploadProfilePicture(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.UploadProfilePicture(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -186,7 +191,7 @@ func TestUploadProfilePicture_MissingHeaders(t *testing.T) {
 }
 
 func TestUploadProfilePicture_MissingFile(t *testing.T) {
-	ctrl, _, _, f := setup(t)
+	ctrl, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	_, contentType := createMultipartFormData(t, "image", "test.jpg", fileContent)
@@ -195,7 +200,7 @@ func TestUploadProfilePicture_MissingFile(t *testing.T) {
 	req.Header.Set("Content-Type", contentType)
 	rec := httptest.NewRecorder()
 
-	f.UploadProfilePicture(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.UploadProfilePicture(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -205,7 +210,7 @@ func TestUploadProfilePicture_MissingFile(t *testing.T) {
 }
 
 func TestUploadProfilePicture_WrongFormData(t *testing.T) {
-	ctrl, _, _, f := setup(t)
+	ctrl, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	body, contentType := createMultipartFormData(t, "img", "test.jpg", fileContent)
@@ -213,7 +218,7 @@ func TestUploadProfilePicture_WrongFormData(t *testing.T) {
 	req.Header.Set("Content-Type", contentType)
 	rec := httptest.NewRecorder()
 
-	f.UploadProfilePicture(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.UploadProfilePicture(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -223,7 +228,7 @@ func TestUploadProfilePicture_WrongFormData(t *testing.T) {
 }
 
 func TestUploadProfilePicture_NotFound(t *testing.T) {
-	ctrl, mockUserService, _, f := setup(t)
+	ctrl, mockUserService, _, h := setup(t)
 	defer ctrl.Finish()
 
 	mockUserService.EXPECT().SetProfilePicture(gomock.Any(), int64(1), gomock.Any(), "", gomock.Any(), gomock.Any()).Return(pg_error.ErrNotFound)
@@ -233,7 +238,7 @@ func TestUploadProfilePicture_NotFound(t *testing.T) {
 	req.Header.Set("Content-Type", contentType)
 	rec := httptest.NewRecorder()
 	
-	f.UploadProfilePicture(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.UploadProfilePicture(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -243,7 +248,7 @@ func TestUploadProfilePicture_NotFound(t *testing.T) {
 }
 
 func TestUploadProfilePicture_ServiceError(t *testing.T) {
-	ctrl, mockUserService, _, f := setup(t)
+	ctrl, mockUserService, _, h := setup(t)
 	defer ctrl.Finish()
 
 	mockUserService.EXPECT().SetProfilePicture(gomock.Any(), int64(1), gomock.Any(), "", gomock.Any(), gomock.Any()).Return(errors.New(""))
@@ -254,7 +259,7 @@ func TestUploadProfilePicture_ServiceError(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	
-	f.UploadProfilePicture(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.UploadProfilePicture(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -264,13 +269,13 @@ func TestUploadProfilePicture_ServiceError(t *testing.T) {
 }
 
 func TestUploadProfilePicture_IdParamNotSet(t *testing.T) {
-	ctrl, _, _, f := setup(t)
+	ctrl, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
 
-	f.UploadProfilePicture(rec, req)
+	h.UploadProfilePicture(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -280,7 +285,7 @@ func TestUploadProfilePicture_IdParamNotSet(t *testing.T) {
 }
 
 func TestUpdateUserData_Success(t *testing.T) {
-	ctrl, mockUserService, mockValidator, f := setup(t)
+	ctrl, mockUserService, mockValidator, h := setup(t)
 	defer ctrl.Finish()
 
 	mockUserService.EXPECT().UpdateUserDataById(gomock.Any(), int64(1), gomock.Any()).Return(userDto, nil)
@@ -290,19 +295,19 @@ func TestUpdateUserData_Success(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	f.UpdateUserData(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.UpdateUserData(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
 
 func TestUpdateUserDataWith_BindError(t *testing.T) {
-	ctrl, _, _, f := setup(t)
+	ctrl, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(updateUserJSON))
 	rec := httptest.NewRecorder()
 	
-	f.UpdateUserData(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.UpdateUserData(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -312,7 +317,7 @@ func TestUpdateUserDataWith_BindError(t *testing.T) {
 }
 
 func TestUpdateUserData_InvalidValues(t *testing.T) {
-	ctrl, _, mockValidator, f := setup(t)
+	ctrl, _, mockValidator, h := setup(t)
 	defer ctrl.Finish()
 
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(rest.NewInvalidArgumentsError(errors.New("")))
@@ -321,7 +326,7 @@ func TestUpdateUserData_InvalidValues(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	f.UpdateUserData(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.UpdateUserData(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -331,7 +336,7 @@ func TestUpdateUserData_InvalidValues(t *testing.T) {
 }
 
 func TestUpdateUserData_NotFound(t *testing.T) {
-	ctrl, mockUserService, mockValidator, f := setup(t)
+	ctrl, mockUserService, mockValidator, h := setup(t)
 	defer ctrl.Finish()
 
 	mockUserService.EXPECT().UpdateUserDataById(gomock.Any(), int64(1), gomock.Any()).Return(dto.User{}, pg_error.ErrNotFound)
@@ -341,7 +346,7 @@ func TestUpdateUserData_NotFound(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	f.UpdateUserData(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.UpdateUserData(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -351,7 +356,7 @@ func TestUpdateUserData_NotFound(t *testing.T) {
 }
 
 func TestUpdateUserData_NotChanges(t *testing.T) {
-	ctrl, mockUserService, mockValidator, f := setup(t)
+	ctrl, mockUserService, mockValidator, h := setup(t)
 	defer ctrl.Finish()
 
 	mockUserService.EXPECT().UpdateUserDataById(gomock.Any(), int64(1), gomock.Any()).Return(dto.User{}, pgx.ErrNoRows)
@@ -361,7 +366,7 @@ func TestUpdateUserData_NotChanges(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	f.UpdateUserData(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.UpdateUserData(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -371,7 +376,7 @@ func TestUpdateUserData_NotChanges(t *testing.T) {
 }
 
 func TestUpdateUserData_ServiceError(t *testing.T) {
-	ctrl, mockUserService, mockValidator, f := setup(t)
+	ctrl, mockUserService, mockValidator, h := setup(t)
 	defer ctrl.Finish()
 
 	mockUserService.EXPECT().UpdateUserDataById(gomock.Any(), int64(1), gomock.Any()).Return(dto.User{}, errors.New(""))
@@ -381,7 +386,7 @@ func TestUpdateUserData_ServiceError(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	f.UpdateUserData(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.UpdateUserData(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -391,13 +396,13 @@ func TestUpdateUserData_ServiceError(t *testing.T) {
 }
 
 func TestUpdateUserData_IdParamNotSet(t *testing.T) {
-	ctrl, _, _, f := setup(t)
+	ctrl, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
 
-	f.UpdateUserData(rec, req)
+	h.UpdateUserData(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -407,7 +412,7 @@ func TestUpdateUserData_IdParamNotSet(t *testing.T) {
 }
 
 func TestDeleteUser_Success(t *testing.T) {
-	ctrl, mockUserService, _, f := setup(t)
+	ctrl, mockUserService, _, h := setup(t)
 	defer ctrl.Finish()
 
 	mockUserService.EXPECT().DeleteUserById(gomock.Any(), int64(1)).Return(nil)
@@ -416,13 +421,13 @@ func TestDeleteUser_Success(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	f.DeleteUser(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.DeleteUser(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	assert.Equal(t, http.StatusNoContent, rec.Code)
 }
 
 func TestDelete_NotFound(t *testing.T) {
-	ctrl, mockUserService, _, f := setup(t)
+	ctrl, mockUserService, _, h := setup(t)
 	defer ctrl.Finish()
 
 	mockUserService.EXPECT().DeleteUserById(gomock.Any(), int64(1)).Return(pg_error.ErrNotFound)
@@ -431,7 +436,7 @@ func TestDelete_NotFound(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	f.DeleteUser(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.DeleteUser(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -441,7 +446,7 @@ func TestDelete_NotFound(t *testing.T) {
 }
 
 func TestDeleteUser_ServiceError(t *testing.T) {
-	ctrl, mockUserService, _, f := setup(t)
+	ctrl, mockUserService, _, h := setup(t)
 	defer ctrl.Finish()
 
 	mockUserService.EXPECT().DeleteUserById(gomock.Any(), int64(1)).Return(errors.New(""))
@@ -450,7 +455,7 @@ func TestDeleteUser_ServiceError(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	f.DeleteUser(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
+	h.DeleteUser(rec, req.WithContext(ctx_util.SetParamId(req.Context(), 1)))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -460,13 +465,13 @@ func TestDeleteUser_ServiceError(t *testing.T) {
 }
 
 func TestTestDeleteUser_IdParamNotSet(t *testing.T) {
-	ctrl, _, _, f := setup(t)
+	ctrl, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
 
-	f.DeleteUser(rec, req)
+	h.DeleteUser(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -476,7 +481,7 @@ func TestTestDeleteUser_IdParamNotSet(t *testing.T) {
 }
 
 func TestChangePassword_Success(t *testing.T) {
-	ctrl, mockUserService, mockValidator, f := setup(t)
+	ctrl, mockUserService, mockValidator, h := setup(t)
 	defer ctrl.Finish()
 
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
@@ -486,19 +491,19 @@ func TestChangePassword_Success(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	f.ChangePassword(rec, req.WithContext(ctx_util.SetJWTId(req.Context(), "1")))
+	h.ChangePassword(rec, req.WithContext(ctx_util.SetJWTId(req.Context(), "1")))
 
 	assert.Equal(t, http.StatusNoContent, rec.Code)
 }
 
 func TestChangePassword_BindError(t *testing.T) {
-	ctrl, _, _, f := setup(t)
+	ctrl, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(changePasswordJSON))
 	rec := httptest.NewRecorder()
 
-	f.ChangePassword(rec, req.WithContext(ctx_util.SetJWTId(req.Context(), "1")))
+	h.ChangePassword(rec, req.WithContext(ctx_util.SetJWTId(req.Context(), "1")))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -508,7 +513,7 @@ func TestChangePassword_BindError(t *testing.T) {
 }
 
 func TestChangePassword_InvalidValues(t *testing.T) {
-	ctrl, _, mockValidator, f := setup(t)
+	ctrl, _, mockValidator, h := setup(t)
 	defer ctrl.Finish()
 
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(rest.NewInvalidArgumentsError(errors.New("")))
@@ -517,7 +522,7 @@ func TestChangePassword_InvalidValues(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 	
-	f.ChangePassword(rec, req.WithContext(ctx_util.SetJWTId(req.Context(), "1")))
+	h.ChangePassword(rec, req.WithContext(ctx_util.SetJWTId(req.Context(), "1")))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -527,7 +532,7 @@ func TestChangePassword_InvalidValues(t *testing.T) {
 }
 
 func TestChangePassword_NotFound(t *testing.T) {
-	ctrl, mockUserService, mockValidator, f := setup(t)
+	ctrl, mockUserService, mockValidator, h := setup(t)
 	defer ctrl.Finish()
 
 	mockUserService.EXPECT().ChangePassword(gomock.Any(), int64(1), gomock.Any()).Return(pg_error.ErrNotFound)
@@ -537,7 +542,7 @@ func TestChangePassword_NotFound(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 	
-	f.ChangePassword(rec, req.WithContext(ctx_util.SetJWTId(req.Context(), "1")))
+	h.ChangePassword(rec, req.WithContext(ctx_util.SetJWTId(req.Context(), "1")))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -547,7 +552,7 @@ func TestChangePassword_NotFound(t *testing.T) {
 }
 
 func TestChangePassword_IncorrectPassword(t *testing.T) {
-	ctrl, mockUserService, mockValidator, f := setup(t)
+	ctrl, mockUserService, mockValidator, h := setup(t)
 	defer ctrl.Finish()
 
 	mockUserService.EXPECT().ChangePassword(gomock.Any(), int64(1), gomock.Any()).Return(hasher.ErrPasswordMismatch)
@@ -557,7 +562,7 @@ func TestChangePassword_IncorrectPassword(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	f.ChangePassword(rec, req.WithContext(ctx_util.SetJWTId(req.Context(), "1")))
+	h.ChangePassword(rec, req.WithContext(ctx_util.SetJWTId(req.Context(), "1")))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -567,7 +572,7 @@ func TestChangePassword_IncorrectPassword(t *testing.T) {
 }
 
 func TestChangePassword_ServiceError(t *testing.T) {
-	ctrl, mockUserService, mockValidator, f := setup(t)
+	ctrl, mockUserService, mockValidator, h := setup(t)
 	defer ctrl.Finish()
 
 	mockUserService.EXPECT().ChangePassword(gomock.Any(), int64(1), gomock.Any()).Return(errors.New(""))
@@ -577,7 +582,7 @@ func TestChangePassword_ServiceError(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	f.ChangePassword(rec, req.WithContext(ctx_util.SetJWTId(req.Context(), "1")))
+	h.ChangePassword(rec, req.WithContext(ctx_util.SetJWTId(req.Context(), "1")))
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -587,13 +592,13 @@ func TestChangePassword_ServiceError(t *testing.T) {
 }
 
 func TestChangePassword_JwtNotSet(t *testing.T) {
-	ctrl, _, _, f := setup(t)
+	ctrl, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
-	f.ChangePassword(rec, req)
+	h.ChangePassword(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {

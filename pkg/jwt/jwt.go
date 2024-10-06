@@ -4,7 +4,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type JwtClaimsMapper[T any] interface {
+type JWTClaimsMapper[T any] interface {
 	MapToClaim(mapClaims any) T
 }
 

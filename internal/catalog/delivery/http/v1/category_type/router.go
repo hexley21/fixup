@@ -7,7 +7,7 @@ import (
 )
 
 func MapRoutes(
-	h *CategoryTypeHandler,
+	h *Handler,
 	jWTAccessMiddleware func(http.Handler) http.Handler,
 	onlyVerifiedMiddleware func(http.Handler) http.Handler,
 	onlyAdminMiddleware func(http.Handler) http.Handler,

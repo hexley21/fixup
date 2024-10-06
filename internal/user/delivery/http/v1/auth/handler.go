@@ -11,8 +11,9 @@ import (
 	"github.com/hexley21/fixup/internal/common/auth_jwt"
 	"github.com/hexley21/fixup/internal/common/util/ctx_util"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
+	"github.com/hexley21/fixup/internal/user/jwt/refresh_jwt"
+	"github.com/hexley21/fixup/internal/user/jwt/verify_jwt"
 	"github.com/hexley21/fixup/internal/user/service"
-	"github.com/hexley21/fixup/internal/user/service/verifier"
 	"github.com/hexley21/fixup/pkg/hasher"
 	"github.com/hexley21/fixup/pkg/http/handler"
 	"github.com/hexley21/fixup/pkg/http/rest"
@@ -37,13 +38,13 @@ const (
 	MsgIncorrectEmailOrPass = "Email or Password is incorrect"
 )
 
-type HandlerFactory struct {
+type Handler struct {
 	*handler.Components
 	service service.AuthService
 }
 
-func NewFactory(components *handler.Components, service service.AuthService) *HandlerFactory {
-	return &HandlerFactory{
+func NewFactory(components *handler.Components, service service.AuthService) *Handler {
+	return &Handler{
 		Components: components,
 		service:    service,
 	}
@@ -84,36 +85,36 @@ func eraseCookie(w http.ResponseWriter, cookieName string) {
 // @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/register/customer [post]
-func (f *HandlerFactory) RegisterCustomer(
-	verGenerator verifier.JWTGenerator,
+func (h *Handler) RegisterCustomer(
+	verGenerator verify_jwt.JWTGenerator,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		dto := new(dto.RegisterUser)
-		if err := f.Binder.BindJSON(r, dto); err != nil {
-			f.Writer.WriteError(w, err)
+		if err := h.Binder.BindJSON(r, dto); err != nil {
+			h.Writer.WriteError(w, err)
 			return
 		}
 
-		if err := f.Validator.Validate(dto); err != nil {
-			f.Writer.WriteError(w, err)
+		if err := h.Validator.Validate(dto); err != nil {
+			h.Writer.WriteError(w, err)
 			return
 		}
 
-		user, err := f.service.RegisterCustomer(r.Context(), *dto)
+		user, err := h.service.RegisterCustomer(r.Context(), *dto)
 		if err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-				f.Writer.WriteError(w, rest.NewConflictError(err, MsgUserAlreadyExists))
+				h.Writer.WriteError(w, rest.NewConflictError(err, MsgUserAlreadyExists))
 				return
 			}
-			f.Writer.WriteError(w, rest.NewInternalServerError(err))
+			h.Writer.WriteError(w, rest.NewInternalServerError(err))
 			return
 		}
 
-		go f.sendConfirmationLetter(context.Background(), verGenerator, user.ID, user.Email, user.FirstName)
+		go h.sendConfirmationLetter(context.Background(), verGenerator, user.ID, user.Email, user.FirstName)
 
-		f.Logger.Infof("Register customer - Email: %s, U-ID: %d", user.Email, user.ID)
-		f.Writer.WriteNoContent(w, http.StatusCreated)
+		h.Logger.Infof("Register customer - Email: %s, U-ID: %d", user.Email, user.ID)
+		h.Writer.WriteNoContent(w, http.StatusCreated)
 	}
 }
 
@@ -128,37 +129,37 @@ func (f *HandlerFactory) RegisterCustomer(
 // @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/register/provider [post]
-func (f *HandlerFactory) RegisterProvider(
-	verGenerator verifier.JWTGenerator,
+func (h *Handler) RegisterProvider(
+	verGenerator verify_jwt.JWTGenerator,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		dto := new(dto.RegisterProvider)
-		if err := f.Binder.BindJSON(r, dto); err != nil {
-			f.Writer.WriteError(w, err)
+		if err := h.Binder.BindJSON(r, dto); err != nil {
+			h.Writer.WriteError(w, err)
 			return
 		}
 
-		if err := f.Validator.Validate(dto); err != nil {
-			f.Writer.WriteError(w, err)
+		if err := h.Validator.Validate(dto); err != nil {
+			h.Writer.WriteError(w, err)
 			return
 		}
 
-		user, err := f.service.RegisterProvider(r.Context(), *dto)
+		user, err := h.service.RegisterProvider(r.Context(), *dto)
 		if err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-				f.Writer.WriteError(w, rest.NewConflictError(err, MsgUserAlreadyExists))
+				h.Writer.WriteError(w, rest.NewConflictError(err, MsgUserAlreadyExists))
 				return
 			}
 
-			f.Writer.WriteError(w, rest.NewInternalServerError(err))
+			h.Writer.WriteError(w, rest.NewInternalServerError(err))
 			return
 		}
 
-		go f.sendConfirmationLetter(context.Background(), verGenerator, user.ID, user.Email, user.FirstName)
+		go h.sendConfirmationLetter(context.Background(), verGenerator, user.ID, user.Email, user.FirstName)
 
-		f.Logger.Infof("Register provider - Email: %s, U-ID: %d", user.Email, user.ID)
-		f.Writer.WriteNoContent(w, http.StatusCreated)
+		h.Logger.Infof("Register provider - Email: %s, U-ID: %d", user.Email, user.ID)
+		h.Writer.WriteNoContent(w, http.StatusCreated)
 	}
 }
 
@@ -173,43 +174,43 @@ func (f *HandlerFactory) RegisterProvider(
 // @Failure 409 {object} rest.ErrorResponse "Conflict"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/resend-confirmation [post]
-func (f *HandlerFactory) ResendConfirmationLetter(
-	verGenerator verifier.JWTGenerator,
+func (h *Handler) ResendConfirmationLetter(
+	verGenerator verify_jwt.JWTGenerator,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		dto := new(dto.Email)
-		if err := f.Binder.BindJSON(r, dto); err != nil {
-			f.Writer.WriteError(w, err)
+		if err := h.Binder.BindJSON(r, dto); err != nil {
+			h.Writer.WriteError(w, err)
 			return
 		}
 
-		if err := f.Validator.Validate(dto); err != nil {
-			f.Writer.WriteError(w, err)
+		if err := h.Validator.Validate(dto); err != nil {
+			h.Writer.WriteError(w, err)
 			return
 		}
 
-		details, err := f.service.GetUserConfirmationDetails(r.Context(), dto.Email)
+		details, err := h.service.GetUserConfirmationDetails(r.Context(), dto.Email)
 		if err != nil {
 			if errors.Is(err, pg_error.ErrNotFound) {
-				f.Writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
+				h.Writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 				return
 			}
-			f.Writer.WriteError(w, rest.NewInternalServerError(err))
+			h.Writer.WriteError(w, rest.NewInternalServerError(err))
 			return
 		}
 
 		if details.UserStatus {
-			f.Writer.WriteError(w, rest.NewConflictError(err, MsgUserAlreadyActivated))
+			h.Writer.WriteError(w, rest.NewConflictError(err, MsgUserAlreadyActivated))
 			return
 		}
 
-		if err := f.sendConfirmationLetter(r.Context(), verGenerator, details.ID, dto.Email, details.Firstname); err != nil {
-			f.Writer.WriteError(w, err)
+		if err := h.sendConfirmationLetter(r.Context(), verGenerator, details.ID, dto.Email, details.Firstname); err != nil {
+			h.Writer.WriteError(w, err)
 			return
 		}
 
-		f.Logger.Infof("Resend user confirmation letter - Email %s, U-ID: %d", dto.Email, details.ID)
-		f.Writer.WriteNoContent(w, http.StatusNoContent)
+		h.Logger.Infof("Resend user confirmation letter - Email %s, U-ID: %d", dto.Email, details.ID)
+		h.Writer.WriteNoContent(w, http.StatusNoContent)
 	}
 }
 
@@ -224,53 +225,53 @@ func (f *HandlerFactory) ResendConfirmationLetter(
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized - Incorrect email or password"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/login [post]
-func (f *HandlerFactory) Login(
+func (h *Handler) Login(
 	accessGenerator auth_jwt.JWTGenerator,
-	refreshGenerator auth_jwt.JWTGenerator,
+	refreshGenerator refresh_jwt.JWTGenerator,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var dto dto.Login
-		if err := f.Binder.BindJSON(r, &dto); err != nil {
-			f.Writer.WriteError(w, err)
+		if err := h.Binder.BindJSON(r, &dto); err != nil {
+			h.Writer.WriteError(w, err)
 			return
 		}
 
-		if err := f.Validator.Validate(&dto); err != nil {
-			f.Writer.WriteError(w, err)
+		if err := h.Validator.Validate(&dto); err != nil {
+			h.Writer.WriteError(w, err)
 			return
 		}
 
-		user, err := f.service.AuthenticateUser(r.Context(), dto)
+		user, err := h.service.AuthenticateUser(r.Context(), dto)
 		if err != nil {
 			if errors.Is(err, hasher.ErrPasswordMismatch) {
-				f.Writer.WriteError(w, rest.NewUnauthorizedError(err, MsgIncorrectEmailOrPass))
+				h.Writer.WriteError(w, rest.NewUnauthorizedError(err, MsgIncorrectEmailOrPass))
 				return
 			}
 
 			if errors.Is(err, pgx.ErrNoRows) {
-				f.Writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
+				h.Writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 				return
 			}
-			f.Writer.WriteError(w, rest.NewInternalServerError(err))
+			h.Writer.WriteError(w, rest.NewInternalServerError(err))
 			return
 		}
 
 		accessToken, jWTErr := accessGenerator.GenerateJWT(user.ID, user.Role, user.UserStatus)
 		if jWTErr != nil {
-			f.Writer.WriteError(w, jWTErr)
+			h.Writer.WriteError(w, jWTErr)
 			return
 		}
-		refreshToken, jWTErr := refreshGenerator.GenerateJWT(user.ID, user.Role, user.UserStatus)
+		refreshToken, jWTErr := refreshGenerator.GenerateJWT(user.ID)
 		if jWTErr != nil {
-			f.Writer.WriteError(w, jWTErr)
+			h.Writer.WriteError(w, jWTErr)
 			return
 		}
 
 		setCookies(w, accessToken, access_token_cookie)
 		setCookies(w, refreshToken, refresh_token_cookie)
 
-		f.Logger.Infof("Login user - Role: %s, U-ID: %d", user.Role, user.ID)
-		f.Writer.WriteNoContent(w, http.StatusOK)
+		h.Logger.Infof("Login user - Role: %s, U-ID: %d", user.Role, user.ID)
+		h.Writer.WriteNoContent(w, http.StatusOK)
 	}
 }
 
@@ -279,12 +280,12 @@ func (f *HandlerFactory) Login(
 // @Tags auth
 // @Success 200 {string} string "Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token; HttpOnly"
 // @Router /auth/logout [post]
-func (f *HandlerFactory) Logout(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 	eraseCookie(w, access_token_cookie)
 	eraseCookie(w, refresh_token_cookie)
 
-	f.Logger.Info("Logout user")
-	f.Writer.WriteNoContent(w, http.StatusOK)
+	h.Logger.Info("Logout user")
+	h.Writer.WriteNoContent(w, http.StatusOK)
 }
 
 // @Summary Refresh access token
@@ -295,38 +296,41 @@ func (f *HandlerFactory) Logout(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security refresh_token
 // @Router /auth/refresh [post]
-func (f *HandlerFactory) Refresh(
-	accessGenerator auth_jwt.JWTGenerator,
-) http.HandlerFunc {
+func (h *Handler) Refresh(accessGenerator auth_jwt.JWTGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := ctx_util.GetJWTId(r.Context())
-		if err != nil {
-			f.Writer.WriteError(w, err)
+		idStr, errResp := ctx_util.GetJWTId(r.Context())
+		if errResp != nil {
+			h.Writer.WriteError(w, errResp)
 			return
 		}
 
-		role, err := ctx_util.GetJWTRole(r.Context())
+		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
-			f.Writer.WriteError(w, err)
+			h.Writer.WriteError(w, rest.NewInvalidArgumentsError(err))
 			return
 		}
 
-		userStatus, err := ctx_util.GetJWTUserStatus(r.Context())
+		creds, err := h.service.GetUserRoleAndStatus(r.Context(), id)
 		if err != nil {
-			f.Writer.WriteError(w, err)
+			if errors.Is(err, pgx.ErrNoRows) {
+				h.Writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
+				return
+			}
+
+			h.Writer.WriteError(w, rest.NewInternalServerError(err))
 			return
 		}
 
-		accessToken, err := accessGenerator.GenerateJWT(id, string(role), userStatus)
-		if err != nil {
-			f.Writer.WriteError(w, err)
+		accessToken, errResp := accessGenerator.GenerateJWT(idStr, creds.Role, creds.UserStatus)
+		if errResp != nil {
+			h.Writer.WriteError(w, errResp)
 			return
 		}
 
 		setCookies(w, accessToken, access_token_cookie)
 
-		f.Logger.Infof("Rotate JWT - Role: %s, UserStatus: %v, U-ID: %d", role, userStatus, id)
-		f.Writer.WriteNoContent(w, http.StatusOK)
+		h.Logger.Infof("Rotate JWT - Role: %s, UserStatus: %v, U-ID: %d", creds.Role, creds.UserStatus, id)
+		h.Writer.WriteNoContent(w, http.StatusOK)
 	}
 }
 
@@ -342,66 +346,66 @@ func (f *HandlerFactory) Refresh(
 // @Failure 404 {object} rest.ErrorResponse "User was not found"
 // @Failure 500 {object} rest.ErrorResponse "Internal server error"
 // @Router /auth/verify-email [get]
-func (f *HandlerFactory) VerifyEmail(
-	jWTVerifier verifier.JWTVerifier,
+func (h *Handler) VerifyEmail(
+	jWTverify_jwt verify_jwt.JWTVerifier,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenParam := r.URL.Query().Get("token")
 
-		claims, errResp := jWTVerifier.VerifyJWT(tokenParam)
+		claims, errResp := jWTverify_jwt.VerifyJWT(tokenParam)
 		if errResp != nil {
-			f.Writer.WriteError(w, errResp)
+			h.Writer.WriteError(w, errResp)
 			return
 		}
 
 		id, err := strconv.ParseInt(claims.ID, 10, 64)
 		if err != nil {
-			f.Writer.WriteError(w, rest.NewInternalServerError(err))
+			h.Writer.WriteError(w, rest.NewInternalServerError(err))
 			return
 		}
 
-		if err := f.service.VerifyUser(r.Context(), tokenParam, time.Until(claims.ExpiresAt.Time), id, claims.Email); err != nil {
+		if err := h.service.VerifyUser(r.Context(), tokenParam, time.Until(claims.ExpiresAt.Time), id, claims.Email); err != nil {
 			if errors.Is(err, redis.TxFailedErr) {
-				f.Writer.WriteError(w, rest.NewConflictError(err, MsgTokenAlreadyUsed))
+				h.Writer.WriteError(w, rest.NewConflictError(err, MsgTokenAlreadyUsed))
 				return
 			}
 
 			if errors.Is(err, pg_error.ErrNotFound) {
-				f.Writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
+				h.Writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
 				return
 			}
 
-			f.Writer.WriteError(w, rest.NewInternalServerError(err))
+			h.Writer.WriteError(w, rest.NewInternalServerError(err))
 			return
 		}
 
 		go func() {
-			if err := f.service.SendVerifiedLetter(claims.Email); err != nil {
-				f.Logger.Errorf("Fail send verified letter - Email: %s, U-ID: %d - cause: %v", claims.Email, id, err)
+			if err := h.service.SendVerifiedLetter(claims.Email); err != nil {
+				h.Logger.Errorf("Fail send verified letter - Email: %s, U-ID: %d - cause: %v", claims.Email, id, err)
 				return
 			}
 
-			f.Logger.Infof("Send verified letter - Email: %s, U-ID: %d", claims.Email, id)
+			h.Logger.Infof("Send verified letter - Email: %s, U-ID: %d", claims.Email, id)
 		}()
 
-		f.Logger.Infof("Verify user - Email: %s, U-ID: %d", claims.Email, id)
-		f.Writer.WriteNoContent(w, http.StatusOK)
+		h.Logger.Infof("Verify user - Email: %s, U-ID: %d", claims.Email, id)
+		h.Writer.WriteNoContent(w, http.StatusOK)
 	}
 }
 
-func (f *HandlerFactory) sendConfirmationLetter(ctx context.Context, verGenerator verifier.JWTGenerator, id string, email string, name string) *rest.ErrorResponse {
+func (h *Handler) sendConfirmationLetter(ctx context.Context, verGenerator verify_jwt.JWTGenerator, id string, email string, name string) *rest.ErrorResponse {
 	jWT, err := verGenerator.GenerateJWT(id, email)
 	if err != nil {
-		f.Logger.Error(err.Error())
+		h.Logger.Error(err.Error())
 		return err
 	}
 
-	if err := f.service.SendConfirmationLetter(ctx, jWT, email, name); err != nil {
+	if err := h.service.SendConfirmationLetter(ctx, jWT, email, name); err != nil {
 		errResp := rest.NewInternalServerError(err)
-		f.Logger.Error(errResp.Error())
+		h.Logger.Error(errResp.Error())
 		return errResp
 	}
 
-	f.Logger.Infof("Send confirmation letter - Email: %s, U-ID: %d", email, id)
+	h.Logger.Infof("Send confirmation letter - Email: %s, U-ID: %d", email, id)
 	return nil
 }

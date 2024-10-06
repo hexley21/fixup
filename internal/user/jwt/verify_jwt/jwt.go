@@ -1,4 +1,4 @@
-package verifier
+package verify_jwt
 
 import (
 	"time"

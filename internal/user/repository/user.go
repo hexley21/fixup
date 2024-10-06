@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/snowflake"
+	"github.com/hexley21/fixup/internal/common/enum"
 	"github.com/hexley21/fixup/internal/user/entity"
-"github.com/hexley21/fixup/internal/common/enum"
-	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 	"github.com/hexley21/fixup/pkg/infra/postgres"
+	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -19,6 +19,7 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (entity.User, error)
 	GetById(ctx context.Context, id int64) (entity.User, error)
 	GetCredentialsByEmail(ctx context.Context, email string) (GetCredentialsByEmailRow, error)
+	GetUserRoleAndStatus(ctx context.Context, id int64) (GetUserRoleAndStatusRow, error)
 	GetHashById(ctx context.Context, id int64) (string, error)
 	GetUserConfirmationDetails(ctx context.Context, email string) (GetUserConfirmationDetailsRow, error)
 	Update(ctx context.Context, arg UpdateUserParams) (entity.User, error)
@@ -54,12 +55,12 @@ RETURNING id, first_name, last_name, phone_number, email, picture_name, role, us
 `
 
 type CreateUserParams struct {
-	ID          int64    `json:"id"`
-	FirstName   string   `json:"first_name"`
-	LastName    string   `json:"last_name"`
-	PhoneNumber string   `json:"phone_number"`
-	Email       string   `json:"email"`
-	Hash        string   `json:"hash"`
+	ID          int64         `json:"id"`
+	FirstName   string        `json:"first_name"`
+	LastName    string        `json:"last_name"`
+	PhoneNumber string        `json:"phone_number"`
+	Email       string        `json:"email"`
+	Hash        string        `json:"hash"`
 	Role        enum.UserRole `json:"role"`
 }
 
@@ -136,6 +137,22 @@ func (r *userRepositoryImpl) GetHashById(ctx context.Context, id int64) (string,
 	var hash string
 	err := row.Scan(&hash)
 	return hash, err
+}
+
+const getUserRoleAndStatus = `-- name: GetUserRoleAndStatus :one
+SELECT role, user_status FROM users WHERE id = $1
+`
+
+type GetUserRoleAndStatusRow struct {
+	Role       enum.UserRole `json:"role"`
+	UserStatus pgtype.Bool   `json:"user_status"`
+}
+
+func (r *userRepositoryImpl) GetUserRoleAndStatus(ctx context.Context, id int64) (GetUserRoleAndStatusRow, error) {
+	row := r.db.QueryRow(ctx, getUserRoleAndStatus, id)
+	var i GetUserRoleAndStatusRow
+	err := row.Scan(&i.Role, &i.UserStatus)
+	return i, err
 }
 
 const getUserConfirmationDetails = `-- name: GetUserConfirmationDetails :one
