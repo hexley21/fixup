@@ -4,7 +4,7 @@ MAKEFLAGS += --no-print-directory
 
 SWAGGER_CONF=./configs/swagger-config.yaml
 
-SRVCS=user catalog order chat
+SVCS=user catalog order chat
 
 
 build:
@@ -56,12 +56,12 @@ migrate-init:
 # PLATFORM SPECIFIC
 
 build/batch:
-	@for %%s in ($(SRVCS)) do ( \
+	@for %%s in ($(SVCS)) do ( \
 		set CGO_ENABLED=0&& set GOOS=linux&& go build -o ./bin/%%s ./cmd/%%s/main.go \
 	)
 
 build/bash:
-	@for svc in $(SRVCS); do \
+	@for svc in $(SVCS); do \
 		CGO_ENABLED=0 GOOS=linux go build -o ./bin/$$svc ./cmd/$$svc/main.go; \
 	done
 
@@ -76,14 +76,14 @@ swag-gen/batch:
 
 swag-config/bash:
 	@echo "urls:" > $(SWAGGER_CONF)
-	@for svc in $(SRVCS); do \
+	@for svc in $(SVCS); do \
 		echo "  - url: "./$$svc.swagger.yaml"" >> $(SWAGGER_CONF); \
 		echo "    name: "$$svc"" >> $(SWAGGER_CONF); \
 	done
 
 swag-config/batch:
 	@echo urls: > $(SWAGGER_CONF)
-	@for %%s in ($(SRVCS)) do ( \
+	@for %%s in ($(SVCS)) do ( \
 		echo   - url: "./%%s.swagger.yaml" >> $(SWAGGER_CONF) && \
 		echo     name: "%%s" >> $(SWAGGER_CONF) \
 	)

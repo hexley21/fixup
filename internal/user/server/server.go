@@ -11,6 +11,7 @@ import (
 	chi_middleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/go-redis/v9"
 
 	"github.com/hexley21/fixup/internal/common/auth_jwt"
@@ -47,7 +48,9 @@ type jWTManagers struct {
 }
 type server struct {
 	router            chi.Router
+	metricsRouter     chi.Router
 	mux               *http.Server
+	metricsMux        *http.Server
 	cfg               *config.Config
 	dbPool            *pgxpool.Pool
 	redisCluster      *redis.ClusterClient
@@ -113,10 +116,10 @@ func NewServer(
 	jsonManager := std_json.New()
 
 	handlerComponents := &handler.Components{
-		Logger:     logger,
-		Binder:     std_binder.New(jsonManager),
-		Validator:  plaground_validator.New(),
-		Writer: json_writer.New(logger, jsonManager),
+		Logger:    logger,
+		Binder:    std_binder.New(jsonManager),
+		Validator: plaground_validator.New(),
+		Writer:    json_writer.New(logger, jsonManager),
 	}
 
 	router := chi.NewMux()
@@ -128,9 +131,20 @@ func NewServer(
 		WriteTimeout: cfg.HTTP.WriteTimeout,
 	}
 
+	metricsRouter := chi.NewMux()
+	metricsMux := &http.Server{
+		Addr:         fmt.Sprintf(":%d", cfg.Metrics.Port),
+		Handler:      metricsRouter,
+		IdleTimeout:  cfg.HTTP.IdleTimeout,
+		ReadTimeout:  cfg.HTTP.ReadTimeout,
+		WriteTimeout: cfg.HTTP.WriteTimeout,
+	}
+
 	return &server{
 		router:            router,
+		metricsRouter:     metricsRouter,
 		mux:               mux,
+		metricsMux:        metricsMux,
 		cfg:               cfg,
 		dbPool:            dbPool,
 		handlerComponents: handlerComponents,
@@ -166,7 +180,27 @@ func (s *server) Run() error {
 		VerificationJWTManager: s.jWTManagers.verificationJWTManager,
 	}, s.router)
 
-	return s.mux.ListenAndServe()
+	s.metricsRouter.Use(chi_middleware.Recoverer)
+	s.metricsRouter.Use(chi_middleware.RequestLogger(chiLogger))
+	s.metricsRouter.Handle("/metrics", promhttp.Handler())
+
+	mainErrChan := make(chan error, 1)
+    metricsErrChan := make(chan error, 1)
+
+	go func() {
+        mainErrChan <- s.mux.ListenAndServe()
+    }()
+
+    go func() {
+        metricsErrChan <- s.metricsMux.ListenAndServe()
+    }()
+
+    select {
+    case mainErr := <-mainErrChan:
+        return mainErr
+    case metricsErr := <-metricsErrChan:
+        return metricsErr
+    }
 }
 
 func (s *server) Close() error {
@@ -176,11 +210,19 @@ func (s *server) Close() error {
 	err := s.mux.Shutdown(ctx)
 	if err != nil {
 		s.handlerComponents.Logger.Error(err)
+		err = nil
+	}
+
+	err = s.metricsMux.Shutdown(ctx)
+	if err != nil {
+		s.handlerComponents.Logger.Error(err)
+		err = nil
 	}
 
 	err = postgres.Close(s.dbPool)
 	if err != nil {
 		s.handlerComponents.Logger.Error(err)
+		err = nil
 	}
 
 	err = s.redisCluster.Close()

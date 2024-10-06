@@ -239,6 +239,31 @@ services:
     healthcheck:
       test: ["CMD", "redis-cli","ping"]
 
+  prometheus:
+    build:
+      context: .
+      dockerfile: ./docker/metrics/Dockerfile.prometheus
+    depends_on:
+      - catalog-service
+      - user-service
+    restart: unless-stopped
+    ports:
+      - 9090:9090
+  
+  grafana:
+    build:
+      context: .
+      dockerfile: ./docker/metrics/Dockerfile.grafana
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+    volumes:
+      - grafana:/var/lib/grafana
+
   user-db:
     image: postgres:latest
     ports:
@@ -246,7 +271,6 @@ services:
     volumes:
       - userdb:/var/lib/postgresql/data
     restart: unless-stopped
-    env_file: .env
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -264,7 +288,6 @@ services:
     volumes:
       - catalogdb:/var/lib/postgresql/data
     restart: unless-stopped
-    env_file: .env
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -282,7 +305,6 @@ services:
     volumes:
       - orderdb:/var/lib/postgresql/data
     restart: unless-stopped
-    env_file: .env
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -298,8 +320,6 @@ services:
       context: .
       dockerfile: ./docker/Dockerfile.user
     restart: unless-stopped
-    expose:
-      - "80"
     depends_on:
       user-db:
         condition: service_healthy
@@ -307,52 +327,45 @@ services:
         condition: service_healthy
       es01:
         condition: service_healthy
-    env_file: .env
     volumes:
-      - ./log/user.log:/root/log/user.log
+      - ./log/user.log:/log/user.log
 
   catalog-service:
     build:
       context: .
       dockerfile: ./docker/Dockerfile.catalog
     restart: unless-stopped
-    expose:
-      - "80"
     depends_on:
       catalog-db:
         condition: service_healthy
       es01:
         condition: service_healthy
-    env_file: .env
     volumes:
-      - ./log/catalog.log:/root/log/catalog.log
+      - ./log/catalog.log:/log/catalog.log
 
   order-service:
     build:
       context: .
       dockerfile: ./docker/Dockerfile.order
     restart: unless-stopped
-    expose:
-      - "80"
     depends_on:
       order-db:
         condition: service_healthy
-      # es01:
-      #   condition: service_healthy
-    env_file: .env
+      es01:
+        condition: service_healthy
     volumes:
-      - ./log/order.log:/root/log/order.log
+      - ./log/order.log:/log/order.log
 
   chat-service:
     build:
       context: .
       dockerfile: ./docker/Dockerfile.chat
     restart: unless-stopped
-    expose:
-      - "80"
-    env_file: .env
+    depends_on:
+      es01:
+        condition: service_healthy
     volumes:
-      - ./log/chat.log:/root/log/chat.log
+      - ./log/chat.log:/log/chat.log
 
   nginx:
     build:
@@ -360,14 +373,40 @@ services:
       dockerfile: ./docker/Dockerfile.nginx
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "80:80"
     depends_on:
       - user-service
       - catalog-service
       - order-service
       - chat-service
     volumes:
-      - nginxdata:/var/log/nginx
+      - ./log/access.log:/var/log/nginx/access.log
+
+  prometheus-nginx-exporter:
+    build:
+      context: .
+      dockerfile: ./docker/metrics/Dockerfile.nginx-exporter
+    command: --target.host=nginx
+    depends_on:
+      - nginx
+      - prometheus
+    ports:
+    - 9150:9150
+    volumes:
+      - ./log/access.log:/var/log/nginx/access.log
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    ports: 
+      - "8081:8080"
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    volumes: 
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
 
   swagger-ui:
     build:
@@ -375,7 +414,7 @@ services:
       dockerfile: ./docker/Dockerfile.swagger
     restart: unless-stopped
     ports:
-      - "8081:8080"
+      - "8080:8080"
 
 volumes:
   certs:
@@ -408,5 +447,5 @@ volumes:
     driver: local
   redisdata06:
     driver: local
-  nginxdata:
+  grafana:
     driver: local

@@ -17,5 +17,5 @@ class profile {
 
 export function getProfile(id: string) {
   const url = joinUrlWithRoute(baseUrl, id);
-  return (apiClient.get(url) as Promise<profile>)
+  return (apiClient.get(url, {credentials: "include"}) as Promise<profile>)
 }

@@ -25,24 +25,24 @@ definitions:
     required:
     - name
     type: object
-  rest.ErrorResponse:
-    properties:
-      message:
-        type: string
-    type: object
-  rest.apiResponse-CategoryType:
+  rest.ApiResponse-CategoryType:
     properties:
       data:
         $ref: '#/definitions/CategoryType'
     type: object
-  rest.apiResponse-array_CategoryType:
+  rest.ApiResponse-array_CategoryType:
     properties:
       data:
         items:
           $ref: '#/definitions/CategoryType'
         type: array
     type: object
-host: localhost:8080
+  rest.ErrorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+host: localhost:80
 info:
   contact: {}
   description: Handles catalog operations
@@ -68,7 +68,7 @@ paths:
         "200":
           description: OK - Successfully retrieved the category types
           schema:
-            $ref: '#/definitions/rest.apiResponse-array_CategoryType'
+            $ref: '#/definitions/rest.ApiResponse-array_CategoryType'
         "400":
           description: Bad Request
           schema:
@@ -108,7 +108,7 @@ paths:
         "201":
           description: Created - Successfully created the category type
           schema:
-            $ref: '#/definitions/rest.apiResponse-CategoryType'
+            $ref: '#/definitions/rest.ApiResponse-CategoryType'
         "400":
           description: Bad Request
           schema:
@@ -187,7 +187,7 @@ paths:
         "200":
           description: OK - Successfully retrieved the category type
           schema:
-            $ref: '#/definitions/rest.apiResponse-CategoryType'
+            $ref: '#/definitions/rest.ApiResponse-CategoryType'
         "400":
           description: Bad Request
           schema:
@@ -232,7 +232,7 @@ paths:
         "200":
           description: OK - Successfully updated the category type
           schema:
-            $ref: '#/definitions/rest.apiResponse-CategoryType'
+            $ref: '#/definitions/rest.ApiResponse-CategoryType'
         "400":
           description: Bad Request
           schema:
