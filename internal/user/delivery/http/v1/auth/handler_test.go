@@ -58,8 +58,13 @@ var (
 		Firstname:  "Larry",
 	}
 
-	credentialsDto = dto.Credentials{
+	UserIdentity = dto.UserIdentity{
 		ID:         "1",
+		Role:       string(enum.UserRoleADMIN),
+		UserStatus: true,
+	}
+
+	UserRoleAndStatus = dto.UserRoleAndStatus{
 		Role:       string(enum.UserRoleADMIN),
 		UserStatus: true,
 	}
@@ -459,7 +464,7 @@ func TestLogin_Success(t *testing.T) {
 	ctrl, mockAuthService, mockValidator, _, mockAccessGenerator, mockRefreshGenerator, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(credentialsDto, nil)
+	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(UserIdentity, nil)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 	mockAccessGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Role, userDto.UserStatus).Return(token, nil)
 	mockRefreshGenerator.EXPECT().GenerateJWT(userDto.ID).Return(token, nil)
@@ -515,7 +520,7 @@ func TestLogin_AuthError(t *testing.T) {
 	ctrl, mockAuthService, mockValidator, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(dto.Credentials{}, hasher.ErrPasswordMismatch)
+	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(dto.UserIdentity{}, hasher.ErrPasswordMismatch)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(loginJSON))
@@ -535,7 +540,7 @@ func TestLogin_ServiceError(t *testing.T) {
 	ctrl, mockAuthService, mockValidator, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(dto.Credentials{}, errors.New(""))
+	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(dto.UserIdentity{}, errors.New(""))
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(loginJSON))
@@ -556,7 +561,7 @@ func TestLogin_AccessTokenError(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(credentialsDto, nil)
+	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(UserIdentity, nil)
 	mockAccessGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Role, userDto.UserStatus).Return("", rest.NewInternalServerError(errors.New("")))
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(loginJSON))
@@ -576,7 +581,7 @@ func TestLogin_RefreshTokenError(t *testing.T) {
 	ctrl, mockAuthService, mockValidator, _, mockAccessGenerator, mockRefreshGenerator, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(credentialsDto, nil)
+	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(UserIdentity, nil)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 	mockAccessGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Role, userDto.UserStatus).Return(token, nil)
 	mockRefreshGenerator.EXPECT().GenerateJWT(userDto.ID).Return("", rest.NewInternalServerError(errors.New("")))
@@ -614,7 +619,7 @@ func TestRefresh_Success(t *testing.T) {
 	ctrl, mockAuthService, _, _, mockAccessGenerator, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(credentialsDto, nil)
+	mockAuthService.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(UserRoleAndStatus, nil)
 	mockAccessGenerator.EXPECT().GenerateJWT(userDto.ID, userDto.Role, userDto.UserStatus).Return(token, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
@@ -634,7 +639,7 @@ func TestRefresh_NotFound(t *testing.T) {
 	ctrl, mockAuthService, _, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(dto.Credentials{}, pgx.ErrNoRows)
+	mockAuthService.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(dto.UserRoleAndStatus{}, pgx.ErrNoRows)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
@@ -657,7 +662,7 @@ func TestRefresh_ServiceError(t *testing.T) {
 	ctrl, mockAuthService, _, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(dto.Credentials{}, errors.New(""))
+	mockAuthService.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(dto.UserRoleAndStatus{}, errors.New(""))
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()

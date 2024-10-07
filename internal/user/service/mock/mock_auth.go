@@ -42,10 +42,10 @@ func (m *MockAuthService) EXPECT() *MockAuthServiceMockRecorder {
 }
 
 // AuthenticateUser mocks base method.
-func (m *MockAuthService) AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.Credentials, error) {
+func (m *MockAuthService) AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.UserIdentity, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AuthenticateUser", ctx, loginDto)
-	ret0, _ := ret[0].(dto.Credentials)
+	ret0, _ := ret[0].(dto.UserIdentity)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -72,10 +72,10 @@ func (mr *MockAuthServiceMockRecorder) GetUserConfirmationDetails(ctx, email any
 }
 
 // GetUserRoleAndStatus mocks base method.
-func (m *MockAuthService) GetUserRoleAndStatus(ctx context.Context, id int64) (dto.Credentials, error) {
+func (m *MockAuthService) GetUserRoleAndStatus(ctx context.Context, id int64) (dto.UserRoleAndStatus, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserRoleAndStatus", ctx, id)
-	ret0, _ := ret[0].(dto.Credentials)
+	ret0, _ := ret[0].(dto.UserRoleAndStatus)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

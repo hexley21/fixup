@@ -26,9 +26,6 @@ test:
 	go test -cover ./internal/user/repository/ -mp="${CURDIR}/sql/user/migrations"
 	go test -cover ./internal/catalog/repository -mp="${CURDIR}/sql/catalog/migrations"
 
-compose: build
-	@docker compose up --build --remove-orphans
-
 sqlc:
 	@sqlc generate -f ./sql/$(db)/sqlc.yml
 
@@ -46,7 +43,6 @@ migrate-init:
 
 
 # PLATFORM SPECIFIC
-
 swag-gen/bash:
 	@swag init --dir cmd/$(svc)/,internal/$(svc)/delivery/http,pkg/http/rest,internal/common --parseDependency --output ./api/swagger --outputTypes yaml
 	mv ./api/swagger/swagger.yaml ./api/swagger/$(svc).swagger.yaml

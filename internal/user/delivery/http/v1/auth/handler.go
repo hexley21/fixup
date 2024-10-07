@@ -241,7 +241,7 @@ func (h *Handler) Login(
 			return
 		}
 
-		user, err := h.service.AuthenticateUser(r.Context(), dto)
+		userIdentity, err := h.service.AuthenticateUser(r.Context(), dto)
 		if err != nil {
 			if errors.Is(err, hasher.ErrPasswordMismatch) {
 				h.Writer.WriteError(w, rest.NewUnauthorizedError(err, MsgIncorrectEmailOrPass))
@@ -256,12 +256,12 @@ func (h *Handler) Login(
 			return
 		}
 
-		accessToken, jWTErr := accessGenerator.GenerateJWT(user.ID, user.Role, user.UserStatus)
+		accessToken, jWTErr := accessGenerator.GenerateJWT(userIdentity.ID, userIdentity.Role, userIdentity.UserStatus)
 		if jWTErr != nil {
 			h.Writer.WriteError(w, jWTErr)
 			return
 		}
-		refreshToken, jWTErr := refreshGenerator.GenerateJWT(user.ID)
+		refreshToken, jWTErr := refreshGenerator.GenerateJWT(userIdentity.ID)
 		if jWTErr != nil {
 			h.Writer.WriteError(w, jWTErr)
 			return
@@ -270,7 +270,7 @@ func (h *Handler) Login(
 		setCookies(w, accessToken, access_token_cookie)
 		setCookies(w, refreshToken, refresh_token_cookie)
 
-		h.Logger.Infof("Login user - Role: %s, U-ID: %d", user.Role, user.ID)
+		h.Logger.Infof("Login user - Role: %s, U-ID: %d", userIdentity.Role, userIdentity.ID)
 		h.Writer.WriteNoContent(w, http.StatusOK)
 	}
 }
@@ -310,7 +310,7 @@ func (h *Handler) Refresh(accessGenerator auth_jwt.JWTGenerator) http.HandlerFun
 			return
 		}
 
-		creds, err := h.service.GetUserRoleAndStatus(r.Context(), id)
+		roleAndStatus, err := h.service.GetUserRoleAndStatus(r.Context(), id)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				h.Writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
@@ -321,7 +321,7 @@ func (h *Handler) Refresh(accessGenerator auth_jwt.JWTGenerator) http.HandlerFun
 			return
 		}
 
-		accessToken, errResp := accessGenerator.GenerateJWT(idStr, creds.Role, creds.UserStatus)
+		accessToken, errResp := accessGenerator.GenerateJWT(idStr, roleAndStatus.Role, roleAndStatus.UserStatus)
 		if errResp != nil {
 			h.Writer.WriteError(w, errResp)
 			return
@@ -329,7 +329,7 @@ func (h *Handler) Refresh(accessGenerator auth_jwt.JWTGenerator) http.HandlerFun
 
 		setCookies(w, accessToken, access_token_cookie)
 
-		h.Logger.Infof("Rotate JWT - Role: %s, UserStatus: %v, U-ID: %d", creds.Role, creds.UserStatus, id)
+		h.Logger.Infof("Rotate JWT - Role: %s, UserStatus: %v, U-ID: %d", roleAndStatus.Role, roleAndStatus.UserStatus, id)
 		h.Writer.WriteNoContent(w, http.StatusOK)
 	}
 }

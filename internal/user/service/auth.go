@@ -36,10 +36,10 @@ func NewTemplates(confirmation *template.Template, verified *template.Template) 
 type AuthService interface {
 	RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error)
 	RegisterProvider(ctx context.Context, registerDto dto.RegisterProvider) (dto.User, error)
-	AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.Credentials, error)
+	AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.UserIdentity, error)
 	VerifyUser(ctx context.Context, token string, ttl time.Duration, id int64, email string) error
 	GetUserConfirmationDetails(ctx context.Context, email string) (dto.UserConfirmationDetails, error)
-	GetUserRoleAndStatus(ctx context.Context, id int64) (dto.Credentials, error)
+	GetUserRoleAndStatus(ctx context.Context, id int64) (dto.UserRoleAndStatus, error)
 	SendConfirmationLetter(ctx context.Context, token string, email string, name string) error
 	SendVerifiedLetter(email string) error
 }
@@ -183,8 +183,8 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 	return res, nil
 }
 
-func (s *authServiceImpl) AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.Credentials, error) {
-	var dto dto.Credentials
+func (s *authServiceImpl) AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.UserIdentity, error) {
+	var dto dto.UserIdentity
 	creds, err := s.userRepository.GetCredentialsByEmail(ctx, loginDto.Email)
 	if err != nil {
 		return dto, err
@@ -228,13 +228,12 @@ func (s *authServiceImpl) GetUserConfirmationDetails(ctx context.Context, email 
 	return dto, nil
 }
 
-func (s *authServiceImpl) GetUserRoleAndStatus(ctx context.Context, id int64) (dto dto.Credentials, err error) {
+func (s *authServiceImpl) GetUserRoleAndStatus(ctx context.Context, id int64) (dto dto.UserRoleAndStatus, err error) {
 	res, err := s.userRepository.GetUserRoleAndStatus(ctx, id)
 	if err != nil {
 		return dto, err
 	}
 
-	dto.ID = strconv.FormatInt(int64(id), 10)
 	dto.Role = string(res.Role)
 	dto.UserStatus = res.UserStatus.Bool
 

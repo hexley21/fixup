@@ -28,8 +28,13 @@ type UserConfirmationDetails struct {
 	Firstname  string
 }
 
-type Credentials struct {
+type UserIdentity struct {
 	ID         string
+	Role       string
+	UserStatus bool
+}
+
+type UserRoleAndStatus struct {
 	Role       string
 	UserStatus bool
 }
