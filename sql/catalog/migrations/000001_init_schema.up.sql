@@ -34,3 +34,24 @@ CREATE TABLE provider_services (
     service_id INT NOT NULL REFERENCES services(id),
     PRIMARY KEY(provider_id, service_id)
 );
+
+
+CREATE OR REPLACE FUNCTION prevent_duplicate_type_name()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 
+        FROM categories 
+        WHERE type_id = NEW.type_id 
+        AND name = NEW.name
+    ) THEN
+        RAISE EXCEPTION 'A row with the same type_id and name already exists.';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER prevent_duplicate_trigger
+BEFORE INSERT ON categories
+FOR EACH ROW
+EXECUTE FUNCTION prevent_duplicate_type_name();
