@@ -1,3 +1,5 @@
+-- // TODO: Add trigger when inserting categories with the same name in a single category type
+
 -- Category Types Table
 CREATE TABLE category_types (
     id SERIAL PRIMARY KEY,

@@ -14,10 +14,8 @@ func MapRoutes(
 	router chi.Router,
 ) {
 	router.Route("/category-types", func(r chi.Router) {
-		r.Use(jWTAccessMiddleware)
-
 		r.Group(func(r chi.Router) {
-			r.Use(onlyVerifiedMiddleware, onlyAdminMiddleware)
+			r.Use(jWTAccessMiddleware, onlyVerifiedMiddleware, onlyAdminMiddleware)
 
 			r.Post("/", h.CreateCategoryType)
 			r.Patch("/{id}", h.PatchCategoryTypeById)
