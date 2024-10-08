@@ -21,6 +21,7 @@ import (
 	mock_refresh_jwt "github.com/hexley21/fixup/internal/user/jwt/refresh_jwt/mock"
 	"github.com/hexley21/fixup/internal/user/jwt/verify_jwt"
 	mock_verify_jwt "github.com/hexley21/fixup/internal/user/jwt/verify_jwt/mock"
+	"github.com/hexley21/fixup/internal/user/service"
 	mock_service "github.com/hexley21/fixup/internal/user/service/mock"
 	"github.com/hexley21/fixup/pkg/hasher"
 	"github.com/hexley21/fixup/pkg/http/binder/std_binder"
@@ -52,19 +53,19 @@ var (
 		CreatedAt:   time.Now(),
 	}
 
-	userConfirmationDetailsDTO = dto.UserConfirmationDetails{
+	userConfirmationDetailsDTO = service.UserConfirmationDetails{
 		ID:         "1",
 		UserStatus: false,
 		Firstname:  "Larry",
 	}
 
-	UserIdentity = dto.UserIdentity{
+	UserIdentity = service.UserIdentity{
 		ID:         "1",
 		Role:       string(enum.UserRoleADMIN),
 		UserStatus: true,
 	}
 
-	UserRoleAndStatus = dto.UserRoleAndStatus{
+	UserRoleAndStatus = service.UserRoleAndStatus{
 		Role:       string(enum.UserRoleADMIN),
 		UserStatus: true,
 	}
@@ -362,7 +363,7 @@ func TestResendConfirmationLetter_Conflict(t *testing.T) {
 	ctrl, mockAuthService, mockValidator, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(dto.UserConfirmationDetails{UserStatus: true}, nil)
+	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(service.UserConfirmationDetails{UserStatus: true}, nil)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(emailJSON))
@@ -382,7 +383,7 @@ func TestResendConfirmationLetter_NotFound(t *testing.T) {
 	ctrl, mockAuthService, mockValidator, mockverify_jwtGenerator, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(dto.UserConfirmationDetails{}, pg_error.ErrNotFound)
+	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(service.UserConfirmationDetails{}, pg_error.ErrNotFound)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(emailJSON))
@@ -402,7 +403,7 @@ func TestResendConfirmationLetter_Already(t *testing.T) {
 	ctrl, mockAuthService, mockValidator, mockverify_jwtGenerator, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(dto.UserConfirmationDetails{}, pg_error.ErrNotFound)
+	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(service.UserConfirmationDetails{}, pg_error.ErrNotFound)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(emailJSON))
@@ -422,7 +423,7 @@ func TestResendConfirmationLetter_ServiceError(t *testing.T) {
 	ctrl, mockAuthService, mockValidator, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(dto.UserConfirmationDetails{}, errors.New(""))
+	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(service.UserConfirmationDetails{}, errors.New(""))
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(registerProviderJSON))
@@ -520,7 +521,7 @@ func TestLogin_AuthError(t *testing.T) {
 	ctrl, mockAuthService, mockValidator, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(dto.UserIdentity{}, hasher.ErrPasswordMismatch)
+	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(service.UserIdentity{}, hasher.ErrPasswordMismatch)
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(loginJSON))
@@ -540,7 +541,7 @@ func TestLogin_ServiceError(t *testing.T) {
 	ctrl, mockAuthService, mockValidator, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(dto.UserIdentity{}, errors.New(""))
+	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(service.UserIdentity{}, errors.New(""))
 	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(loginJSON))
@@ -639,7 +640,7 @@ func TestRefresh_NotFound(t *testing.T) {
 	ctrl, mockAuthService, _, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(dto.UserRoleAndStatus{}, pgx.ErrNoRows)
+	mockAuthService.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(service.UserRoleAndStatus{}, pgx.ErrNoRows)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
@@ -662,7 +663,7 @@ func TestRefresh_ServiceError(t *testing.T) {
 	ctrl, mockAuthService, _, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(dto.UserRoleAndStatus{}, errors.New(""))
+	mockAuthService.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(service.UserRoleAndStatus{}, errors.New(""))
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()

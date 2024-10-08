@@ -21,20 +21,3 @@ type Login struct {
 type Email struct {
 	Email string `json:"email" validate:"required,email,max=40"`
 } // @name EmailInput
-
-type UserConfirmationDetails struct {
-	ID         string
-	UserStatus bool
-	Firstname  string
-}
-
-type UserIdentity struct {
-	ID         string
-	Role       string
-	UserStatus bool
-}
-
-type UserRoleAndStatus struct {
-	Role       string
-	UserStatus bool
-}

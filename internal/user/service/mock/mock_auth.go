@@ -15,6 +15,7 @@ import (
 	time "time"
 
 	dto "github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
+	service "github.com/hexley21/fixup/internal/user/service"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -42,10 +43,10 @@ func (m *MockAuthService) EXPECT() *MockAuthServiceMockRecorder {
 }
 
 // AuthenticateUser mocks base method.
-func (m *MockAuthService) AuthenticateUser(ctx context.Context, loginDto dto.Login) (dto.UserIdentity, error) {
+func (m *MockAuthService) AuthenticateUser(ctx context.Context, loginDto dto.Login) (service.UserIdentity, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AuthenticateUser", ctx, loginDto)
-	ret0, _ := ret[0].(dto.UserIdentity)
+	ret0, _ := ret[0].(service.UserIdentity)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -57,10 +58,10 @@ func (mr *MockAuthServiceMockRecorder) AuthenticateUser(ctx, loginDto any) *gomo
 }
 
 // GetUserConfirmationDetails mocks base method.
-func (m *MockAuthService) GetUserConfirmationDetails(ctx context.Context, email string) (dto.UserConfirmationDetails, error) {
+func (m *MockAuthService) GetUserConfirmationDetails(ctx context.Context, email string) (service.UserConfirmationDetails, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserConfirmationDetails", ctx, email)
-	ret0, _ := ret[0].(dto.UserConfirmationDetails)
+	ret0, _ := ret[0].(service.UserConfirmationDetails)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -72,10 +73,10 @@ func (mr *MockAuthServiceMockRecorder) GetUserConfirmationDetails(ctx, email any
 }
 
 // GetUserRoleAndStatus mocks base method.
-func (m *MockAuthService) GetUserRoleAndStatus(ctx context.Context, id int64) (dto.UserRoleAndStatus, error) {
+func (m *MockAuthService) GetUserRoleAndStatus(ctx context.Context, id int64) (service.UserRoleAndStatus, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserRoleAndStatus", ctx, id)
-	ret0, _ := ret[0].(dto.UserRoleAndStatus)
+	ret0, _ := ret[0].(service.UserRoleAndStatus)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
