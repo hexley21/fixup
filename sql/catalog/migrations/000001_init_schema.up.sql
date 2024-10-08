@@ -10,7 +10,7 @@ CREATE TABLE category_types (
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
     type_id INT NOT NULL REFERENCES category_types(id),
-    name VARCHAR(100) NOT NULL
+    name VARCHAR(100) NOT NULL CHECK (LENGTH(name) > 1)
 );
 
 -- Subcategories Table

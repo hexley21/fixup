@@ -63,7 +63,7 @@ func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 	category, err := h.service.CreateCategory(r.Context(), dto)
 	if err != nil {
 		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && (pgErr.Code == pgerrcode.UniqueViolation || pgErr.Code == pgerrcode.RaiseException){
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.RaiseException {
 			h.Writer.WriteError(w, rest.NewConflictError(err, app_error.MsgNameAlreadyTaken))
 			return
 		}

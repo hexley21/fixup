@@ -5,6 +5,7 @@ import (
 
 	"github.com/hexley21/fixup/internal/catalog/entity"
 	"github.com/hexley21/fixup/pkg/infra/postgres"
+	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 )
 
 type CategoryRepository interface {
@@ -53,7 +54,12 @@ DELETE FROM categories WHERE id = $1
 `
 
 func (r *postgresCategoryRepository) DeleteCategoryById(ctx context.Context, id int32) error {
-	_, err := r.db.Exec(ctx, deleteCategoryById, id)
+	result, err := r.db.Exec(ctx, deleteCategoryById, id)
+
+	if result.RowsAffected() == 0 {
+		return pg_error.ErrNotFound
+	}
+	
 	return err
 }
 
@@ -127,6 +133,11 @@ type UpdateCategoryByIdParams struct {
 }
 
 func (r *postgresCategoryRepository) UpdateCategoryById(ctx context.Context, arg UpdateCategoryByIdParams) error {
-	_, err := r.db.Exec(ctx, updateCategoryById, arg.ID, arg.Name, arg.TypeID)
+	result, err := r.db.Exec(ctx, updateCategoryById, arg.ID, arg.Name, arg.TypeID)
+	
+	if result.RowsAffected() == 0 {
+		return pg_error.ErrNotFound
+	}
+
 	return err
 }
