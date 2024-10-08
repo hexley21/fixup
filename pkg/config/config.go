@@ -23,6 +23,7 @@ type (
 	Config struct {
 		Server       Server
 		HTTP         HTTP
+		Pagination   Pagination
 		Metrics      Metrics
 		Postgres     Postgres
 		Redis        Redis
@@ -47,6 +48,14 @@ type (
 		IdleTimeout  time.Duration `yaml:"idle_timeout"`
 		ReadTimeout  time.Duration `yaml:"read_timeout"`
 		WriteTimeout time.Duration `yaml:"write_timeout"`
+	}
+
+	Pagination struct {
+		SmallPages   int32 `yaml:"s_pages"`
+		MediumPages  int32 `yaml:"m_pages"`
+		LargePages   int32 `yaml:"l_pages"`
+		XLargePages  int32 `yaml:"xl_pages"`
+		XXLargePages int32 `yaml:"2xl_pages"`
 	}
 
 	Metrics struct {
