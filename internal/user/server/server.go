@@ -155,7 +155,7 @@ func NewServer(
 }
 
 func (s *server) Run() error {
-	middlewareFactory := middleware.NewMiddlewareFactory(s.handlerComponents.Binder, s.handlerComponents.Writer)
+	Middleware := middleware.NewMiddleware(s.handlerComponents.Binder, s.handlerComponents.Writer)
 	chiLogger := &chi_middleware.DefaultLogFormatter{
 		Logger:  s.handlerComponents.Logger,
 		NoColor: false,
@@ -174,7 +174,7 @@ func (s *server) Run() error {
 	v1.MapV1Routes(v1.RouterArgs{
 		AuthService:            s.services.authService,
 		UserService:            s.services.userService,
-		MiddlewareFactory:      middlewareFactory,
+		Middleware:             Middleware,
 		HandlerComponents:      s.handlerComponents,
 		AccessJWTManager:       s.jWTManagers.accessJWTManager,
 		RefreshJWTManager:      s.jWTManagers.refreshJWTManager,
@@ -185,22 +185,22 @@ func (s *server) Run() error {
 	s.metricsRouter.Handle("/metrics", promhttp.Handler())
 
 	mainErrChan := make(chan error, 1)
-    metricsErrChan := make(chan error, 1)
+	metricsErrChan := make(chan error, 1)
 
 	go func() {
-        mainErrChan <- s.mux.ListenAndServe()
-    }()
+		mainErrChan <- s.mux.ListenAndServe()
+	}()
 
-    go func() {
-        metricsErrChan <- s.metricsMux.ListenAndServe()
-    }()
+	go func() {
+		metricsErrChan <- s.metricsMux.ListenAndServe()
+	}()
 
-    select {
-    case mainErr := <-mainErrChan:
-        return mainErr
-    case metricsErr := <-metricsErrChan:
-        return metricsErr
-    }
+	select {
+	case mainErr := <-mainErrChan:
+		return mainErr
+	case metricsErr := <-metricsErrChan:
+		return metricsErr
+	}
 }
 
 func (s *server) Close() error {

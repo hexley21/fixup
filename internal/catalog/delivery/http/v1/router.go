@@ -9,18 +9,18 @@ import (
 	"github.com/hexley21/fixup/internal/common/middleware"
 	"github.com/hexley21/fixup/pkg/http/handler"
 )
-	
+
 type RouterArgs struct {
 	CategoryTypeService service.CategoryTypeService
-	MiddlewareFactory   *middleware.MiddlewareFactory
+	Middleware          *middleware.Middleware
 	HandlerComponents   *handler.Components
 	AccessJWTManager    auth_jwt.JWTManager
 }
 
 func MapV1Routes(args RouterArgs, router chi.Router) {
-	accessJWTMiddleware := args.MiddlewareFactory.NewJWT(args.AccessJWTManager)
-	onlyVerifiedMiddleware := args.MiddlewareFactory.NewAllowVerified(true)
-	onlyAdminMiddleware := args.MiddlewareFactory.NewAllowRoles(enum.UserRoleADMIN)
+	accessJWTMiddleware := args.Middleware.NewJWT(args.AccessJWTManager)
+	onlyVerifiedMiddleware := args.Middleware.NewAllowVerified(true)
+	onlyAdminMiddleware := args.Middleware.NewAllowRoles(enum.UserRoleADMIN)
 
 	categoryTypesHandler := category_type.NewHandler(
 		args.HandlerComponents,

@@ -16,7 +16,7 @@ import (
 type RouterArgs struct {
 	AuthService            service.AuthService
 	UserService            service.UserService
-	MiddlewareFactory      *middleware.MiddlewareFactory
+	Middleware             *middleware.Middleware
 	HandlerComponents      *handler.Components
 	AccessJWTManager       auth_jwt.JWTManager
 	RefreshJWTManager      refresh_jwt.JWTManager
@@ -24,22 +24,22 @@ type RouterArgs struct {
 }
 
 func MapV1Routes(args RouterArgs, router chi.Router) {
-	authHandlerFactory := auth.NewFactory(
+	authHandlermiddleware := auth.NewHandler(
 		args.HandlerComponents,
 		args.AuthService,
 	)
 
-	userHandlerFactory := user.NewFactory(
+	userHandlermiddleware := user.NewHandler(
 		args.HandlerComponents,
 		args.UserService,
 	)
 
-	accessJWTMiddleware := args.MiddlewareFactory.NewJWT(args.AccessJWTManager)
-	onlyVerifiedMiddleware := args.MiddlewareFactory.NewAllowVerified(true)
+	accessJWTMiddleware := args.Middleware.NewJWT(args.AccessJWTManager)
+	onlyVerifiedMiddleware := args.Middleware.NewAllowVerified(true)
 	refreshJWTMiddleware := refresh_middleware.NewJWT(args.HandlerComponents.Writer, args.RefreshJWTManager)
 
 	router.Route("/v1", func(r chi.Router) {
-		auth.MapRoutes(args.MiddlewareFactory, authHandlerFactory, refreshJWTMiddleware, args.AccessJWTManager, args.RefreshJWTManager, args.VerificationJWTManager, r)
-		user.MapRoutes(args.MiddlewareFactory, userHandlerFactory, accessJWTMiddleware, onlyVerifiedMiddleware, r)
+		auth.MapRoutes(args.Middleware, authHandlermiddleware, refreshJWTMiddleware, args.AccessJWTManager, args.RefreshJWTManager, args.VerificationJWTManager, r)
+		user.MapRoutes(args.Middleware, userHandlermiddleware, accessJWTMiddleware, onlyVerifiedMiddleware, r)
 	})
 }

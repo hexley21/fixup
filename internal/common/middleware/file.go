@@ -14,7 +14,7 @@ var (
 	ErrNoFile         = rest.NewBadRequestError(nil, rest.MsgNoFile)
 )
 
-func (f *MiddlewareFactory) NewAllowFilesAmount(size int64, key string, amount int) func(http.Handler) http.Handler {
+func (f *Middleware) NewAllowFilesAmount(size int64, key string, amount int) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			form, err := f.binder.BindMultipartForm(r, size)
@@ -29,12 +29,12 @@ func (f *MiddlewareFactory) NewAllowFilesAmount(size int64, key string, amount i
 				f.writer.WriteError(w, ErrTooManyFiles)
 				return
 			}
-			
+
 			if len(files) == 0 {
-				 f.writer.WriteError(w, ErrNoFile)
-				 return
+				f.writer.WriteError(w, ErrNoFile)
+				return
 			}
-			
+
 			if len(files) < amount {
 				f.writer.WriteError(w, ErrNotEnoughFiles)
 				return
@@ -45,7 +45,7 @@ func (f *MiddlewareFactory) NewAllowFilesAmount(size int64, key string, amount i
 	}
 }
 
-func (f *MiddlewareFactory) NewAllowContentType(size int64, key string, types ...string) func(http.Handler) http.Handler {
+func (f *Middleware) NewAllowContentType(size int64, key string, types ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			form, err := f.binder.BindMultipartForm(r, size)

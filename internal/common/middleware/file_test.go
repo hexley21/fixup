@@ -56,7 +56,7 @@ func TestAllowFilesAmount_ExactFiles(t *testing.T) {
 	req.Header.Set(HeaderContentType, contentType)
 	rec := httptest.NewRecorder()
 
-	factory.NewAllowFilesAmount(maxSize, "files", len(files))(BasicHandler()).ServeHTTP(rec, req)
+	mw.NewAllowFilesAmount(maxSize, "files", len(files))(BasicHandler()).ServeHTTP(rec, req)
 
 	assert.Equal(t, "ok", rec.Body.String())
 	assert.Equal(t, http.StatusOK, rec.Code)
@@ -69,7 +69,7 @@ func TestAllowFilesAmount_TooManyFiles(t *testing.T) {
 	req.Header.Set(HeaderContentType, contentType)
 	rec := httptest.NewRecorder()
 
-	factory.NewAllowFilesAmount(maxSize, "files", 1)(BasicHandler()).ServeHTTP(rec, req)
+	mw.NewAllowFilesAmount(maxSize, "files", 1)(BasicHandler()).ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
@@ -87,7 +87,7 @@ func TestAllowFilesAmount_NotEnoughFiles(t *testing.T) {
 	req.Header.Set(HeaderContentType, contentType)
 	rec := httptest.NewRecorder()
 
-	factory.NewAllowFilesAmount(maxSize, "files", 4)(BasicHandler()).ServeHTTP(rec, req)
+	mw.NewAllowFilesAmount(maxSize, "files", 4)(BasicHandler()).ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
@@ -107,7 +107,7 @@ func TestAllowFilesAmount_NoFile(t *testing.T) {
 	req.Header.Set(HeaderContentType, writer.FormDataContentType())
 	rec := httptest.NewRecorder()
 
-	factory.NewAllowFilesAmount(maxSize, "files", 1)(BasicHandler()).ServeHTTP(rec, req)
+	mw.NewAllowFilesAmount(maxSize, "files", 1)(BasicHandler()).ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
@@ -125,7 +125,7 @@ func TestAllowContentType_ValidContentType(t *testing.T) {
 	req.Header.Set(HeaderContentType, contentType)
 	rec := httptest.NewRecorder()
 
-	factory.NewAllowContentType(maxSize, "files", "application/octet-stream")(BasicHandler()).ServeHTTP(rec, req)
+	mw.NewAllowContentType(maxSize, "files", "application/octet-stream")(BasicHandler()).ServeHTTP(rec, req)
 
 	assert.Equal(t, "ok", rec.Body.String())
 	assert.Equal(t, http.StatusOK, rec.Code)
@@ -137,7 +137,7 @@ func TestAllowContentType_InvalidContentType(t *testing.T) {
 	req.Header.Set(HeaderContentType, contentType)
 	rec := httptest.NewRecorder()
 
-	factory.NewAllowContentType(maxSize, "files", "image/jpeg")(BasicHandler()).ServeHTTP(rec, req)
+	mw.NewAllowContentType(maxSize, "files", "image/jpeg")(BasicHandler()).ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
@@ -153,7 +153,7 @@ func TestAllowContentType_MissingContentType(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/", body)
 	rec := httptest.NewRecorder()
 
-	factory.NewAllowContentType(maxSize, "files", "image/jpeg")(BasicHandler()).ServeHTTP(rec, req)
+	mw.NewAllowContentType(maxSize, "files", "image/jpeg")(BasicHandler()).ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 

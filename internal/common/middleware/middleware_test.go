@@ -19,15 +19,17 @@ func BasicHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("ok"))
 }
 
-func setupMiddlewareFactory() *middleware.MiddlewareFactory {
+func setupMiddleware() *middleware.Middleware {
 	logger := std_logger.New()
 	json := std_json.New()
 
-	return middleware.NewMiddlewareFactory(
+	return middleware.NewMiddleware(
 		std_binder.New(json),
 		json_writer.New(logger, json),
 	)
 
 }
 
-var factory = setupMiddlewareFactory()
+var (
+	mw = setupMiddleware()
+)

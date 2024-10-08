@@ -27,7 +27,7 @@ type Handler struct {
 	service service.UserService
 }
 
-func NewFactory(components *handler.Components, service service.UserService) *Handler {
+func NewHandler(components *handler.Components, service service.UserService) *Handler {
 	return &Handler{
 		Components: components,
 		service:    service,

@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/hexley21/fixup/internal/common/middleware"
 	"github.com/hexley21/fixup/internal/common/enum"
+	"github.com/hexley21/fixup/internal/common/middleware"
 )
 
 var (
@@ -13,7 +13,7 @@ var (
 )
 
 func MapRoutes(
-	mf *middleware.MiddlewareFactory,
+	mw *middleware.Middleware,
 	h *Handler,
 	jWTAccessMiddleware func(http.Handler) http.Handler,
 	onlyVerifiedMiddleware func(http.Handler) http.Handler,
@@ -23,7 +23,7 @@ func MapRoutes(
 		r.Use(
 			jWTAccessMiddleware,
 			onlyVerifiedMiddleware,
-			mf.NewAllowSelfOrRole(enum.UserRoleADMIN, enum.UserRoleMODERATOR),
+			mw.NewAllowSelfOrRole(enum.UserRoleADMIN, enum.UserRoleMODERATOR),
 		)
 
 		r.Get("/{id}", h.FindUserById)
@@ -32,8 +32,8 @@ func MapRoutes(
 
 		r.Group(func(r chi.Router) {
 			r.Use(
-				mf.NewAllowFilesAmount(maxFileSize, "image", 1),
-				mf.NewAllowContentType(maxFileSize, "image", "image/jpeg", "image/png"),
+				mw.NewAllowFilesAmount(maxFileSize, "image", 1),
+				mw.NewAllowContentType(maxFileSize, "image", "image/jpeg", "image/png"),
 			)
 			r.Patch("/{id}/pfp", h.UploadProfilePicture)
 		})

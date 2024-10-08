@@ -10,7 +10,7 @@ import (
 	"github.com/hexley21/fixup/pkg/http/rest"
 )
 
-func (f *MiddlewareFactory) NewJWT(jwtVerifier auth_jwt.JWTVerifier) func(http.Handler) http.Handler {
+func (f *Middleware) NewJWT(jwtVerifier auth_jwt.JWTVerifier) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")

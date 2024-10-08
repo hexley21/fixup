@@ -43,7 +43,7 @@ type Handler struct {
 	service service.AuthService
 }
 
-func NewFactory(components *handler.Components, service service.AuthService) *Handler {
+func NewHandler(components *handler.Components, service service.AuthService) *Handler {
 	return &Handler{
 		Components: components,
 		service:    service,

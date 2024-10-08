@@ -11,8 +11,8 @@ import (
 	"github.com/hexley21/fixup/internal/common/app_error"
 	"github.com/hexley21/fixup/internal/common/auth_jwt"
 	mock_jwt "github.com/hexley21/fixup/internal/common/auth_jwt/mock"
-	"github.com/hexley21/fixup/internal/common/middleware"
 	"github.com/hexley21/fixup/internal/common/enum"
+	"github.com/hexley21/fixup/internal/common/middleware"
 	"github.com/hexley21/fixup/pkg/http/rest"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -23,11 +23,11 @@ var (
 )
 
 func setupJWT(t *testing.T) (*gomock.Controller, func(http.Handler) http.Handler, *mock_jwt.MockJWTVerifier) {
+	mw := setupMiddleware()
 	ctrl := gomock.NewController(t)
 	mockJwtVerifier := mock_jwt.NewMockJWTVerifier(ctrl)
 
-
-	return ctrl, factory.NewJWT(mockJwtVerifier), mockJwtVerifier
+	return ctrl, mw.NewJWT(mockJwtVerifier), mockJwtVerifier
 }
 
 func TestJWT_MissingAuthorizationHeader(t *testing.T) {
@@ -82,7 +82,7 @@ func TestJWT_InvalidToken(t *testing.T) {
 	JWTMiddleware(BasicHandler()).ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
-	
+
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
 		assert.Equal(t, app_error.MsgInvalidToken, errResp.Message)
@@ -99,7 +99,7 @@ func TestJWT_ValidToken(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set("Authorization", "Bearer validtoken")
 	rec := httptest.NewRecorder()
-	
+
 	JWTMiddleware(BasicHandler()).ServeHTTP(rec, req)
 
 	assert.Equal(t, "ok", rec.Body.String())

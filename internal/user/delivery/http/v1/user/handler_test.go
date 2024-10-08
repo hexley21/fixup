@@ -63,7 +63,7 @@ func setup(t *testing.T) (
 	logger := std_logger.New()
 	jsonManager := std_json.New()
 
-	h = user.NewFactory(
+	h = user.NewHandler(
 		handler.NewComponents(logger, std_binder.New(jsonManager), mockValidator, json_writer.New(logger, jsonManager)),
 		mockUserService,
 	)

@@ -11,7 +11,7 @@ import (
 )
 
 func MapRoutes(
-	mf *middleware.MiddlewareFactory,
+	mw *middleware.Middleware,
 	h *Handler,
 	refreshJWTMiddleware func(http.Handler) http.Handler,
 	accessJwtManager auth_jwt.JWTManager,

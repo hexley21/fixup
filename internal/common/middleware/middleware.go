@@ -14,13 +14,13 @@ const(
 	MsgMissingBearerToken         = "Bearer token is missing"
 )
 
-type MiddlewareFactory struct {
+type Middleware struct {
 	binder binder.FullBinder
 	writer writer.HTTPErrorWriter
 }
 
-func NewMiddlewareFactory(binder binder.FullBinder, writer writer.HTTPErrorWriter) *MiddlewareFactory{
-	return &MiddlewareFactory{
+func NewMiddleware(binder binder.FullBinder, writer writer.HTTPErrorWriter) *Middleware{
+	return &Middleware{
 		binder, writer,
 	}
 }

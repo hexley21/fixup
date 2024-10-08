@@ -6,9 +6,9 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/hexley21/fixup/pkg/http/rest"
-	"github.com/hexley21/fixup/internal/common/util/ctx_util"
 	"github.com/hexley21/fixup/internal/common/enum"
+	"github.com/hexley21/fixup/internal/common/util/ctx_util"
+	"github.com/hexley21/fixup/pkg/http/rest"
 )
 
 var (
@@ -17,7 +17,7 @@ var (
 	ErrUserNotVerified    = rest.NewForbiddenError(nil, MsgUserIsNotVerified)
 )
 
-func (f *MiddlewareFactory) NewAllowRoles(roles ...enum.UserRole) func(http.Handler) http.Handler {
+func (f *Middleware) NewAllowRoles(roles ...enum.UserRole) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			role, err := ctx_util.GetJWTRole(r.Context())
@@ -36,7 +36,7 @@ func (f *MiddlewareFactory) NewAllowRoles(roles ...enum.UserRole) func(http.Hand
 	}
 }
 
-func (f *MiddlewareFactory) NewAllowSelfOrRole(roles ...enum.UserRole) func(http.Handler) http.Handler {
+func (f *Middleware) NewAllowSelfOrRole(roles ...enum.UserRole) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			idParam := chi.URLParam(r, "id")
@@ -81,7 +81,7 @@ func (f *MiddlewareFactory) NewAllowSelfOrRole(roles ...enum.UserRole) func(http
 	}
 }
 
-func (f *MiddlewareFactory) NewAllowVerified(status bool) func(http.Handler) http.Handler {
+func (f *Middleware) NewAllowVerified(status bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			verified, err := ctx_util.GetJWTUserStatus(r.Context())
