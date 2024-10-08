@@ -388,14 +388,14 @@ services:
     build:
       context: .
       dockerfile: ./docker/metrics/Dockerfile.nginx-exporter
-    command: --target.host=nginx
+    command: --target.host=nginx --target.port=81 --target.path=/status --prom.port=9150 --target.log /var/log/nginx/access.log
     depends_on:
       - nginx
       - prometheus
     ports:
     - 9150:9150
     volumes:
-      - ./log/access.log:/var/log/nginx/access.log
+      - ./log/access.log:/var/log/nginx/access.log:ro
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     ports: 
