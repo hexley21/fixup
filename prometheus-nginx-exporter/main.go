@@ -41,8 +41,8 @@ func NewMetrics(reg prometheus.Registerer) *metrics {
 			Name:      "http_request_duration_seconds",
 			Help:      "Duration of the request.",
 			// Optionally configure time buckets
-			// Buckets:   prometheus.LinearBuckets(0.01, 0.05, 20),
-			Buckets: prometheus.DefBuckets,
+			Buckets: []float64{0.0005, 0.0006, 0.0007, 0.0008, 0.0009, 0.001, 0.0011, 0.0012, 0.0013, 0.0014, 0.0015, 0.0016, 0.0017, 0.0018, 0.0019, 0.002, 0.01, 0.02, 0.03, 0.04, 0.05, 0.1, 0.5, 1, 2, 3, 4, 5},
+			// Buckets: prometheus.DefBuckets,
 		}, []string{"status_code", "method", "path"}),
 	}
 	reg.MustRegister(m.size, m.requests, m.duration)
@@ -51,8 +51,8 @@ func NewMetrics(reg prometheus.Registerer) *metrics {
 
 func main() {
 	var (
-		targetHost = flag.String("target.host", "nginx", "nginx address with basic_status page")
-		targetPort = flag.Int("target.port", 81, "nginx port with basic_status page")
+		targetHost = flag.String("target.host", "localhost", "nginx address with basic_status page")
+		targetPort = flag.Int("target.port", 80, "nginx port with basic_status page")
 		targetPath = flag.String("target.path", "/status", "URL path to scrap metrics")
 		promPort   = flag.Int("prom.port", 9150, "port to expose prometheus metrics")
 		logPath    = flag.String("target.log", "/var/log/nginx/access.log", "path to access.log")
@@ -111,6 +111,11 @@ func tailAccessLogFile(m *metrics, path string) {
 	for line := range t.Lines {
 		match := exp.FindStringSubmatch(line.Text)
 		result := make(map[string]string)
+
+		if len(match) == 0 {
+			log.Printf("No match found for line: %s", line.Text)
+			continue
+		}
 
 		for i, name := range exp.SubexpNames() {
 			if i != 0 && name != "" {
