@@ -10,6 +10,13 @@ http:
     read_timeout: 10s
     write_timeout: 30s
 
+pagination:
+    s_pages: 10
+    m_pages: 25
+    l_pages: 50
+    xl_pages: 100
+    2xl_pages: 200
+
 metrics:
     port: 8081
 
