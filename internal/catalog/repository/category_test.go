@@ -18,7 +18,7 @@ const (
 	categoryName = "Maintenance"
 )
 
-func setupCategory()(
+func setupCategory() (
 	ctx context.Context,
 	pgPool *pgxpool.Pool,
 	repo repository.CategoryRepository,
@@ -205,20 +205,53 @@ func TestUpdateCategoryById_Success(t *testing.T) {
 		t.Fatalf("failed to insert category: %v", err)
 	}
 
-	err = repo.UpdateCategoryById(ctx, repository.UpdateCategoryByIdParams{ID: insert.ID, TypeID: insert.TypeID, Name: insert.Name})
-	
+	update, err := repo.UpdateCategoryById(ctx, repository.UpdateCategoryByIdParams{ID: insert.ID, TypeID: insert.TypeID, Name: insert.Name})
+
 	assert.NoError(t, err)
+	assert.Equal(t, insert.ID, update.ID)
+	assert.Equal(t, insert.TypeID, update.TypeID)
+	assert.Equal(t, insert.Name, update.Name)
 }
 
 func TestUpdateCategoryById_NotFound(t *testing.T) {
 	ctx, pgPool, repo := setupCategory()
 	defer cleanupPostgres(ctx, pgPool)
 
-	err := repo.UpdateCategoryById(ctx, repository.UpdateCategoryByIdParams{ID: categoryTypeId, Name: categoryTypeName})
-	
-	assert.ErrorIs(t, err, pg_error.ErrNotFound)
+	update, err := repo.UpdateCategoryById(ctx, repository.UpdateCategoryByIdParams{ID: categoryTypeId, Name: categoryTypeName})
+
+	assert.ErrorIs(t, err, pgx.ErrNoRows)
+	assert.Empty(t, update)
 }
 
+func TestUpdateCategoryById_Conflict(t *testing.T) {
+	ctx, pgPool, repo := setupCategory()
+	defer cleanupPostgres(ctx, pgPool)
+
+	insertCategoryType, err := insertCategoryType(pgPool, ctx, categoryTypeName)
+	if err != nil {
+		t.Fatalf("failed to insert category type: %v", err)
+	}
+
+	insert, err := insertCategory(pgPool, ctx, insertCategoryType.ID, categoryName)
+	if err != nil {
+		t.Fatalf("failed to insert category: %v", err)
+	}
+
+	_, err = insertCategory(pgPool, ctx, insertCategoryType.ID, "Fix")
+	if err != nil {
+		t.Fatalf("failed to insert category: %v", err)
+	}
+
+	entity, err := repo.UpdateCategoryById(ctx, repository.UpdateCategoryByIdParams{ID: insert.ID, TypeID: insert.TypeID, Name: "Fix"})
+
+	var pgErr *pgconn.PgError
+	if assert.ErrorAs(t, err, &pgErr) {
+		assert.Equal(t, pgerrcode.RaiseException, pgErr.Code)
+	}
+	assert.Empty(t, entity.ID)
+	assert.Empty(t, entity.Name)
+	assert.Empty(t, entity.TypeID)
+}
 
 func insertCategory(dbPool *pgxpool.Pool, ctx context.Context, typeId int32, name string) (entity.Category, error) {
 	row := dbPool.QueryRow(ctx, "INSERT INTO categories (type_id, name) VALUES ($1, $2) RETURNING *", typeId, name)

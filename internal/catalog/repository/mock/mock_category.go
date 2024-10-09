@@ -117,11 +117,12 @@ func (mr *MockCategoryRepositoryMockRecorder) GetCategoryById(ctx, id any) *gomo
 }
 
 // UpdateCategoryById mocks base method.
-func (m *MockCategoryRepository) UpdateCategoryById(ctx context.Context, arg repository.UpdateCategoryByIdParams) error {
+func (m *MockCategoryRepository) UpdateCategoryById(ctx context.Context, arg repository.UpdateCategoryByIdParams) (entity.Category, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateCategoryById", ctx, arg)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(entity.Category)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateCategoryById indicates an expected call of UpdateCategoryById.

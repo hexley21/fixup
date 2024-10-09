@@ -41,9 +41,9 @@ func (m *MockCategoryService) EXPECT() *MockCategoryServiceMockRecorder {
 }
 
 // CreateCategory mocks base method.
-func (m *MockCategoryService) CreateCategory(ctx context.Context, categoryDto dto.CreateCategoryDTO) (dto.CategoryDTO, error) {
+func (m *MockCategoryService) CreateCategory(ctx context.Context, createDTO dto.CreateCategoryDTO) (dto.CategoryDTO, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateCategory", ctx, categoryDto)
+	ret := m.ctrl.Call(m, "CreateCategory", ctx, createDTO)
 	ret0, _ := ret[0].(dto.CategoryDTO)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -84,6 +84,21 @@ func (mr *MockCategoryServiceMockRecorder) GetCategories(ctx, page, per_page any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCategories", reflect.TypeOf((*MockCategoryService)(nil).GetCategories), ctx, page, per_page)
 }
 
+// GetCategoriesByTypeId mocks base method.
+func (m *MockCategoryService) GetCategoriesByTypeId(ctx context.Context, id, page, per_page int32) ([]dto.CategoryDTO, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCategoriesByTypeId", ctx, id, page, per_page)
+	ret0, _ := ret[0].([]dto.CategoryDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCategoriesByTypeId indicates an expected call of GetCategoriesByTypeId.
+func (mr *MockCategoryServiceMockRecorder) GetCategoriesByTypeId(ctx, id, page, per_page any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCategoriesByTypeId", reflect.TypeOf((*MockCategoryService)(nil).GetCategoriesByTypeId), ctx, id, page, per_page)
+}
+
 // GetCategoryById mocks base method.
 func (m *MockCategoryService) GetCategoryById(ctx context.Context, id int32) (dto.CategoryDTO, error) {
 	m.ctrl.T.Helper()
@@ -100,11 +115,12 @@ func (mr *MockCategoryServiceMockRecorder) GetCategoryById(ctx, id any) *gomock.
 }
 
 // UpdateCategoryById mocks base method.
-func (m *MockCategoryService) UpdateCategoryById(ctx context.Context, id int32, dto dto.PatchCategoryDTO) error {
+func (m *MockCategoryService) UpdateCategoryById(ctx context.Context, id int32, patchDTO dto.PatchCategoryDTO) (dto.CategoryDTO, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateCategoryById", ctx, id, dto)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "UpdateCategoryById", ctx, id, patchDTO)
+	ret0, _ := ret[0].(dto.CategoryDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateCategoryById indicates an expected call of UpdateCategoryById.

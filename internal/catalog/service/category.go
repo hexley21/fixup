@@ -15,7 +15,7 @@ type CategoryService interface {
 	GetCategoryById(ctx context.Context, id int32) (dto dto.CategoryDTO, err error)
 	GetCategories(ctx context.Context, page int32, per_page int32) (dtos []dto.CategoryDTO, err error)
 	GetCategoriesByTypeId(ctx context.Context, id int32, page int32, per_page int32) ([]dto.CategoryDTO, error)
-	UpdateCategoryById(ctx context.Context, id int32, dto dto.PatchCategoryDTO) error
+	UpdateCategoryById(ctx context.Context, id int32, dto dto.PatchCategoryDTO) (categoryDTO dto.CategoryDTO, err error)
 }
 
 type categoryServiceImpl struct {
@@ -97,6 +97,12 @@ func (s *categoryServiceImpl) GetCategoriesByTypeId(ctx context.Context, id int3
 	return categories, err
 }
 
-func (s *categoryServiceImpl) UpdateCategoryById(ctx context.Context, id int32, dto dto.PatchCategoryDTO) error {
-	return s.categoryRepository.UpdateCategoryById(ctx, repository.UpdateCategoryByIdParams{ID: id, Name: dto.Name})
+func (s *categoryServiceImpl) UpdateCategoryById(ctx context.Context, id int32, dto dto.PatchCategoryDTO) (categoryDTO dto.CategoryDTO, err error) {
+	entity, err := s.categoryRepository.UpdateCategoryById(ctx, repository.UpdateCategoryByIdParams{ID: id, Name: dto.Name})
+
+	if err != nil {
+		return categoryDTO, err
+	}
+
+	return mapper.MapCategoryToDTO(entity), err	
 }

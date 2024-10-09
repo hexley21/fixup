@@ -134,7 +134,7 @@ func TestGetCategories_RepositoryError(t *testing.T) {
 	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepo.EXPECT().GetCategories(ctx, per_page*(page-1), per_page).Return([]entity.Category{}, errors.New(""))
+	mockCategoryRepo.EXPECT().GetCategories(ctx, per_page*(page-1), per_page).Return(nil, errors.New(""))
 
 	dtos, err := svc.GetCategories(ctx, page, per_page)
 	assert.Error(t, err)
@@ -157,7 +157,7 @@ func TestGetCategoriesByTypeId_RepositoryError(t *testing.T) {
 	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepo.EXPECT().GetCategoriesByTypeId(ctx, id, per_page*(page-1), per_page).Return([]entity.Category{}, errors.New(""))
+	mockCategoryRepo.EXPECT().GetCategoriesByTypeId(ctx, id, per_page*(page-1), per_page).Return(nil, errors.New(""))
 
 	dtos, err := svc.GetCategoriesByTypeId(ctx, id, page, per_page)
 	assert.Error(t, err)
@@ -168,16 +168,22 @@ func TestUpdateCategoryById_Success(t *testing.T) {
 	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepo.EXPECT().UpdateCategoryById(ctx, gomock.Any()).Return(nil)
-
-	assert.NoError(t, svc.UpdateCategoryById(ctx, id, patchCategoryDTO))
+	mockCategoryRepo.EXPECT().UpdateCategoryById(ctx, gomock.Any()).Return(categoryEntity, nil)
+	
+	category, err := svc.UpdateCategoryById(ctx, id, patchCategoryDTO)
+	assert.NoError(t, err)
+	assert.Equal(t, categoryName, category.Name)
+	assert.Equal(t, strId, category.TypeID)
+	assert.Equal(t, strId, category.ID)
 }
 
 func TestUpdateCategoryById_RepositoryError(t *testing.T) {
 	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepo.EXPECT().UpdateCategoryById(ctx, gomock.Any()).Return(errors.New(""))
+	mockCategoryRepo.EXPECT().UpdateCategoryById(ctx, gomock.Any()).Return(entity.Category{}, errors.New(""))
 
-	assert.Error(t, svc.UpdateCategoryById(ctx, id, patchCategoryDTO))
+	category, err := svc.UpdateCategoryById(ctx, id, patchCategoryDTO)
+	assert.Error(t, err)
+	assert.Empty(t, category)
 }

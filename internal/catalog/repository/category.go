@@ -16,7 +16,7 @@ type CategoryRepository interface {
 	GetCategories(ctx context.Context, offset int32, limit int32) ([]entity.Category, error)
 	GetCategoryById(ctx context.Context, id int32) (entity.Category, error)
 	GetCategoriesByTypeId(ctx context.Context, id int32, offset int32, limit int32) ([]entity.Category, error)
-	UpdateCategoryById(ctx context.Context, arg UpdateCategoryByIdParams) error
+	UpdateCategoryById(ctx context.Context, arg UpdateCategoryByIdParams) (entity.Category, error)
 }
 
 type postgresCategoryRepository struct {
@@ -122,7 +122,7 @@ func (r *postgresCategoryRepository) GetCategoriesByTypeId(ctx context.Context, 
 	return items, nil
 }
 
-const updateCategoryById = `-- name: UpdateCategoryById :exec
+const updateCategoryById = `-- name: UpdateCategoryById :one
 UPDATE categories SET name = $2, type_id = $3 WHERE id = $1 Returning id, type_id, name
 `
 
@@ -132,12 +132,10 @@ type UpdateCategoryByIdParams struct {
 	TypeID int32  `json:"type_id"`
 }
 
-func (r *postgresCategoryRepository) UpdateCategoryById(ctx context.Context, arg UpdateCategoryByIdParams) error {
-	result, err := r.db.Exec(ctx, updateCategoryById, arg.ID, arg.Name, arg.TypeID)
-	
-	if result.RowsAffected() == 0 {
-		return pg_error.ErrNotFound
-	}
-
-	return err
+func (r *postgresCategoryRepository) UpdateCategoryById(ctx context.Context, arg UpdateCategoryByIdParams) (entity.Category, error) {
+	row := r.db.QueryRow(ctx, updateCategoryById, arg.ID, arg.Name, arg.TypeID)
+	var i entity.Category
+	err := row.Scan(&i.ID, &i.TypeID, &i.Name)
+	return i, err
 }
+

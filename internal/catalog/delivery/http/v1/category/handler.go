@@ -138,7 +138,7 @@ func (h *Handler) GetCategoryiesByTypeId(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	category, err := h.service.GetCategoriesByTypeId(r.Context(), int32(id), int32(page), int32(perPage))
+	categories, err := h.service.GetCategoriesByTypeId(r.Context(), int32(id), int32(page), int32(perPage))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			h.Writer.WriteError(w, rest.NewNotFoundError(err, MsgCategoryNotFound))
@@ -149,8 +149,8 @@ func (h *Handler) GetCategoryiesByTypeId(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	h.Logger.Infof("Fetch category  - elements: %d", len(category))
-	h.Writer.WriteData(w, http.StatusOK, category)
+	h.Logger.Infof("Fetch category  - elements: %d", len(categories))
+	h.Writer.WriteData(w, http.StatusOK, categories)
 }
 
 // @Summary Retrieve a category by ID
@@ -221,15 +221,15 @@ func (h *Handler) PatchCategoryById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.UpdateCategoryById(r.Context(), int32(id), patchDto)
+	updated, err := h.service.UpdateCategoryById(r.Context(), int32(id), patchDto)
 	if err != nil {
-		if errors.Is(err, pg_error.ErrNotFound) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			h.Writer.WriteError(w, rest.NewNotFoundError(err, MsgCategoryNotFound))
 			return
 		}
 
 		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.RaiseException {
 			h.Writer.WriteError(w, rest.NewConflictError(err, app_error.MsgNameAlreadyTaken))
 			return
 		}
@@ -239,7 +239,7 @@ func (h *Handler) PatchCategoryById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.Logger.Infof("Patch category: %s, ID: %d", patchDto.Name, id)
-	h.Writer.WriteData(w, http.StatusOK, dto.CategoryDTO{ID: strconv.Itoa(id), Name: patchDto.Name})
+	h.Writer.WriteData(w, http.StatusOK, updated)
 }
 
 // @Summary Delete a category by ID

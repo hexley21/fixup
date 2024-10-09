@@ -44,6 +44,7 @@ BEGIN
         FROM categories 
         WHERE type_id = NEW.type_id 
         AND name = NEW.name
+        AND id <> NEW.id
     ) THEN
         RAISE EXCEPTION 'A row with the same type_id and name already exists.';
     END IF;
@@ -52,6 +53,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER prevent_duplicate_trigger
-BEFORE INSERT ON categories
+BEFORE INSERT OR UPDATE ON categories
 FOR EACH ROW
 EXECUTE FUNCTION prevent_duplicate_type_name();
