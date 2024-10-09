@@ -14,7 +14,7 @@ type CategoryService interface {
 	DeleteCategoryById(ctx context.Context, id int32) error
 	GetCategoryById(ctx context.Context, id int32) (dto dto.CategoryDTO, err error)
 	GetCategories(ctx context.Context, page int32, per_page int32) (dtos []dto.CategoryDTO, err error)
-	GetCategoriesByTypeId(ctx context.Context, id int32, offset int32, limit int32) ([]dto.CategoryDTO, error)
+	GetCategoriesByTypeId(ctx context.Context, id int32, page int32, per_page int32) ([]dto.CategoryDTO, error)
 	UpdateCategoryById(ctx context.Context, id int32, dto dto.PatchCategoryDTO) error
 }
 
@@ -59,35 +59,39 @@ func (s *categoryServiceImpl) GetCategoryById(ctx context.Context, id int32) (dt
 	return mapper.MapCategoryToDTO(entity), err
 }
 
-func (s *categoryServiceImpl) GetCategories(ctx context.Context, page int32, per_page int32) (categories []dto.CategoryDTO, err error) {
+func (s *categoryServiceImpl) GetCategories(ctx context.Context, page int32, per_page int32) ([]dto.CategoryDTO, error) {
 	if per_page == 0 || per_page > s.maxPerPage {
 		per_page = s.defaultPerPage
 	}
 
+	
+
 	entities, err := s.categoryRepository.GetCategories(ctx, per_page*(page-1), per_page)
 	if err != nil {
-		return categories, err
+		return []dto.CategoryDTO{}, err
 	}
 
-	for _, e := range entities {
-		categories = append(categories, mapper.MapCategoryToDTO(e))
+	categories := make([]dto.CategoryDTO, len(entities))
+	for i, e := range entities {
+		categories[i] = mapper.MapCategoryToDTO(e)
 	}
 
 	return categories, err
 }
 
-func (s *categoryServiceImpl) GetCategoriesByTypeId(ctx context.Context, id int32, page int32, per_page int32) (categories []dto.CategoryDTO, err error) {
+func (s *categoryServiceImpl) GetCategoriesByTypeId(ctx context.Context, id int32, page int32, per_page int32) ([]dto.CategoryDTO, error) {
 	if per_page == 0 || per_page > s.maxPerPage {
 		per_page = s.defaultPerPage
 	}
 
 	entities, err := s.categoryRepository.GetCategoriesByTypeId(ctx, id, per_page*(page-1), per_page)
 	if err != nil {
-		return categories, err
+		return []dto.CategoryDTO{}, err
 	}
 
-	for _, e := range entities {
-		categories = append(categories, mapper.MapCategoryToDTO(e))
+	categories := make([]dto.CategoryDTO, len(entities))
+	for i, e := range entities {
+		categories[i] = mapper.MapCategoryToDTO(e)
 	}
 	
 	return categories, err

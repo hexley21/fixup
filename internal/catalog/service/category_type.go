@@ -8,10 +8,6 @@ import (
 	"github.com/hexley21/fixup/internal/catalog/repository"
 )
 
-const (
-	defaultPerPage = 50
-)
-
 type CategoryTypeService interface {
 	CreateCategoryType(ctx context.Context, dto dto.CreateCategoryTypeDTO) (categoryType dto.CategoryTypeDTO, err error)
 	DeleteCategoryTypeById(ctx context.Context, id int32) error
@@ -22,11 +18,15 @@ type CategoryTypeService interface {
 
 type categoryTypeServiceImpl struct {
 	categoryTypeRepository repository.CategoryTypeRepository
+	defaultPerPage     int32
+	maxPerPage         int32
 }
 
-func NewCategoryTypeService(categoryTypeRepository repository.CategoryTypeRepository) *categoryTypeServiceImpl {
+func NewCategoryTypeService(categoryTypeRepository repository.CategoryTypeRepository, defaultPerPage int32, maxPerPage int32) *categoryTypeServiceImpl {
 	return &categoryTypeServiceImpl{
 		categoryTypeRepository: categoryTypeRepository,
+		defaultPerPage:     defaultPerPage,
+		maxPerPage:         maxPerPage,
 	}
 }
 
@@ -53,19 +53,18 @@ func (s *categoryTypeServiceImpl) GetCategoryTypeById(ctx context.Context, id in
 }
 
 func (s *categoryTypeServiceImpl) GetCategoryTypes(ctx context.Context, page int32, per_page int32) ([]dto.CategoryTypeDTO, error) {
-	var dtos []dto.CategoryTypeDTO
-	
-	if per_page == 0 {
-		per_page = defaultPerPage
+	if per_page == 0 || per_page > s.maxPerPage {
+		per_page = s.defaultPerPage
 	}
 
 	entities, err := s.categoryTypeRepository.GetCategoryTypes(ctx, per_page*(page-1), per_page)
 	if err != nil {
-		return dtos, err
+		return []dto.CategoryTypeDTO{}, err
 	}
 
-	for _, e := range entities {
-		dtos = append(dtos, mapper.MapCategoryTypeToDTO(e))
+	dtos := make([]dto.CategoryTypeDTO, len(entities))
+	for i, e := range entities {
+		dtos[i] = mapper.MapCategoryTypeToDTO(e)
 	}
 
 	return dtos, err
