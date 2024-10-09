@@ -1,4 +1,4 @@
-package category_type
+package category
 
 import (
 	"net/http"
@@ -13,16 +13,18 @@ func MapRoutes(
 	onlyAdminMiddleware func(http.Handler) http.Handler,
 	router chi.Router,
 ) {
-	router.Route("/category-types", func(r chi.Router) {
+	router.Route("/categories", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Use(jWTAccessMiddleware, onlyVerifiedMiddleware, onlyAdminMiddleware)
 
-			r.Post("/", h.CreateCategoryType)
-			r.Patch("/{id}", h.PatchCategoryTypeById)
-			r.Delete("/{id}", h.DeleteCategoryTypeById)
+			r.Post("/", h.CreateCategory)
+			r.Patch("/{id}", h.PatchCategoryById)
+			r.Delete("/{id}", h.DeleteCategoryById)
 		})
 
-		r.Get("/", h.GetCategoryTypes)
-		r.Get("/{id}", h.GetCategoryTypeById)
+		r.Get("/", h.GetCategoryies)
+		r.Get("/{id}", h.GetCategoryById)
 	})
+
+	router.Get("/category-types/{id}/categories", h.GetCategoryiesByTypeId)
 }

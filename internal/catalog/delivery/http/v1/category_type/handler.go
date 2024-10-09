@@ -79,7 +79,7 @@ func (h *Handler) CreateCategoryType(w http.ResponseWriter, r *http.Request) {
 // @Summary Retrieve a category types
 // @Description Retrieves a category type range
 // @Tags CategoryType
-// @Param page query int false "Page number"
+// @Param page query int true "Page number"
 // @Param per_page query int false "Number of items per page"
 // @Success 200 {object} rest.ApiResponse[[]dto.CategoryTypeDTO] "OK - Successfully retrieved the category types"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"

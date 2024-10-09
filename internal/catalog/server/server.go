@@ -61,7 +61,7 @@ func NewServer(
 	categoryRepository := repository.NewCategoryRepository(dbPool)
 
 	services := &services{
-		categoryTypes: service.NewCategoryTypeService(categoryTypeRepository),
+		categoryTypes: service.NewCategoryTypeService(categoryTypeRepository, cfg.Pagination.LargePages, cfg.Pagination.XLargePages),
 		category: service.NewCategoryService(categoryRepository, cfg.Pagination.LargePages, cfg.Pagination.XLargePages),
 	}
 
@@ -115,6 +115,7 @@ func (s *server) Run() error {
 		NoColor: false,
 	}
 
+	// TODO: Add CSRF middleware
 	s.router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   strings.Split(s.cfg.HTTP.CorsOrigins, ","),
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},

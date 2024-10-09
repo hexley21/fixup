@@ -81,7 +81,7 @@ func TestDeleteCategoryTypeById_Success(t *testing.T) {
 
 	insert, err := insertCategoryType(pgPool, ctx, categoryTypeName)
 	if err != nil {
-		t.Fatalf("failed to insert user: %v", err)
+		t.Fatalf("failed to insert category type: %v", err)
 	}
 
 	err = repo.DeleteCategoryTypeById(ctx, insert.ID)

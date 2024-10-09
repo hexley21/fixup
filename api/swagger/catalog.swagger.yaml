@@ -1,11 +1,31 @@
 basePath: /v1
 definitions:
+  Category:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      type_id:
+        type: string
+    type: object
   CategoryType:
     properties:
       id:
         type: string
       name:
         type: string
+    type: object
+  CreateCategoryInput:
+    properties:
+      name:
+        maxLength: 30
+        minLength: 2
+        type: string
+      type_id:
+        type: string
+    required:
+    - name
     type: object
   CreateCategoryTypeInput:
     properties:
@@ -25,10 +45,22 @@ definitions:
     required:
     - name
     type: object
+  rest.ApiResponse-Category:
+    properties:
+      data:
+        $ref: '#/definitions/Category'
+    type: object
   rest.ApiResponse-CategoryType:
     properties:
       data:
         $ref: '#/definitions/CategoryType'
+    type: object
+  rest.ApiResponse-array_Category:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/Category'
+        type: array
     type: object
   rest.ApiResponse-array_CategoryType:
     properties:
@@ -52,6 +84,218 @@ info:
   title: Catalog Microservice
   version: 1.0.0-alpha0
 paths:
+  /categories:
+    get:
+      description: Retrieves a category range
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: per_page
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ApiResponse-array_Category'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error - An error occurred while retrieving
+            categories
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Retrieve categories
+      tags:
+      - Category
+    post:
+      description: Creates a new category with the provided data.
+      parameters:
+      - description: Category data
+        in: body
+        name: dto
+        required: true
+        schema:
+          $ref: '#/definitions/CreateCategoryInput'
+      responses:
+        "201":
+          description: Created - Successfully created the category
+          schema:
+            $ref: '#/definitions/rest.ApiResponse-Category'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error - An error occurred while creating the
+            category
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Create a new category
+      tags:
+      - Category
+  /categories/{id}:
+    delete:
+      description: Deletes a category specified by the ID.
+      parameters:
+      - description: The ID of the category to delete
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content - Successfully deleted the category
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error - An error occurred while deleting the
+            category
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Delete a category by ID
+      tags:
+      - Category
+    get:
+      description: Retrieves a category specified by the ID.
+      parameters:
+      - description: The ID of the category to retrieve
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK - Successfully retrieved the category
+          schema:
+            $ref: '#/definitions/rest.ApiResponse-Category'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error - An error occurred while retrieving
+            the category
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Retrieve a category by ID
+      tags:
+      - Category
+    patch:
+      description: Updates a category specified by the ID.
+      parameters:
+      - description: The ID of the category to update
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Category data
+        in: body
+        name: dto
+        required: true
+        schema:
+          $ref: '#/definitions/CreateCategoryInput'
+      responses:
+        "200":
+          description: OK - Successfully updated the category
+          schema:
+            $ref: '#/definitions/rest.ApiResponse-Category'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error - An error occurred while updating the
+            category
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Update a category by ID
+      tags:
+      - Category
   /category-types:
     get:
       description: Retrieves a category type range
@@ -59,6 +303,7 @@ paths:
       - description: Page number
         in: query
         name: page
+        required: true
         type: integer
       - description: Number of items per page
         in: query
@@ -263,6 +508,55 @@ paths:
       summary: Update a category type by ID
       tags:
       - CategoryType
+  /category-types/{id}/categories:
+    get:
+      description: Retrieves a category range
+      parameters:
+      - description: Category Type id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: per_page
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ApiResponse-array_Category'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error - An error occurred while retrieving
+            categories
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Retrieve categories
+      tags:
+      - Category
 schemes:
 - http
 securityDefinitions:

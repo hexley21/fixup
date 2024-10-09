@@ -13,3 +13,11 @@ func MapCategoryTypeToDTO(entity entity.CategoryType) dto.CategoryTypeDTO {
 		Name: entity.Name,
 	}
 }
+
+func MapCategoryToDTO(entity entity.Category) dto.CategoryDTO {
+	return dto.CategoryDTO{
+		ID: strconv.Itoa(int(entity.ID)),
+		TypeID: strconv.Itoa(int(entity.TypeID)),
+		Name: entity.Name,
+	}
+}

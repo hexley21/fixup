@@ -18,6 +18,7 @@ import (
 const (
 	categoryTypeName = "Home"
 	id = int32(1)
+    strId = "1"
 
 	page     int32 = 1
     per_page int32 = 2
@@ -41,7 +42,7 @@ var (
 	}
 )
 
-func setup(t *testing.T) (
+func setupCategoryType(t *testing.T) (
 	ctrl *gomock.Controller,
 	ctx context.Context,
 	svc service.CategoryTypeService,
@@ -51,13 +52,13 @@ func setup(t *testing.T) (
 	ctx = context.Background()
 
 	mockCategoryTypeRepo = mock_repository.NewMockCategoryTypeRepository(ctrl)
-	svc = service.NewCategoryTypeService(mockCategoryTypeRepo)
+	svc = service.NewCategoryTypeService(mockCategoryTypeRepo, 50, 100)
 
 	return
 }
 
 func TestCreateCategoryType_Success(t *testing.T) {
-    ctrl, ctx, svc, mockCategoryTypeRepo := setup(t)
+    ctrl, ctx, svc, mockCategoryTypeRepo := setupCategoryType(t)
 	defer ctrl.Finish()
 
     mockCategoryTypeRepo.EXPECT().CreateCategoryType(ctx, categoryTypeName).Return(categoryTypeEntity, nil)
@@ -70,7 +71,7 @@ func TestCreateCategoryType_Success(t *testing.T) {
 }
 
 func TestCreateCategoryType_RepositoryError(t *testing.T) {
-    ctrl, ctx, svc, mockCategoryTypeRepo := setup(t)
+    ctrl, ctx, svc, mockCategoryTypeRepo := setupCategoryType(t)
     defer ctrl.Finish()
 
     mockCategoryTypeRepo.EXPECT().CreateCategoryType(ctx, categoryTypeName).Return(entity.CategoryType{}, errors.New(""))
@@ -83,7 +84,7 @@ func TestCreateCategoryType_RepositoryError(t *testing.T) {
 }
 
 func TestDeleteCategoryTypeById_Success(t *testing.T) {
-    ctrl, ctx, svc, mockRepo := setup(t)
+    ctrl, ctx, svc, mockRepo := setupCategoryType(t)
     defer ctrl.Finish()
 
     mockRepo.EXPECT().DeleteCategoryTypeById(ctx, id).Return(nil)
@@ -93,7 +94,7 @@ func TestDeleteCategoryTypeById_Success(t *testing.T) {
 }
 
 func TestDeleteCategoryTypeById_RepositoryError(t *testing.T) {
-    ctrl, ctx, svc, mockRepo := setup(t)
+    ctrl, ctx, svc, mockRepo := setupCategoryType(t)
     defer ctrl.Finish()
 
     mockRepo.EXPECT().DeleteCategoryTypeById(ctx, id).Return(errors.New(""))
@@ -104,7 +105,7 @@ func TestDeleteCategoryTypeById_RepositoryError(t *testing.T) {
 
 
 func TestGetCategoryTypeById_Success(t *testing.T) {
-    ctrl, ctx, svc, mockRepo := setup(t)
+    ctrl, ctx, svc, mockRepo := setupCategoryType(t)
     defer ctrl.Finish()
 
     mockRepo.EXPECT().GetCategoryTypeById(ctx, id).Return(categoryTypeEntity, nil)
@@ -117,7 +118,7 @@ func TestGetCategoryTypeById_Success(t *testing.T) {
 }
 
 func TestGetCategoryTypeById_RepositoryError(t *testing.T) {
-    ctrl, ctx, svc, mockRepo := setup(t)
+    ctrl, ctx, svc, mockRepo := setupCategoryType(t)
     defer ctrl.Finish()
 
     mockRepo.EXPECT().GetCategoryTypeById(ctx, id).Return(entity.CategoryType{}, errors.New(""))
@@ -130,7 +131,7 @@ func TestGetCategoryTypeById_RepositoryError(t *testing.T) {
 }
 
 func TestGetCategoryTypes_Success(t *testing.T) {
-    ctrl, ctx, svc, mockRepo := setup(t)
+    ctrl, ctx, svc, mockRepo := setupCategoryType(t)
     defer ctrl.Finish()
 
     mockRepo.EXPECT().GetCategoryTypes(ctx, per_page*(page-1), per_page).Return(categoryTypeEntities, nil)
@@ -145,7 +146,7 @@ func TestGetCategoryTypes_Success(t *testing.T) {
 }
 
 func TestGetCategoryTypes_RepositoryError(t *testing.T) {
-    ctrl, ctx, svc, mockRepo := setup(t)
+    ctrl, ctx, svc, mockRepo := setupCategoryType(t)
     defer ctrl.Finish()
 
     mockRepo.EXPECT().GetCategoryTypes(ctx, per_page*(page-1), per_page).Return(nil, errors.New(""))
@@ -157,7 +158,7 @@ func TestGetCategoryTypes_RepositoryError(t *testing.T) {
 }
 
 func TestUpdateCategoryTypeById_Success(t *testing.T) {
-    ctrl, ctx, svc, mockRepo := setup(t)
+    ctrl, ctx, svc, mockRepo := setupCategoryType(t)
     defer ctrl.Finish()
 
     mockRepo.EXPECT().UpdateCategoryTypeById(ctx, repository.UpdateCategoryTypeByIdParams{ID: id, Name: categoryTypeName}).Return(nil)
@@ -168,7 +169,7 @@ func TestUpdateCategoryTypeById_Success(t *testing.T) {
 }
 
 func TestUpdateCategoryTypeById_RepositoryError(t *testing.T) {
-    ctrl, ctx, svc, mockRepo := setup(t)
+    ctrl, ctx, svc, mockRepo := setupCategoryType(t)
     defer ctrl.Finish()
 
     mockRepo.EXPECT().UpdateCategoryTypeById(ctx, repository.UpdateCategoryTypeByIdParams{ID: id, Name: categoryTypeName}).Return(errors.New(""))
