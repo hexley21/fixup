@@ -55,12 +55,15 @@ DELETE FROM categories WHERE id = $1
 
 func (r *postgresCategoryRepository) DeleteCategoryById(ctx context.Context, id int32) error {
 	result, err := r.db.Exec(ctx, deleteCategoryById, id)
+	if err != nil {
+		return err
+	}
 
 	if result.RowsAffected() == 0 {
 		return pg_error.ErrNotFound
 	}
-	
-	return err
+
+	return nil
 }
 
 const getCategories = `-- name: GetCategories :many
@@ -138,4 +141,3 @@ func (r *postgresCategoryRepository) UpdateCategoryById(ctx context.Context, arg
 	err := row.Scan(&i.ID, &i.TypeID, &i.Name)
 	return i, err
 }
-

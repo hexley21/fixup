@@ -4,15 +4,15 @@ import (
 	"io"
 )
 
-type JSONProcessor interface {
-	JSONSerializer
-	JSONDeserializer
+type Processor interface {
+	Serializer
+	Deserializer
 }
 
-type JSONSerializer interface {
+type Serializer interface {
 	Serialize(w io.Writer, i any) error
 }
 
-type JSONDeserializer interface {
+type Deserializer interface {
 	Deserialize(reader io.Reader, i any) error
 }

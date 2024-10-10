@@ -12,10 +12,10 @@ var msgErrReturningResult = "Error returning result"
 
 type jSONHTTPWriter struct {
 	logger         logger.Logger
-	jsonSerializer json.JSONSerializer
+	jsonSerializer json.Serializer
 }
 
-func New(logger logger.Logger, jsonSerializer json.JSONSerializer) *jSONHTTPWriter {
+func New(logger logger.Logger, jsonSerializer json.Serializer) *jSONHTTPWriter {
 	return &jSONHTTPWriter{logger, jsonSerializer}
 }
 

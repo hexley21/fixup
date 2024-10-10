@@ -15,12 +15,9 @@ type UserClaims struct {
 }
 
 func NewClaims(id string, role string, Verified bool, expiry time.Duration) UserClaims {
-	var userRole enum.UserRole
-	userRole.Scan(role)
-
 	return UserClaims{
 		ID:       id,
-		Role:     userRole,
+		Role:     enum.UserRole(role),
 		Verified: Verified,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
@@ -35,8 +32,8 @@ func mapToClaim(mapClaims any) UserClaims {
 	}
 
 	return UserClaims{
-		ID: claims["id"].(string),
-		Role: enum.UserRole(claims["role"].(string)),
+		ID:       claims["id"].(string),
+		Role:     enum.UserRole(claims["role"].(string)),
 		Verified: claims["verified"].(bool),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Unix(int64(claims["exp"].(float64)), 0)),

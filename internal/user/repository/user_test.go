@@ -5,8 +5,8 @@ import (
 	"log"
 	"testing"
 
-	"github.com/hexley21/fixup/internal/user/entity"
 	"github.com/hexley21/fixup/internal/common/enum"
+	"github.com/hexley21/fixup/internal/user/entity"
 	"github.com/hexley21/fixup/internal/user/repository"
 	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 	"github.com/jackc/pgerrcode"
@@ -30,7 +30,6 @@ var (
 	invalidValue = "uwox71YgdFn6SuR4x971KjxrUaSoUdax9k0DkCt1WnzEHcdG9lpqEkF7RHw0SWUL"
 )
 
-
 func TestGetById_Success(t *testing.T) {
 	ctx := context.Background()
 	dbPool := getPgPool(ctx)
@@ -43,20 +42,20 @@ func TestGetById_Success(t *testing.T) {
 		t.Fatalf("failed to insert user: %v", err)
 	}
 
-	entity, err := repo.GetById(ctx, insert.ID)
+	userEntity, err := repo.GetById(ctx, insert.ID)
 	assert.NoError(t, err)
 
-	assert.Equal(t, insert.ID, entity.ID)
-	assert.Equal(t, insert.FirstName, entity.FirstName)
-	assert.Equal(t, insert.LastName, entity.LastName)
-	assert.Equal(t, insert.PhoneNumber, entity.PhoneNumber)
-	assert.Equal(t, insert.Email, entity.Email)
-	assert.Equal(t, insert.Role, entity.Role)
-	assert.Equal(t, insert.UserStatus, entity.UserStatus)
-	assert.Equal(t, insert.CreatedAt, entity.CreatedAt)
-	assert.Equal(t, insert.PictureName, entity.PictureName)
+	assert.Equal(t, insert.ID, userEntity.ID)
+	assert.Equal(t, insert.FirstName, userEntity.FirstName)
+	assert.Equal(t, insert.LastName, userEntity.LastName)
+	assert.Equal(t, insert.PhoneNumber, userEntity.PhoneNumber)
+	assert.Equal(t, insert.Email, userEntity.Email)
+	assert.Equal(t, insert.Role, userEntity.Role)
+	assert.Equal(t, insert.UserStatus, userEntity.UserStatus)
+	assert.Equal(t, insert.CreatedAt, userEntity.CreatedAt)
+	assert.Equal(t, insert.PictureName, userEntity.PictureName)
 
-	assert.Empty(t, entity.Hash)
+	assert.Empty(t, userEntity.Hash)
 }
 
 func TestCreate_Success(t *testing.T) {
@@ -67,21 +66,21 @@ func TestCreate_Success(t *testing.T) {
 
 	repo := repository.NewUserRepository(dbPool, snowflakeNode)
 
-	entity, err := repo.CreateUser(ctx, userCreateArgs)
+	userEntity, err := repo.CreateUser(ctx, userCreateArgs)
 	assert.NoError(t, err)
 
-	assert.Equal(t, userCreateArgs.FirstName, entity.FirstName)
-	assert.Equal(t, userCreateArgs.LastName, entity.LastName)
-	assert.Equal(t, userCreateArgs.PhoneNumber, entity.PhoneNumber)
-	assert.Equal(t, userCreateArgs.Email, entity.Email)
-	assert.Equal(t, userCreateArgs.Role, entity.Role)
-	assert.Equal(t, false, entity.UserStatus.Bool)
+	assert.Equal(t, userCreateArgs.FirstName, userEntity.FirstName)
+	assert.Equal(t, userCreateArgs.LastName, userEntity.LastName)
+	assert.Equal(t, userCreateArgs.PhoneNumber, userEntity.PhoneNumber)
+	assert.Equal(t, userCreateArgs.Email, userEntity.Email)
+	assert.Equal(t, userCreateArgs.Role, userEntity.Role)
+	assert.Equal(t, false, userEntity.UserStatus.Bool)
 
-	assert.NotEqual(t, 0, entity.ID)
-	assert.NotEmpty(t, entity.CreatedAt)
+	assert.NotEqual(t, 0, userEntity.ID)
+	assert.NotEmpty(t, userEntity.CreatedAt)
 
-	assert.Empty(t, entity.PictureName)
-	assert.Empty(t, entity.Hash)
+	assert.Empty(t, userEntity.PictureName)
+	assert.Empty(t, userEntity.Hash)
 }
 
 func TestCreate_InvalidArgs(t *testing.T) {
@@ -103,11 +102,11 @@ func TestCreate_InvalidArgs(t *testing.T) {
 
 	i := 0
 	for _, args := range invalidArgs {
-		entity, err := repo.CreateUser(ctx, args)
+		userEntity, err := repo.CreateUser(ctx, args)
 		if !assert.Error(t, err) {
 			log.Println("create user:", i)
 		}
-		assert.Empty(t, entity)
+		assert.Empty(t, userEntity)
 		i++
 	}
 }
@@ -225,9 +224,9 @@ func TestUpdate_PartialArguments(t *testing.T) {
 	lastName := "updated_lastname"
 
 	updateArgs := repository.UpdateUserParams{
-		ID:          insert.ID,
-		FirstName:   &firstName,
-		LastName:    &lastName,
+		ID:        insert.ID,
+		FirstName: &firstName,
+		LastName:  &lastName,
 	}
 
 	update, err := repo.Update(ctx, updateArgs)

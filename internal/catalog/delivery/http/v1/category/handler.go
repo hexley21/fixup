@@ -47,20 +47,20 @@ func NewHandler(handlerComponents *handler.Components, service service.CategoryS
 // @Router /categories [post]
 // @Security access_token
 func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
-	var dto dto.CreateCategoryDTO
-	errResp := h.Binder.BindJSON(r, &dto)
+	var createDTO dto.CreateCategoryDTO
+	errResp := h.Binder.BindJSON(r, &createDTO)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	errResp = h.Validator.Validate(dto)
+	errResp = h.Validator.Validate(createDTO)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	category, err := h.service.CreateCategory(r.Context(), dto)
+	category, err := h.service.CreateCategory(r.Context(), createDTO)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.RaiseException {
@@ -72,7 +72,7 @@ func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Create category: %s, ID: %d", category.Name, category.ID)
+	h.Logger.Infof("Create category: %s, ID: %s", category.Name, category.ID)
 	h.Writer.WriteData(w, http.StatusCreated, category)
 }
 
@@ -172,7 +172,7 @@ func (h *Handler) GetCategoryById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto, err := h.service.GetCategoryById(r.Context(), int32(id))
+	categoryDTO, err := h.service.GetCategoryById(r.Context(), int32(id))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			h.Writer.WriteError(w, rest.NewNotFoundError(err, MsgCategoryNotFound))
@@ -183,8 +183,8 @@ func (h *Handler) GetCategoryById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Fetch category: %s, ID: %d", dto.Name, dto.ID)
-	h.Writer.WriteData(w, http.StatusOK, dto)
+	h.Logger.Infof("Fetch category: %s, ID: %s", categoryDTO.Name, categoryDTO.ID)
+	h.Writer.WriteData(w, http.StatusOK, categoryDTO)
 }
 
 // @Summary Update a category by ID

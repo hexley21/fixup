@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/common/enum"
+	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/repository"
 	mock_repository "github.com/hexley21/fixup/internal/user/repository/mock"
 	"github.com/hexley21/fixup/internal/user/service"
@@ -61,7 +61,7 @@ var (
 	verifiedTemplate     = template.New("verified")
 
 	verificationTTL = time.Hour
-	vrfToken = "poUnbbjqcnpaDBbK8nQfbxrx0ZJZBbFR"
+	vrfToken        = "poUnbbjqcnpaDBbK8nQfbxrx0ZJZBbFR"
 )
 
 func setupAuth(t *testing.T) (
@@ -99,19 +99,19 @@ func setupAuth(t *testing.T) (
 func TestRegisterCustomer(t *testing.T) {
 	ctx := context.Background()
 
-	ctrl, service, mockUserRepo, _, _, _, _, mockHasher, _, _, mockUrlSigner := setupAuth(t)
+	ctrl, svc, mockUserRepo, _, _, _, _, mockHasher, _, _, mockUrlSigner := setupAuth(t)
 	defer ctrl.Finish()
 
 	mockUserRepo.EXPECT().CreateUser(ctx, gomock.Any()).Return(userEntity, nil)
-	mockHasher.EXPECT().HashPassword(gomock.Any()).Return(newHash)
+	mockHasher.EXPECT().HashPassword(gomock.Any()).Return(newHash, nil)
 	mockUrlSigner.EXPECT().SignURL(gomock.Any()).Return(newUrl, nil)
 
-	dto, err := service.RegisterCustomer(ctx, registerUserDto)
+	registerDTO, err := svc.RegisterCustomer(ctx, registerUserDto)
 	assert.NoError(t, err)
-	assert.Equal(t, registerUserDto.Email, dto.Email)
-	assert.Equal(t, registerUserDto.PhoneNumber, dto.PhoneNumber)
-	assert.Equal(t, registerUserDto.FirstName, dto.FirstName)
-	assert.Equal(t, registerUserDto.LastName, dto.LastName)
+	assert.Equal(t, registerUserDto.Email, registerDTO.Email)
+	assert.Equal(t, registerUserDto.PhoneNumber, registerDTO.PhoneNumber)
+	assert.Equal(t, registerUserDto.FirstName, registerDTO.FirstName)
+	assert.Equal(t, registerUserDto.LastName, registerDTO.LastName)
 
 	time.Sleep(time.Microsecond)
 }
@@ -119,7 +119,7 @@ func TestRegisterCustomer(t *testing.T) {
 func TestRegisterProvider(t *testing.T) {
 	ctx := context.Background()
 
-	ctrl, service, mockUserRepo, mockProviderRepo, _, mockPgx, mockTx, mockHasher, mockEncryptor, _, mockUrlSigner := setupAuth(t)
+	ctrl, svc, mockUserRepo, mockProviderRepo, _, mockPgx, mockTx, mockHasher, mockEncryptor, _, mockUrlSigner := setupAuth(t)
 	defer ctrl.Finish()
 
 	mockUserRepo.EXPECT().WithTx(mockTx).Return(mockUserRepo)
@@ -130,16 +130,16 @@ func TestRegisterProvider(t *testing.T) {
 	mockPgx.EXPECT().BeginTx(ctx, gomock.Any()).Return(mockTx, nil)
 	mockTx.EXPECT().Commit(ctx).Return(nil)
 
-	mockHasher.EXPECT().HashPassword(gomock.Any()).Return(newHash)
+	mockHasher.EXPECT().HashPassword(gomock.Any()).Return(newHash, nil)
 	mockEncryptor.EXPECT().Encrypt(gomock.Any()).Return([]byte(registerProviderDto.PersonalIDNumber), nil)
 	mockUrlSigner.EXPECT().SignURL(gomock.Any()).Return(newUrl, nil)
 
-	dto, err := service.RegisterProvider(ctx, registerProviderDto)
+	registerDTO, err := svc.RegisterProvider(ctx, registerProviderDto)
 	assert.NoError(t, err)
-	assert.Equal(t, registerUserDto.Email, dto.Email)
-	assert.Equal(t, registerUserDto.PhoneNumber, dto.PhoneNumber)
-	assert.Equal(t, registerUserDto.FirstName, dto.FirstName)
-	assert.Equal(t, registerUserDto.LastName, dto.LastName)
+	assert.Equal(t, registerUserDto.Email, registerDTO.Email)
+	assert.Equal(t, registerUserDto.PhoneNumber, registerDTO.PhoneNumber)
+	assert.Equal(t, registerUserDto.FirstName, registerDTO.FirstName)
+	assert.Equal(t, registerUserDto.LastName, registerDTO.LastName)
 
 	time.Sleep(time.Microsecond)
 }
@@ -147,18 +147,18 @@ func TestRegisterProvider(t *testing.T) {
 func TestAuthenticateUser_Success(t *testing.T) {
 	ctx := context.Background()
 
-	ctrl, _, mockUserRepo, _, _, _, _, mockHasher, _, _, _ := setupAuth(t)
+	ctrl, svc, mockUserRepo, _, _, _, _, mockHasher, _, _, _ := setupAuth(t)
 	defer ctrl.Finish()
 
 	mockUserRepo.EXPECT().GetCredentialsByEmail(ctx, loginDto.Email).Return(creds, nil)
 	mockHasher.EXPECT().VerifyPassword(loginDto.Password, creds.Hash).Return(nil)
 
-	service := service.NewAuthService(mockUserRepo, nil, nil, time.Hour, nil, mockHasher, nil, nil, emailAddress, nil)
+	//svc := svc.NewAuthService(mockUserRepo, nil, nil, time.Hour, nil, mockHasher, nil, nil, emailAddress, nil)
 
-	credentialsDto, err := service.AuthenticateUser(ctx, loginDto)
+	credentialsDto, err := svc.AuthenticateUser(ctx, loginDto)
 	assert.NoError(t, err)
 	assert.Equal(t, strconv.FormatInt(creds.ID, 10), credentialsDto.ID)
-	assert.Equal(t, string(credentialsDto.Role), credentialsDto.Role)
+	assert.Equal(t, credentialsDto.Role, credentialsDto.Role)
 	assert.Equal(t, creds.UserStatus.Bool, credentialsDto.UserStatus)
 }
 
@@ -198,7 +198,7 @@ func TestVerifyUser_Success(t *testing.T) {
 	mockVerificationRepo.EXPECT().SetTokenUsed(ctx, vrfToken, verificationTTL).Return(nil)
 	mockUserRepo.EXPECT().UpdateStatus(ctx, gomock.Any()).Return(nil)
 
-	assert.NoError(t, svc.VerifyUser(ctx, vrfToken, verificationTTL, 1, emailAddress))
+	assert.NoError(t, svc.VerifyUser(ctx, vrfToken, verificationTTL, 1))
 }
 
 func TestVerifyUser_AlreadySet(t *testing.T) {
@@ -209,7 +209,7 @@ func TestVerifyUser_AlreadySet(t *testing.T) {
 
 	mockVerificationRepo.EXPECT().SetTokenUsed(ctx, vrfToken, verificationTTL).Return(redis.TxFailedErr)
 
-	assert.ErrorIs(t, redis.TxFailedErr, svc.VerifyUser(ctx, vrfToken, verificationTTL, 1, emailAddress))
+	assert.ErrorIs(t, redis.TxFailedErr, svc.VerifyUser(ctx, vrfToken, verificationTTL, 1))
 }
 
 func TestVerifyUser_RepoError(t *testing.T) {
@@ -221,7 +221,7 @@ func TestVerifyUser_RepoError(t *testing.T) {
 	mockVerificationRepo.EXPECT().SetTokenUsed(ctx, vrfToken, verificationTTL).Return(nil)
 	mockUserRepo.EXPECT().UpdateStatus(ctx, gomock.Any()).Return(errors.New(""))
 
-	assert.Error(t, svc.VerifyUser(ctx, vrfToken, verificationTTL, 1, emailAddress))
+	assert.Error(t, svc.VerifyUser(ctx, vrfToken, verificationTTL, 1))
 }
 
 func TestVerifyUser_NotFound(t *testing.T) {
@@ -233,7 +233,7 @@ func TestVerifyUser_NotFound(t *testing.T) {
 	mockVerificationRepo.EXPECT().SetTokenUsed(ctx, vrfToken, verificationTTL).Return(nil)
 	mockUserRepo.EXPECT().UpdateStatus(ctx, gomock.Any()).Return(pg_error.ErrNotFound)
 
-	assert.ErrorIs(t, pg_error.ErrNotFound, svc.VerifyUser(ctx, vrfToken, verificationTTL, 1, emailAddress))
+	assert.ErrorIs(t, pg_error.ErrNotFound, svc.VerifyUser(ctx, vrfToken, verificationTTL, 1))
 }
 
 func TestGetUserConfirmationDetails_Success(t *testing.T) {
@@ -250,11 +250,11 @@ func TestGetUserConfirmationDetails_Success(t *testing.T) {
 
 	mockUserRepo.EXPECT().GetUserConfirmationDetails(ctx, gomock.Any()).Return(args, nil)
 
-	dto, err := svc.GetUserConfirmationDetails(ctx, "")
+	confirmationDTO, err := svc.GetUserConfirmationDetails(ctx, "")
 	assert.NoError(t, err)
-	assert.Equal(t, strconv.FormatInt(args.ID, 10), dto.ID)
-	assert.Equal(t, args.UserStatus.Bool, dto.UserStatus)
-	assert.Equal(t, args.FirstName, dto.Firstname)
+	assert.Equal(t, strconv.FormatInt(args.ID, 10), confirmationDTO.ID)
+	assert.Equal(t, args.UserStatus.Bool, confirmationDTO.UserStatus)
+	assert.Equal(t, args.FirstName, confirmationDTO.Firstname)
 }
 
 func TestSendConfirmationLetter_Success(t *testing.T) {

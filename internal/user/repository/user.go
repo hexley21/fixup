@@ -41,7 +41,7 @@ func NewUserRepository(q postgres.PGXQuerier, snowflake *snowflake.Node) UserRep
 	}
 }
 
-func (r userRepositoryImpl) WithTx(tx postgres.PGXQuerier) UserRepository {
+func (r *userRepositoryImpl) WithTx(tx postgres.PGXQuerier) UserRepository {
 	return NewUserRepository(tx, r.snowflake)
 }
 
@@ -190,7 +190,7 @@ func (r *userRepositoryImpl) Update(ctx context.Context, arg UpdateUserParams) (
 
 	query := baseUpdateUserData
 	params := []interface{}{arg.ID}
-	setClauses := []string{}
+	var setClauses []string
 
 	if arg.ID == 0 || (arg.FirstName == nil && arg.LastName == nil && arg.PhoneNumber == nil && arg.Email == nil) {
 		return i, pgx.ErrNoRows

@@ -26,7 +26,6 @@ import (
 	"github.com/hexley21/fixup/pkg/infra/postgres"
 	"github.com/hexley21/fixup/pkg/logger"
 	"github.com/hexley21/fixup/pkg/validator"
-	"github.com/hexley21/fixup/pkg/validator/playground_validator"
 )
 
 type services struct {
@@ -35,7 +34,7 @@ type services struct {
 }
 
 type jWTManagers struct {
-	accessJWTManager auth_jwt.JWTManager
+	accessJWTManager auth_jwt.Manager
 }
 
 type server struct {
@@ -62,18 +61,18 @@ func NewServer(
 
 	services := &services{
 		categoryTypes: service.NewCategoryTypeService(categoryTypeRepository, cfg.Pagination.LargePages, cfg.Pagination.XLargePages),
-		category: service.NewCategoryService(categoryRepository, cfg.Pagination.LargePages, cfg.Pagination.XLargePages),
+		category:      service.NewCategoryService(categoryRepository, cfg.Pagination.LargePages, cfg.Pagination.XLargePages),
 	}
 
 	jWTManagers := &jWTManagers{
-		accessJWTManager: auth_jwt.NewJWTManager(cfg.JWT.AccessSecret, cfg.JWT.AccessTTL),
+		accessJWTManager: auth_jwt.NewManager(cfg.JWT.AccessSecret, cfg.JWT.AccessTTL),
 	}
 
 	jsonManager := std_json.New()
 	handlerComponents := &handler.Components{
 		Logger:    logger,
 		Binder:    std_binder.New(jsonManager),
-		Validator: playground_validator.New(),
+		Validator: validator,
 		Writer:    json_writer.New(logger, jsonManager),
 	}
 

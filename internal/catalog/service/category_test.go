@@ -18,10 +18,10 @@ const (
 )
 
 var (
-	categoryEntity    = entity.Category{ID: id, Name: categoryName, TypeID: id}
-	
+	categoryEntity = entity.Category{ID: id, Name: categoryName, TypeID: id}
+
 	createCategoryDTO = dto.CreateCategoryDTO{Name: categoryName, TypeID: strId}
-	patchCategoryDTO = dto.PatchCategoryDTO{Name: categoryName, TypeID: strId}
+	patchCategoryDTO  = dto.PatchCategoryDTO{Name: categoryName, TypeID: strId}
 )
 
 func setupCategory(t *testing.T) (
@@ -45,22 +45,22 @@ func TestCreateCategory_Success(t *testing.T) {
 
 	mockCategoryRepo.EXPECT().CreateCategory(ctx, gomock.Any()).Return(categoryEntity, nil)
 
-	dto, err := svc.CreateCategory(ctx, createCategoryDTO)
+	categoryDTO, err := svc.CreateCategory(ctx, createCategoryDTO)
 
 	assert.NoError(t, err)
-	assert.Equal(t, strId, dto.ID)
-	assert.Equal(t, strId, dto.TypeID)
-	assert.Equal(t, categoryName, dto.Name)
+	assert.Equal(t, strId, categoryDTO.ID)
+	assert.Equal(t, strId, categoryDTO.TypeID)
+	assert.Equal(t, categoryName, categoryDTO.Name)
 }
 
 func TestCreateCategory_InvalidId(t *testing.T) {
 	ctrl, ctx, svc, _ := setupCategory(t)
 	defer ctrl.Finish()
 
-	dto, err := svc.CreateCategory(ctx, dto.CreateCategoryDTO{TypeID: "abc"})
+	categoryDTO, err := svc.CreateCategory(ctx, dto.CreateCategoryDTO{TypeID: "abc"})
 
 	assert.Error(t, err)
-	assert.Empty(t, dto)
+	assert.Empty(t, categoryDTO)
 }
 
 func TestCreateCategory_RepositoryError(t *testing.T) {
@@ -69,10 +69,10 @@ func TestCreateCategory_RepositoryError(t *testing.T) {
 
 	mockCategoryRepo.EXPECT().CreateCategory(ctx, gomock.Any()).Return(entity.Category{}, errors.New(""))
 
-	dto, err := svc.CreateCategory(ctx, createCategoryDTO)
+	categoryDTO, err := svc.CreateCategory(ctx, createCategoryDTO)
 
 	assert.Error(t, err)
-	assert.Empty(t, dto)
+	assert.Empty(t, categoryDTO)
 }
 
 func TestDeleteCategoryById_Success(t *testing.T) {
@@ -99,12 +99,12 @@ func TestGetCategoryById_Success(t *testing.T) {
 
 	mockCategoryRepo.EXPECT().GetCategoryById(ctx, id).Return(categoryEntity, nil)
 
-	dto, err := svc.GetCategoryById(ctx, id)
-	
+	categoryDTO, err := svc.GetCategoryById(ctx, id)
+
 	assert.NoError(t, err)
-	assert.Equal(t, strId, dto.ID)
-	assert.Equal(t, strId, dto.TypeID)
-	assert.Equal(t, categoryName, dto.Name)
+	assert.Equal(t, strId, categoryDTO.ID)
+	assert.Equal(t, strId, categoryDTO.TypeID)
+	assert.Equal(t, categoryName, categoryDTO.Name)
 }
 
 func TestGetCategoryById_RepositoryError(t *testing.T) {
@@ -113,10 +113,10 @@ func TestGetCategoryById_RepositoryError(t *testing.T) {
 
 	mockCategoryRepo.EXPECT().GetCategoryById(ctx, id).Return(entity.Category{}, errors.New(""))
 
-	dto, err := svc.GetCategoryById(ctx, id)
-	
+	categoryDTO, err := svc.GetCategoryById(ctx, id)
+
 	assert.Error(t, err)
-	assert.Empty(t, dto)
+	assert.Empty(t, categoryDTO)
 }
 
 func TestGetCategories_Success(t *testing.T) {
@@ -140,7 +140,6 @@ func TestGetCategories_RepositoryError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Empty(t, dtos)
 }
-
 
 func TestGetCategoriesByTypeId_Success(t *testing.T) {
 	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
@@ -169,7 +168,7 @@ func TestUpdateCategoryById_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockCategoryRepo.EXPECT().UpdateCategoryById(ctx, gomock.Any()).Return(categoryEntity, nil)
-	
+
 	category, err := svc.UpdateCategoryById(ctx, id, patchCategoryDTO)
 	assert.NoError(t, err)
 	assert.Equal(t, categoryName, category.Name)

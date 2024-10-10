@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 
@@ -149,7 +150,12 @@ func (h *Handler) UploadProfilePicture(w http.ResponseWriter, r *http.Request) {
 		h.Writer.WriteError(w, rest.NewReadFileError(err))
 		return
 	}
-	defer file.Close()
+	defer func(file multipart.File) {
+		err := file.Close()
+		if err != nil {
+			h.Logger.Errorf("failed to close file: %v", err)
+		}
+	}(file)
 
 	err = h.service.SetProfilePicture(r.Context(), id, file, "", imageFile.Size, imageFile.Header.Get("Content-Type"))
 	if err != nil {
@@ -188,18 +194,18 @@ func (h *Handler) UpdateUserData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto := new(dto.UpdateUser)
-	if errResp := h.Binder.BindJSON(r, dto); errResp != nil {
+	var updateDTO dto.UpdateUser
+	if errResp := h.Binder.BindJSON(r, &updateDTO); errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	if errResp := h.Validator.Validate(dto); errResp != nil {
+	if errResp := h.Validator.Validate(updateDTO); errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	user, err := h.service.UpdateUserDataById(r.Context(), id, *dto)
+	user, err := h.service.UpdateUserDataById(r.Context(), id, updateDTO)
 	if err != nil {
 		if errors.Is(err, pg_error.ErrNotFound) {
 			h.Writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
@@ -281,20 +287,20 @@ func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto := new(dto.UpdatePassword)
-	errResp = h.Binder.BindJSON(r, dto)
+	var updateDTO dto.UpdatePassword
+	errResp = h.Binder.BindJSON(r, &updateDTO)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	errResp = h.Validator.Validate(dto)
+	errResp = h.Validator.Validate(updateDTO)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	err = h.service.ChangePassword(r.Context(), id, *dto)
+	err = h.service.ChangePassword(r.Context(), id, updateDTO)
 	if err != nil {
 		if errors.Is(err, pg_error.ErrNotFound) || errors.Is(err, pgx.ErrNoRows) {
 			h.Writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))

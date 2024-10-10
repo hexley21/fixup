@@ -23,13 +23,11 @@ func NewClient(awsCfg config.AWSCfg, s3Cfg config.S3) (*awsS3, error) {
 		return nil, err
 	}
 
-	s3 := &awsS3{
+	return &awsS3{
 		s3Client: s3.NewFromConfig(clientCfg),
 		bucket:   s3Cfg.Bucket,
 		nameSize: s3Cfg.RandomNameSize,
-	}
-
-	return s3, nil
+	}, nil
 }
 
 func generateRandomString(n int) (string, error) {

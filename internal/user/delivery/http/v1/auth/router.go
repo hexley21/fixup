@@ -5,18 +5,16 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/hexley21/fixup/internal/common/auth_jwt"
-	"github.com/hexley21/fixup/internal/common/middleware"
 	"github.com/hexley21/fixup/internal/user/jwt/refresh_jwt"
 	"github.com/hexley21/fixup/internal/user/jwt/verify_jwt"
 )
 
 func MapRoutes(
-	mw *middleware.Middleware,
 	h *Handler,
 	refreshJWTMiddleware func(http.Handler) http.Handler,
-	accessJwtManager auth_jwt.JWTManager,
-	refreshJwtManager refresh_jwt.JWTManager,
-	vrfJWTManager verify_jwt.JWTManager,
+	accessJwtManager auth_jwt.Manager,
+	refreshJwtManager refresh_jwt.Manager,
+	vrfJWTManager verify_jwt.Manager,
 	router chi.Router,
 ) chi.Router {
 	router.Route("/auth", func(r chi.Router) {

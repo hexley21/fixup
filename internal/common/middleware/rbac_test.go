@@ -20,7 +20,6 @@ func ParamTestHandlerFunc(t *testing.T, value int64) http.HandlerFunc {
 		assert.Equal(t, value, id)
 		assert.Nil(t, err)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("ok"))
 	}
 }
 

@@ -101,7 +101,10 @@ func TestAllowFilesAmount_NotEnoughFiles(t *testing.T) {
 func TestAllowFilesAmount_NoFile(t *testing.T) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-	writer.Close()
+	err := writer.Close()
+	if err != nil {
+		t.Fatalf("failed to close writer: %v", err)
+	}
 
 	req := httptest.NewRequest(http.MethodPost, "/", body)
 	req.Header.Set(HeaderContentType, writer.FormDataContentType())

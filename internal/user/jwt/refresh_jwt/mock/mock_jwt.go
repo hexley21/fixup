@@ -40,108 +40,108 @@ func (m *MockJWTManager) EXPECT() *MockJWTManagerMockRecorder {
 	return m.recorder
 }
 
-// GenerateJWT mocks base method.
-func (m *MockJWTManager) GenerateJWT(id string) (string, *rest.ErrorResponse) {
+// Generate mocks base method.
+func (m *MockJWTManager) Generate(id string) (string, *rest.ErrorResponse) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateJWT", id)
+	ret := m.ctrl.Call(m, "Generate", id)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(*rest.ErrorResponse)
 	return ret0, ret1
 }
 
-// GenerateJWT indicates an expected call of GenerateJWT.
-func (mr *MockJWTManagerMockRecorder) GenerateJWT(id any) *gomock.Call {
+// Generate indicates an expected call of Generate.
+func (mr *MockJWTManagerMockRecorder) Generate(id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateJWT", reflect.TypeOf((*MockJWTManager)(nil).GenerateJWT), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Generate", reflect.TypeOf((*MockJWTManager)(nil).Generate), id)
 }
 
-// VerifyJWT mocks base method.
-func (m *MockJWTManager) VerifyJWT(tokenString string) (refresh_jwt.RefreshClaims, *rest.ErrorResponse) {
+// Verify mocks base method.
+func (m *MockJWTManager) Verify(tokenString string) (refresh_jwt.RefreshClaims, *rest.ErrorResponse) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "VerifyJWT", tokenString)
+	ret := m.ctrl.Call(m, "Verify", tokenString)
 	ret0, _ := ret[0].(refresh_jwt.RefreshClaims)
 	ret1, _ := ret[1].(*rest.ErrorResponse)
 	return ret0, ret1
 }
 
-// VerifyJWT indicates an expected call of VerifyJWT.
-func (mr *MockJWTManagerMockRecorder) VerifyJWT(tokenString any) *gomock.Call {
+// Verify indicates an expected call of Verify.
+func (mr *MockJWTManagerMockRecorder) Verify(tokenString any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyJWT", reflect.TypeOf((*MockJWTManager)(nil).VerifyJWT), tokenString)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Verify", reflect.TypeOf((*MockJWTManager)(nil).Verify), tokenString)
 }
 
-// MockJWTGenerator is a mock of JWTGenerator interface.
-type MockJWTGenerator struct {
+// MockGenerator is a mock of Generator interface.
+type MockGenerator struct {
 	ctrl     *gomock.Controller
-	recorder *MockJWTGeneratorMockRecorder
+	recorder *MockGeneratorMockRecorder
 }
 
-// MockJWTGeneratorMockRecorder is the mock recorder for MockJWTGenerator.
-type MockJWTGeneratorMockRecorder struct {
-	mock *MockJWTGenerator
+// MockGeneratorMockRecorder is the mock recorder for MockGenerator.
+type MockGeneratorMockRecorder struct {
+	mock *MockGenerator
 }
 
-// NewMockJWTGenerator creates a new mock instance.
-func NewMockJWTGenerator(ctrl *gomock.Controller) *MockJWTGenerator {
-	mock := &MockJWTGenerator{ctrl: ctrl}
-	mock.recorder = &MockJWTGeneratorMockRecorder{mock}
+// NewMockGenerator creates a new mock instance.
+func NewMockGenerator(ctrl *gomock.Controller) *MockGenerator {
+	mock := &MockGenerator{ctrl: ctrl}
+	mock.recorder = &MockGeneratorMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockJWTGenerator) EXPECT() *MockJWTGeneratorMockRecorder {
+func (m *MockGenerator) EXPECT() *MockGeneratorMockRecorder {
 	return m.recorder
 }
 
-// GenerateJWT mocks base method.
-func (m *MockJWTGenerator) GenerateJWT(id string) (string, *rest.ErrorResponse) {
+// Generate mocks base method.
+func (m *MockGenerator) Generate(id string) (string, *rest.ErrorResponse) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateJWT", id)
+	ret := m.ctrl.Call(m, "Generate", id)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(*rest.ErrorResponse)
 	return ret0, ret1
 }
 
-// GenerateJWT indicates an expected call of GenerateJWT.
-func (mr *MockJWTGeneratorMockRecorder) GenerateJWT(id any) *gomock.Call {
+// Generate indicates an expected call of Generate.
+func (mr *MockGeneratorMockRecorder) Generate(id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateJWT", reflect.TypeOf((*MockJWTGenerator)(nil).GenerateJWT), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Generate", reflect.TypeOf((*MockGenerator)(nil).Generate), id)
 }
 
-// MockJWTVerifier is a mock of JWTVerifier interface.
-type MockJWTVerifier struct {
+// MockVerifier is a mock of Verifier interface.
+type MockVerifier struct {
 	ctrl     *gomock.Controller
-	recorder *MockJWTVerifierMockRecorder
+	recorder *MockVerifierMockRecorder
 }
 
-// MockJWTVerifierMockRecorder is the mock recorder for MockJWTVerifier.
-type MockJWTVerifierMockRecorder struct {
-	mock *MockJWTVerifier
+// MockVerifierMockRecorder is the mock recorder for MockVerifier.
+type MockVerifierMockRecorder struct {
+	mock *MockVerifier
 }
 
-// NewMockJWTVerifier creates a new mock instance.
-func NewMockJWTVerifier(ctrl *gomock.Controller) *MockJWTVerifier {
-	mock := &MockJWTVerifier{ctrl: ctrl}
-	mock.recorder = &MockJWTVerifierMockRecorder{mock}
+// NewMockVerifier creates a new mock instance.
+func NewMockVerifier(ctrl *gomock.Controller) *MockVerifier {
+	mock := &MockVerifier{ctrl: ctrl}
+	mock.recorder = &MockVerifierMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockJWTVerifier) EXPECT() *MockJWTVerifierMockRecorder {
+func (m *MockVerifier) EXPECT() *MockVerifierMockRecorder {
 	return m.recorder
 }
 
-// VerifyJWT mocks base method.
-func (m *MockJWTVerifier) VerifyJWT(tokenString string) (refresh_jwt.RefreshClaims, *rest.ErrorResponse) {
+// Verify mocks base method.
+func (m *MockVerifier) Verify(tokenString string) (refresh_jwt.RefreshClaims, *rest.ErrorResponse) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "VerifyJWT", tokenString)
+	ret := m.ctrl.Call(m, "Verify", tokenString)
 	ret0, _ := ret[0].(refresh_jwt.RefreshClaims)
 	ret1, _ := ret[1].(*rest.ErrorResponse)
 	return ret0, ret1
 }
 
-// VerifyJWT indicates an expected call of VerifyJWT.
-func (mr *MockJWTVerifierMockRecorder) VerifyJWT(tokenString any) *gomock.Call {
+// Verify indicates an expected call of Verify.
+func (mr *MockVerifierMockRecorder) Verify(tokenString any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyJWT", reflect.TypeOf((*MockJWTVerifier)(nil).VerifyJWT), tokenString)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Verify", reflect.TypeOf((*MockVerifier)(nil).Verify), tokenString)
 }

@@ -25,6 +25,8 @@ go.work.sum
 *.crt
 *.key
 keys/
+.idea/
+node_modules/
 
 docker-data
 bin

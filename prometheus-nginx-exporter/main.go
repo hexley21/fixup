@@ -71,7 +71,12 @@ func main() {
 		if err != nil {
 			log.Fatalf("netClient.Get failed %s: %s", uri, err)
 		}
-		defer resp.Body.Close()
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				log.Printf("failed to close body: %v", err)
+			}
+		}(resp.Body)
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			log.Fatalf("io.ReadAll failed: %s", err)

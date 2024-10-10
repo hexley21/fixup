@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hexley21/fixup/internal/common/enum"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto/mapper"
 	"github.com/hexley21/fixup/internal/user/entity"
-	"github.com/hexley21/fixup/internal/common/enum"
 	mock_cdn "github.com/hexley21/fixup/pkg/infra/cdn/mock"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/assert"
@@ -17,32 +17,32 @@ import (
 
 var (
 	errSigning = errors.New("error signing photo")
-	signedUrl = "http://signed.url/"
+	signedUrl  = "http://signed.url/"
 
 	customerEntity = entity.User{
-		ID: 1,
-		FirstName: "Larry",
-		LastName: "Page",
+		ID:          1,
+		FirstName:   "Larry",
+		LastName:    "Page",
 		PhoneNumber: "995555555555",
-		Email: "larry@page.com",
+		Email:       "larry@page.com",
 		PictureName: pgtype.Text{String: "photograph.png", Valid: true},
-		Hash: "abcd",
-		Role: enum.UserRoleCUSTOMER,
-		UserStatus: pgtype.Bool{Bool: true, Valid: true},
-		CreatedAt: pgtype.Timestamp{Time: time.Now(), Valid: true},
+		Hash:        "abcd",
+		Role:        enum.UserRoleCUSTOMER,
+		UserStatus:  pgtype.Bool{Bool: true, Valid: true},
+		CreatedAt:   pgtype.Timestamp{Time: time.Now(), Valid: true},
 	}
 
 	providerEntity = entity.User{
-		ID: 1,
-		FirstName: "Larry",
-		LastName: "Page",
+		ID:          1,
+		FirstName:   "Larry",
+		LastName:    "Page",
 		PhoneNumber: "995555555555",
-		Email: "larry@page.com",
+		Email:       "larry@page.com",
 		PictureName: pgtype.Text{String: "photograph.png", Valid: true},
-		Hash: "abcd",
-		Role: enum.UserRolePROVIDER,
-		UserStatus: pgtype.Bool{Bool: true, Valid: true},
-		CreatedAt: pgtype.Timestamp{Time: time.Now(), Valid: true},
+		Hash:        "abcd",
+		Role:        enum.UserRolePROVIDER,
+		UserStatus:  pgtype.Bool{Bool: true, Valid: true},
+		CreatedAt:   pgtype.Timestamp{Time: time.Now(), Valid: true},
 	}
 )
 
@@ -75,7 +75,6 @@ func TestMapUserToDto_SignError(t *testing.T) {
 	assert.ErrorIs(t, err, errSigning)
 	assert.Empty(t, dto)
 }
-
 
 func TestMapCustomerToProfileDto_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)

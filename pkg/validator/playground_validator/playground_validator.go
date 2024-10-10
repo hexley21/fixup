@@ -1,8 +1,9 @@
 package playground_validator
 
 import (
+	"log"
 	"regexp"
-	
+
 	"github.com/go-playground/validator/v10"
 	"github.com/hexley21/fixup/pkg/http/rest"
 )
@@ -13,7 +14,10 @@ type playgroundValidator struct {
 
 func New() *playgroundValidator {
 	validate := validator.New()
-	validate.RegisterValidation("phone", phoneNumberValidator)
+	err := validate.RegisterValidation("phone", phoneNumberValidator)
+	if err != nil {
+		log.Fatalf("failed to register phone validator: %v", err)
+	}
 
 	return &playgroundValidator{validator: validate}
 }

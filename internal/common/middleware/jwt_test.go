@@ -22,10 +22,10 @@ var (
 	userClaims = auth_jwt.NewClaims("1", string(enum.UserRoleCUSTOMER), true, time.Hour)
 )
 
-func setupJWT(t *testing.T) (*gomock.Controller, func(http.Handler) http.Handler, *mock_jwt.MockJWTVerifier) {
+func setupJWT(t *testing.T) (*gomock.Controller, func(http.Handler) http.Handler, *mock_jwt.MockVerifier) {
 	mw := setupMiddleware()
 	ctrl := gomock.NewController(t)
-	mockJwtVerifier := mock_jwt.NewMockJWTVerifier(ctrl)
+	mockJwtVerifier := mock_jwt.NewMockVerifier(ctrl)
 
 	return ctrl, mw.NewJWT(mockJwtVerifier), mockJwtVerifier
 }
@@ -73,7 +73,7 @@ func TestJWT_InvalidToken(t *testing.T) {
 	ctrl, JWTMiddleware, mockJWTVerifier := setupJWT(t)
 	defer ctrl.Finish()
 
-	mockJWTVerifier.EXPECT().VerifyJWT(gomock.Any()).Return(auth_jwt.UserClaims{}, rest.NewUnauthorizedError(errors.New(""), app_error.MsgInvalidToken))
+	mockJWTVerifier.EXPECT().Verify(gomock.Any()).Return(auth_jwt.UserClaims{}, rest.NewUnauthorizedError(errors.New(""), app_error.MsgInvalidToken))
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set("Authorization", "Bearer invalidtoken")
@@ -94,7 +94,7 @@ func TestJWT_ValidToken(t *testing.T) {
 	ctrl, JWTMiddleware, mockJWTVerifier := setupJWT(t)
 	defer ctrl.Finish()
 
-	mockJWTVerifier.EXPECT().VerifyJWT(gomock.Any()).Return(userClaims, nil)
+	mockJWTVerifier.EXPECT().Verify(gomock.Any()).Return(userClaims, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set("Authorization", "Bearer validtoken")

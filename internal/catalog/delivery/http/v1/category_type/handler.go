@@ -47,20 +47,20 @@ func NewHandler(handlerComponents *handler.Components, service service.CategoryT
 // @Router /category-types [post]
 // @Security access_token
 func (h *Handler) CreateCategoryType(w http.ResponseWriter, r *http.Request) {
-	var dto dto.CreateCategoryTypeDTO
-	errResp := h.Binder.BindJSON(r, &dto)
+	var createDTO dto.CreateCategoryTypeDTO
+	errResp := h.Binder.BindJSON(r, &createDTO)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	errResp = h.Validator.Validate(dto)
+	errResp = h.Validator.Validate(createDTO)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	categoryType, err := h.service.CreateCategoryType(r.Context(), dto)
+	categoryType, err := h.service.CreateCategoryType(r.Context(), createDTO)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
@@ -72,7 +72,7 @@ func (h *Handler) CreateCategoryType(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Create category type: %s, ID: %d", categoryType.Name, categoryType.ID)
+	h.Logger.Infof("Create category type: %s, ID: %s", categoryType.Name, categoryType.ID)
 	h.Writer.WriteData(w, http.StatusCreated, categoryType)
 }
 
@@ -90,11 +90,11 @@ func (h *Handler) CreateCategoryType(w http.ResponseWriter, r *http.Request) {
 // @Router /category-types [get]
 // @Security access_token
 func (h *Handler) GetCategoryTypes(w http.ResponseWriter, r *http.Request) {
-    errResp, page, perPage := request_util.ParsePagination(r)
-    if errResp != nil {
-        h.Writer.WriteError(w, errResp)
-        return
-    }
+	errResp, page, perPage := request_util.ParsePagination(r)
+	if errResp != nil {
+		h.Writer.WriteError(w, errResp)
+		return
+	}
 
 	categoryTypes, err := h.service.GetCategoryTypes(r.Context(), int32(page), int32(perPage))
 	if err != nil {
@@ -130,7 +130,7 @@ func (h *Handler) GetCategoryTypeById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto, err := h.service.GetCategoryTypeById(r.Context(), int32(id))
+	categoryTypeDTO, err := h.service.GetCategoryTypeById(r.Context(), int32(id))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			h.Writer.WriteError(w, rest.NewNotFoundError(err, MsgCategoryTypeNotFound))
@@ -141,8 +141,8 @@ func (h *Handler) GetCategoryTypeById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Fetch category type: %s, ID: %d", dto.Name, dto.ID)
-	h.Writer.WriteData(w, http.StatusOK, dto)
+	h.Logger.Infof("Fetch category type: %s, ID: %s", categoryTypeDTO.Name, categoryTypeDTO.ID)
+	h.Writer.WriteData(w, http.StatusOK, categoryTypeDTO)
 }
 
 // @Summary Update a category type by ID

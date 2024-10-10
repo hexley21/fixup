@@ -39,11 +39,12 @@ func (m *MockHasher) EXPECT() *MockHasherMockRecorder {
 }
 
 // GetSalt mocks base method.
-func (m *MockHasher) GetSalt() []byte {
+func (m *MockHasher) GetSalt() ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSalt")
 	ret0, _ := ret[0].([]byte)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetSalt indicates an expected call of GetSalt.
@@ -53,11 +54,12 @@ func (mr *MockHasherMockRecorder) GetSalt() *gomock.Call {
 }
 
 // HashPassword mocks base method.
-func (m *MockHasher) HashPassword(password string) string {
+func (m *MockHasher) HashPassword(password string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HashPassword", password)
 	ret0, _ := ret[0].(string)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // HashPassword indicates an expected call of HashPassword.

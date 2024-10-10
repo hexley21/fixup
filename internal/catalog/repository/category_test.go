@@ -40,10 +40,10 @@ func TestCreateCategory_Success(t *testing.T) {
 		t.Fatalf("failed to insert category type: %v", err)
 	}
 
-	entity, err := repo.CreateCategory(ctx, repository.CreateCategoryParams{TypeID: categoryType.ID, Name: categoryName})
+	category, err := repo.CreateCategory(ctx, repository.CreateCategoryParams{TypeID: categoryType.ID, Name: categoryName})
 	assert.NoError(t, err)
-	assert.NotEmpty(t, entity.ID)
-	assert.Equal(t, categoryName, entity.Name)
+	assert.NotEmpty(t, category.ID)
+	assert.Equal(t, categoryName, category.Name)
 }
 
 func TestCreateCategory_InvalidArgs(t *testing.T) {
@@ -55,28 +55,28 @@ func TestCreateCategory_InvalidArgs(t *testing.T) {
 		t.Fatalf("failed to insert category type: %v", err)
 	}
 
-	entity, err := repo.CreateCategory(ctx, repository.CreateCategoryParams{TypeID: categoryType.ID, Name: ""})
+	category, err := repo.CreateCategory(ctx, repository.CreateCategoryParams{TypeID: categoryType.ID, Name: ""})
 
 	var pgErr *pgconn.PgError
 	if assert.ErrorAs(t, err, &pgErr) {
 		assert.Equal(t, pgerrcode.CheckViolation, pgErr.Code)
 	}
-	assert.Empty(t, entity.ID)
-	assert.Empty(t, entity.Name)
+	assert.Empty(t, category.ID)
+	assert.Empty(t, category.Name)
 }
 
 func TestCreateCategory_NonexistentType(t *testing.T) {
 	ctx, pgPool, repo := setupCategory()
 	defer cleanupPostgres(ctx, pgPool)
 
-	entity, err := repo.CreateCategory(ctx, repository.CreateCategoryParams{TypeID: 0, Name: categoryName})
+	category, err := repo.CreateCategory(ctx, repository.CreateCategoryParams{TypeID: 0, Name: categoryName})
 
 	var pgErr *pgconn.PgError
 	if assert.ErrorAs(t, err, &pgErr) {
 		assert.Equal(t, pgerrcode.ForeignKeyViolation, pgErr.Code)
 	}
-	assert.Empty(t, entity.ID)
-	assert.Empty(t, entity.Name)
+	assert.Empty(t, category.ID)
+	assert.Empty(t, category.Name)
 }
 
 func TestCreateCategory_Conflict(t *testing.T) {
@@ -88,18 +88,18 @@ func TestCreateCategory_Conflict(t *testing.T) {
 		t.Fatalf("failed to insert category type: %v", err)
 	}
 
-	entity, err := repo.CreateCategory(ctx, repository.CreateCategoryParams{TypeID: categoryType.ID, Name: categoryName})
+	category, err := repo.CreateCategory(ctx, repository.CreateCategoryParams{TypeID: categoryType.ID, Name: categoryName})
 	assert.NoError(t, err)
-	assert.NotEmpty(t, entity.ID)
-	assert.Equal(t, categoryName, entity.Name)
+	assert.NotEmpty(t, category.ID)
+	assert.Equal(t, categoryName, category.Name)
 
-	entity, err = repo.CreateCategory(ctx, repository.CreateCategoryParams{TypeID: categoryType.ID, Name: categoryName})
+	category, err = repo.CreateCategory(ctx, repository.CreateCategoryParams{TypeID: categoryType.ID, Name: categoryName})
 	var pgErr *pgconn.PgError
 	if assert.ErrorAs(t, err, &pgErr) {
 		assert.Equal(t, pgerrcode.RaiseException, pgErr.Code)
 	}
-	assert.Empty(t, entity.ID)
-	assert.Empty(t, entity.Name)
+	assert.Empty(t, category.ID)
+	assert.Empty(t, category.Name)
 }
 
 func TestDeleteCategoryById_Success(t *testing.T) {
@@ -119,8 +119,8 @@ func TestDeleteCategoryById_Success(t *testing.T) {
 	err = repo.DeleteCategoryById(ctx, insert.ID)
 	assert.NoError(t, err)
 
-	entity, err := getCategoryById(pgPool, ctx, insert.ID)
-	assert.Empty(t, entity)
+	category, err := getCategoryById(pgPool, ctx, insert.ID)
+	assert.Empty(t, category)
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 }
 
@@ -146,18 +146,18 @@ func TestGetCategoryById_Success(t *testing.T) {
 		t.Fatalf("failed to insert category: %v", err)
 	}
 
-	entity, err := repo.GetCategoryById(ctx, insert.ID)
+	category, err := repo.GetCategoryById(ctx, insert.ID)
 	assert.NoError(t, err)
-	assert.Equal(t, categoryName, entity.Name)
+	assert.Equal(t, categoryName, category.Name)
 }
 
 func TestGetCategoryById_NotFound(t *testing.T) {
 	ctx, pgPool, repo := setupCategory()
 	defer cleanupPostgres(ctx, pgPool)
 
-	entity, err := repo.GetCategoryById(ctx, -1)
+	category, err := repo.GetCategoryById(ctx, -1)
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
-	assert.Empty(t, entity.Name)
+	assert.Empty(t, category.Name)
 }
 
 func TestGetCategories_Success(t *testing.T) {
@@ -242,15 +242,15 @@ func TestUpdateCategoryById_Conflict(t *testing.T) {
 		t.Fatalf("failed to insert category: %v", err)
 	}
 
-	entity, err := repo.UpdateCategoryById(ctx, repository.UpdateCategoryByIdParams{ID: insert.ID, TypeID: insert.TypeID, Name: "Fix"})
+	category, err := repo.UpdateCategoryById(ctx, repository.UpdateCategoryByIdParams{ID: insert.ID, TypeID: insert.TypeID, Name: "Fix"})
 
 	var pgErr *pgconn.PgError
 	if assert.ErrorAs(t, err, &pgErr) {
 		assert.Equal(t, pgerrcode.RaiseException, pgErr.Code)
 	}
-	assert.Empty(t, entity.ID)
-	assert.Empty(t, entity.Name)
-	assert.Empty(t, entity.TypeID)
+	assert.Empty(t, category.ID)
+	assert.Empty(t, category.Name)
+	assert.Empty(t, category.TypeID)
 }
 
 func insertCategory(dbPool *pgxpool.Pool, ctx context.Context, typeId int32, name string) (entity.Category, error) {

@@ -8,30 +8,30 @@ import (
 	"github.com/hexley21/fixup/pkg/jwt"
 )
 
-type JWTManager interface {
-	JWTGenerator
-	JWTVerifier
+type Manager interface {
+	Generator
+	Verifier
 }
 
-type JWTGenerator interface {
-	GenerateJWT(id string) (string, *rest.ErrorResponse)
+type Generator interface {
+	Generate(id string) (string, *rest.ErrorResponse)
 }
 
-type JWTVerifier interface {
-	VerifyJWT(tokenString string) (RefreshClaims, *rest.ErrorResponse)
+type Verifier interface {
+	Verify(tokenString string) (RefreshClaims, *rest.ErrorResponse)
 }
 
-type authJWTImpl struct {
+type managerImpl struct {
 	secretKey string
 	ttl       time.Duration
 }
 
-func NewJWTManager(secretKey string, ttl time.Duration) *authJWTImpl {
-	return &authJWTImpl{secretKey: secretKey, ttl: ttl}
+func NewManager(secretKey string, ttl time.Duration) *managerImpl {
+	return &managerImpl{secretKey: secretKey, ttl: ttl}
 }
 
-func (j *authJWTImpl) GenerateJWT(id string) (string, *rest.ErrorResponse) {
-	token, err := jwt.GenerateJWT(NewClaims(id, j.ttl), j.secretKey)
+func (j *managerImpl) Generate(id string) (string, *rest.ErrorResponse) {
+	token, err := jwt.Generate(NewClaims(id, j.ttl), j.secretKey)
 	if err != nil {
 		return "", rest.NewInternalServerError(err)
 	}
@@ -39,8 +39,8 @@ func (j *authJWTImpl) GenerateJWT(id string) (string, *rest.ErrorResponse) {
 	return token, nil
 }
 
-func (j *authJWTImpl) VerifyJWT(tokenString string) (RefreshClaims, *rest.ErrorResponse) {
-	mapClaims, err := jwt.VerifyJWT(tokenString, j.secretKey)
+func (j *managerImpl) Verify(tokenString string) (RefreshClaims, *rest.ErrorResponse) {
+	mapClaims, err := jwt.Verify(tokenString, j.secretKey)
 	if err != nil {
 		return RefreshClaims{}, rest.NewUnauthorizedError(err, app_error.MsgInvalidToken)
 	}

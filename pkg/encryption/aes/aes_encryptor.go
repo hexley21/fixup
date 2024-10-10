@@ -16,7 +16,6 @@ func NewAesEncryptor(key string) *aesEncryptor {
 	return &aesEncryptor{key: []byte(key)}
 }
 
-
 func (e *aesEncryptor) Encrypt(value []byte) ([]byte, error) {
 	block, err := aes.NewCipher(e.key)
 	if err != nil {
@@ -30,7 +29,7 @@ func (e *aesEncryptor) Encrypt(value []byte) ([]byte, error) {
 	}
 
 	stream := cipher.NewCFBEncrypter(block, iv)
-	stream.XORKeyStream(ciphertext[aes.BlockSize:], []byte(value))
+	stream.XORKeyStream(ciphertext[aes.BlockSize:], value)
 
 	return ciphertext, nil
 }

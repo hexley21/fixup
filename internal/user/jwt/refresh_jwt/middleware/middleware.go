@@ -11,7 +11,7 @@ import (
 	"github.com/hexley21/fixup/pkg/http/writer"
 )
 
-func NewJWT(writer writer.HTTPErrorWriter, jwtVerifier refresh_jwt.JWTVerifier) func(http.Handler) http.Handler {
+func NewJWT(writer writer.HTTPErrorWriter, jwtVerifier refresh_jwt.Verifier) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -26,7 +26,7 @@ func NewJWT(writer writer.HTTPErrorWriter, jwtVerifier refresh_jwt.JWTVerifier) 
 				return
 			}
 
-			claims, err := jwtVerifier.VerifyJWT(tokenString)
+			claims, err := jwtVerifier.Verify(tokenString)
 			if err != nil {
 				writer.WriteError(w, err)
 				return

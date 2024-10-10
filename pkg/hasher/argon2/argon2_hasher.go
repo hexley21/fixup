@@ -11,7 +11,6 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
-
 type argon2Hasher struct {
 	config.Argon2
 }
@@ -20,13 +19,16 @@ func NewHasher(hasherCfg config.Argon2) *argon2Hasher {
 	return &argon2Hasher{hasherCfg}
 }
 
-func (h *argon2Hasher) HashPassword(password string) string {
-	saltInBytes := h.GetSalt()
+func (h *argon2Hasher) HashPassword(password string) (string, error) {
+	saltInBytes, err := h.GetSalt()
+	if err != nil {
+		return "", err
+	}
 	salt := base64.RawStdEncoding.EncodeToString(saltInBytes)
 
 	hash := base64.RawStdEncoding.EncodeToString(argon2.Key([]byte(password), saltInBytes, h.Time, h.Memory, h.Threads, h.KeyLen))
 
-	return fmt.Sprint(hash, salt)
+	return fmt.Sprint(hash, salt), nil
 }
 
 func (h *argon2Hasher) HashPasswordWithSalt(password string, salt string) (string, error) {
@@ -54,9 +56,12 @@ func (h *argon2Hasher) VerifyPassword(password string, hash string) error {
 	return hasher.ErrPasswordMismatch
 }
 
-func (h *argon2Hasher) GetSalt() []byte {
+func (h *argon2Hasher) GetSalt() ([]byte, error) {
 	salt := make([]byte, h.SaltLen)
-	io.ReadFull(rand.Reader, salt)
+	_, err := io.ReadFull(rand.Reader, salt)
+	if err != nil {
+		return nil, err
+	}
 
-	return salt
+	return salt, nil
 }

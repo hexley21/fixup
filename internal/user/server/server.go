@@ -34,7 +34,6 @@ import (
 	"github.com/hexley21/fixup/pkg/logger"
 	"github.com/hexley21/fixup/pkg/mailer"
 	"github.com/hexley21/fixup/pkg/validator"
-	plaground_validator "github.com/hexley21/fixup/pkg/validator/playground_validator"
 )
 
 type services struct {
@@ -43,9 +42,9 @@ type services struct {
 }
 
 type jWTManagers struct {
-	accessJWTManager       auth_jwt.JWTManager
-	refreshJWTManager      refresh_jwt.JWTManager
-	verificationJWTManager verify_jwt.JWTManager
+	accessJWTManager       auth_jwt.Manager
+	refreshJWTManager      refresh_jwt.Manager
+	verificationJWTManager verify_jwt.Manager
 }
 type server struct {
 	router            chi.Router
@@ -92,7 +91,7 @@ func NewServer(
 		cdnURLSigner,
 	)
 	if err := authService.ParseTemplates(); err != nil {
-		logger.Fatalf("error starting server %w", err)
+		logger.Fatalf("error starting server %v", err)
 	}
 
 	userService := service.NewUserService(
@@ -109,9 +108,9 @@ func NewServer(
 	}
 
 	jWTManagers := &jWTManagers{
-		accessJWTManager:       auth_jwt.NewJWTManager(cfg.JWT.AccessSecret, cfg.JWT.AccessTTL),
-		refreshJWTManager:      refresh_jwt.NewJWTManager(cfg.JWT.RefreshSecret, cfg.JWT.RefreshTTL),
-		verificationJWTManager: verify_jwt.NewJWTManager(cfg.JWT.VerificationSecret, cfg.JWT.VerificationTTL),
+		accessJWTManager:       auth_jwt.NewManager(cfg.JWT.AccessSecret, cfg.JWT.AccessTTL),
+		refreshJWTManager:      refresh_jwt.NewManager(cfg.JWT.RefreshSecret, cfg.JWT.RefreshTTL),
+		verificationJWTManager: verify_jwt.NewManager(cfg.JWT.VerificationSecret, cfg.JWT.VerificationTTL),
 	}
 
 	jsonManager := std_json.New()
@@ -119,7 +118,7 @@ func NewServer(
 	handlerComponents := &handler.Components{
 		Logger:    logger,
 		Binder:    std_binder.New(jsonManager),
-		Validator: plaground_validator.New(),
+		Validator: validator,
 		Writer:    json_writer.New(logger, jsonManager),
 	}
 

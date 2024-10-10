@@ -50,19 +50,19 @@ func NewUserService(
 }
 
 func (s *userServiceImpl) FindUserById(ctx context.Context, userId int64) (dto.User, error) {
-	var dto dto.User
+	var userDTO dto.User
 
 	entity, err := s.userRepository.GetById(ctx, userId)
 	if err != nil {
-		return dto, err
+		return userDTO, err
 	}
 
-	dto, err = mapper.MapUserToDto(entity, s.cdnUrlSigner)
+	userDTO, err = mapper.MapUserToDto(entity, s.cdnUrlSigner)
 	if err != nil {
-		return dto, err
+		return userDTO, err
 	}
 
-	return dto, nil
+	return userDTO, nil
 }
 
 func (s *userServiceImpl) FindUserProfileById(ctx context.Context, userId int64) (dto.Profile, error) {
@@ -82,7 +82,7 @@ func (s *userServiceImpl) FindUserProfileById(ctx context.Context, userId int64)
 }
 
 func (s *userServiceImpl) UpdateUserDataById(ctx context.Context, id int64, updateDto dto.UpdateUser) (dto.User, error) {
-	var dto dto.User
+	var userDTO dto.User
 
 	entity, err := s.userRepository.Update(ctx, repository.UpdateUserParams{
 		ID:          id,
@@ -92,7 +92,7 @@ func (s *userServiceImpl) UpdateUserDataById(ctx context.Context, id int64, upda
 		PhoneNumber: updateDto.PhoneNumber,
 	})
 	if err != nil {
-		return dto, err
+		return userDTO, err
 	}
 
 	return mapper.MapUserToDto(entity, s.cdnUrlSigner)
@@ -149,9 +149,14 @@ func (s *userServiceImpl) ChangePassword(ctx context.Context, id int64, updateDt
 		return err
 	}
 
+	hash, err := s.hasher.HashPassword(updateDto.NewPassword)
+	if err != nil {
+		return err
+	}
+
 	return s.userRepository.UpdateHash(ctx, repository.UpdateUserHashParams{
 		ID:   id,
-		Hash: s.hasher.HashPassword(updateDto.NewPassword),
+		Hash: hash,
 	})
 }
 

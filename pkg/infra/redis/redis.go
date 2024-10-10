@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/hexley21/fixup/pkg/config"
@@ -22,7 +23,7 @@ func NewClient(config *config.Redis) (*redis.ClusterClient, error) {
 	})
 	ctx := context.Background()
 	_, err := client.Ping(ctx).Result()
-	if err == redis.Nil || err != nil {
+	if errors.Is(err, redis.Nil) || err != nil {
 		return nil, err
 	}
 	return client, nil

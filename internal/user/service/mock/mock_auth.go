@@ -146,15 +146,15 @@ func (mr *MockAuthServiceMockRecorder) SendVerifiedLetter(email any) *gomock.Cal
 }
 
 // VerifyUser mocks base method.
-func (m *MockAuthService) VerifyUser(ctx context.Context, token string, ttl time.Duration, id int64, email string) error {
+func (m *MockAuthService) VerifyUser(ctx context.Context, token string, ttl time.Duration, id int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "VerifyUser", ctx, token, ttl, id, email)
+	ret := m.ctrl.Call(m, "VerifyUser", ctx, token, ttl, id)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // VerifyUser indicates an expected call of VerifyUser.
-func (mr *MockAuthServiceMockRecorder) VerifyUser(ctx, token, ttl, id, email any) *gomock.Call {
+func (mr *MockAuthServiceMockRecorder) VerifyUser(ctx, token, ttl, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyUser", reflect.TypeOf((*MockAuthService)(nil).VerifyUser), ctx, token, ttl, id, email)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyUser", reflect.TypeOf((*MockAuthService)(nil).VerifyUser), ctx, token, ttl, id)
 }

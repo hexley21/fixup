@@ -7,10 +7,10 @@ import (
 	"log"
 
 	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/hexley21/fixup/pkg/config"
 	"github.com/jackc/pgx/v5/pgxpool"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
-    _ "github.com/golang-migrate/migrate/v4/database/postgres"
 )
 
 var errNoConnection = errors.New("no connection")
@@ -53,7 +53,7 @@ func Migrate(url string, migrationPath string) (*migrate.Migrate, error) {
 		return nil, fmt.Errorf("failed to connect migrator: %w", err)
 	}
 
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return nil, fmt.Errorf("failed to migrate up: %w", err)
 	}
 

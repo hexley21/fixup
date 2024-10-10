@@ -16,7 +16,7 @@ type RouterArgs struct {
 	CategoryService     service.CategoryService
 	Middleware          *middleware.Middleware
 	HandlerComponents   *handler.Components
-	AccessJWTManager    auth_jwt.JWTManager
+	AccessJWTManager    auth_jwt.Manager
 }
 
 func MapV1Routes(args RouterArgs, router chi.Router) {

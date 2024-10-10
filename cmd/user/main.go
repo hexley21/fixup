@@ -73,7 +73,7 @@ func main() {
 	argon2Hasher := argon2.NewHasher(cfg.Argon2)
 	aesEncryption := aes.NewAesEncryptor(cfg.AesEncryptor.Key)
 
-	server := server.NewServer(
+	userServer := server.NewServer(
 		cfg,
 		pgPool,
 		redisCluster,
@@ -88,10 +88,10 @@ func main() {
 	)
 
 	shutdownChan := make(chan struct{})
-	go shutdown.NotifyShutdown(server, zapLogger, shutdownChan)
+	go shutdown.NotifyShutdown(userServer, zapLogger, shutdownChan)
 
 	log.Print("User service started...")
-	if !errors.Is(server.Run(), http.ErrServerClosed) {
+	if !errors.Is(userServer.Run(), http.ErrServerClosed) {
 		zapLogger.Fatal(err)
 	}
 

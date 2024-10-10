@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/hexley21/fixup/internal/common/enum"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto/mapper"
-	"github.com/hexley21/fixup/internal/common/enum"
 	"github.com/hexley21/fixup/internal/user/repository"
 	"github.com/hexley21/fixup/pkg/encryption"
 	"github.com/hexley21/fixup/pkg/hasher"
@@ -54,7 +54,7 @@ type AuthService interface {
 	RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error)
 	RegisterProvider(ctx context.Context, registerDto dto.RegisterProvider) (dto.User, error)
 	AuthenticateUser(ctx context.Context, loginDto dto.Login) (UserIdentity, error)
-	VerifyUser(ctx context.Context, token string, ttl time.Duration, id int64, email string) error
+	VerifyUser(ctx context.Context, token string, ttl time.Duration, id int64) error
 	GetUserConfirmationDetails(ctx context.Context, email string) (UserConfirmationDetails, error)
 	GetUserRoleAndStatus(ctx context.Context, id int64) (UserRoleAndStatus, error)
 	SendConfirmationLetter(ctx context.Context, token string, email string, name string) error
@@ -120,7 +120,12 @@ func (s *authServiceImpl) SetTemplates(confirmation *template.Template, verified
 }
 
 func (s *authServiceImpl) RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error) {
-	var dto dto.User
+	var userDTO dto.User
+
+	hash, err := s.hasher.HashPassword(registerDto.Password)
+	if err != nil {
+		return userDTO, err
+	}
 
 	user, err := s.userRepository.CreateUser(ctx,
 		repository.CreateUserParams{
@@ -128,27 +133,32 @@ func (s *authServiceImpl) RegisterCustomer(ctx context.Context, registerDto dto.
 			LastName:    registerDto.LastName,
 			PhoneNumber: registerDto.PhoneNumber,
 			Email:       registerDto.Email,
-			Hash:        s.hasher.HashPassword(registerDto.Password),
+			Hash:        hash,
 			Role:        enum.UserRoleCUSTOMER,
 		})
 	if err != nil {
-		return dto, err
+		return userDTO, err
 	}
 
-	dto, err = mapper.MapUserToDto(user, s.cdnUrlSigner)
+	userDTO, err = mapper.MapUserToDto(user, s.cdnUrlSigner)
 	if err != nil {
-		return dto, err
+		return userDTO, err
 	}
 
-	return dto, nil
+	return userDTO, nil
 }
 
 func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.RegisterProvider) (dto.User, error) {
-	var dto dto.User
+	var userDTO dto.User
+
+	hash, err := s.hasher.HashPassword(registerDto.Password)
+	if err != nil {
+		return userDTO, err
+	}
 
 	tx, err := s.pgx.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
 	if err != nil {
-		return dto, err
+		return userDTO, err
 	}
 
 	user, err := s.userRepository.WithTx(tx).CreateUser(ctx,
@@ -157,23 +167,23 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 			LastName:    registerDto.LastName,
 			PhoneNumber: registerDto.PhoneNumber,
 			Email:       registerDto.Email,
-			Hash:        s.hasher.HashPassword(registerDto.Password),
+			Hash:        hash,
 			Role:        enum.UserRoleCUSTOMER,
 		},
 	)
 	if err != nil {
 		if err := tx.Rollback(ctx); err != nil {
-			return dto, err
+			return userDTO, err
 		}
-		return dto, err
+		return userDTO, err
 	}
 
 	enc, err := s.encryptor.Encrypt([]byte(registerDto.PersonalIDNumber))
 	if err != nil {
 		if err := tx.Rollback(ctx); err != nil {
-			return dto, err
+			return userDTO, err
 		}
-		return dto, err
+		return userDTO, err
 	}
 
 	err = s.providerRepository.WithTx(tx).Create(ctx, repository.CreateProviderParams{
@@ -183,43 +193,43 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 	})
 	if err != nil {
 		if err := tx.Rollback(ctx); err != nil {
-			return dto, err
+			return userDTO, err
 		}
-		return dto, err
+		return userDTO, err
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		return dto, err
+		return userDTO, err
 	}
 
 	res, err := mapper.MapUserToDto(user, s.cdnUrlSigner)
 	if err != nil {
-		return dto, err
+		return userDTO, err
 	}
 
 	return res, nil
 }
 
 func (s *authServiceImpl) AuthenticateUser(ctx context.Context, loginDto dto.Login) (UserIdentity, error) {
-	var dto UserIdentity
+	var identityDTO UserIdentity
 	creds, err := s.userRepository.GetCredentialsByEmail(ctx, loginDto.Email)
 	if err != nil {
-		return dto, err
+		return identityDTO, err
 	}
 
 	err = s.hasher.VerifyPassword(loginDto.Password, creds.Hash)
 	if err != nil {
-		return dto, err
+		return identityDTO, err
 	}
 
-	dto.ID = strconv.FormatInt(creds.ID, 10)
-	dto.Role = string(creds.Role)
-	dto.UserStatus = creds.UserStatus.Bool
+	identityDTO.ID = strconv.FormatInt(creds.ID, 10)
+	identityDTO.Role = string(creds.Role)
+	identityDTO.UserStatus = creds.UserStatus.Bool
 
-	return dto, nil
+	return identityDTO, nil
 }
 
-func (s *authServiceImpl) VerifyUser(ctx context.Context, token string, ttl time.Duration, id int64, email string) error {
+func (s *authServiceImpl) VerifyUser(ctx context.Context, token string, ttl time.Duration, id int64) error {
 	err := s.verificationRepository.SetTokenUsed(ctx, token, ttl)
 	if err != nil {
 		return err
@@ -232,29 +242,31 @@ func (s *authServiceImpl) VerifyUser(ctx context.Context, token string, ttl time
 }
 
 func (s *authServiceImpl) GetUserConfirmationDetails(ctx context.Context, email string) (UserConfirmationDetails, error) {
-	var dto UserConfirmationDetails
+	var detailsDTO UserConfirmationDetails
 	res, err := s.userRepository.GetUserConfirmationDetails(ctx, email)
 	if err != nil {
-		return dto, err
+		return detailsDTO, err
 	}
 
-	dto.ID = strconv.FormatInt(res.ID, 10)
-	dto.UserStatus = res.UserStatus.Bool
-	dto.Firstname = res.FirstName
+	detailsDTO.ID = strconv.FormatInt(res.ID, 10)
+	detailsDTO.UserStatus = res.UserStatus.Bool
+	detailsDTO.Firstname = res.FirstName
 
-	return dto, nil
+	return detailsDTO, nil
 }
 
-func (s *authServiceImpl) GetUserRoleAndStatus(ctx context.Context, id int64) (dto UserRoleAndStatus, err error) {
+func (s *authServiceImpl) GetUserRoleAndStatus(ctx context.Context, id int64) (UserRoleAndStatus, error) {
+	var roleAndStatus UserRoleAndStatus
+
 	res, err := s.userRepository.GetUserRoleAndStatus(ctx, id)
 	if err != nil {
-		return dto, err
+		return roleAndStatus, err
 	}
 
-	dto.Role = string(res.Role)
-	dto.UserStatus = res.UserStatus.Bool
+	roleAndStatus.Role = string(res.Role)
+	roleAndStatus.UserStatus = res.UserStatus.Bool
 
-	return dto, err
+	return roleAndStatus, err
 }
 
 func (s *authServiceImpl) SendConfirmationLetter(ctx context.Context, token string, email string, name string) error {

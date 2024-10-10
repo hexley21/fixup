@@ -45,8 +45,7 @@ func main() {
 		zapLogger.Fatal(err)
 	}
 
-
-	server := server.NewServer(
+	catalogServer := server.NewServer(
 		cfg,
 		pgPool,
 		zapLogger,
@@ -55,10 +54,10 @@ func main() {
 	)
 
 	shutdownChan := make(chan struct{})
-	go shutdown.NotifyShutdown(server, zapLogger, shutdownChan)
+	go shutdown.NotifyShutdown(catalogServer, zapLogger, shutdownChan)
 
 	log.Print("Catalog service started...")
-	if !errors.Is(server.Run(), http.ErrServerClosed) {
+	if !errors.Is(catalogServer.Run(), http.ErrServerClosed) {
 		zapLogger.Fatal(err)
 	}
 

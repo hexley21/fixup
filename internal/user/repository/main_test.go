@@ -25,8 +25,8 @@ func TestMain(m *testing.M) {
 
 	migrationPath := flag.String("mp", "", "Migration Path")
 	flag.Parse()
-	if *migrationPath == "" || migrationPath == nil {
-		log.Print("Continueing without database migration")
+	if *migrationPath == "" {
+		log.Print("Continuing without database migration")
 		os.Exit(0)
 	}
 

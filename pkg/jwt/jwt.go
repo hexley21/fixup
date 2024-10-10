@@ -4,16 +4,16 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type JWTClaimsMapper[T any] interface {
+type ClaimsMapper[T any] interface {
 	MapToClaim(mapClaims any) T
 }
 
-func GenerateJWT[T jwt.Claims](claims T, secretKey string) (string, error) {
+func Generate[T jwt.Claims](claims T, secretKey string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secretKey))
 }
 
-func VerifyJWT(tokenString string, secretKey string) (jwt.MapClaims, error) {
+func Verify(tokenString string, secretKey string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
 		return []byte(secretKey), nil
 	})

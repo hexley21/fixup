@@ -1,6 +1,5 @@
 package std_binder
 
-
 import (
 	"mime/multipart"
 	"net/http"
@@ -13,10 +12,10 @@ import (
 )
 
 type standardBinder struct {
-	JSONDeserializer json.JSONDeserializer
+	JSONDeserializer json.Deserializer
 }
 
-func New(JSONDeserializer json.JSONDeserializer) *standardBinder {
+func New(JSONDeserializer json.Deserializer) *standardBinder {
 	return &standardBinder{
 		JSONDeserializer,
 	}

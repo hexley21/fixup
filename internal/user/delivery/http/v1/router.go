@@ -18,9 +18,9 @@ type RouterArgs struct {
 	UserService            service.UserService
 	Middleware             *middleware.Middleware
 	HandlerComponents      *handler.Components
-	AccessJWTManager       auth_jwt.JWTManager
-	RefreshJWTManager      refresh_jwt.JWTManager
-	VerificationJWTManager verify_jwt.JWTManager
+	AccessJWTManager       auth_jwt.Manager
+	RefreshJWTManager      refresh_jwt.Manager
+	VerificationJWTManager verify_jwt.Manager
 }
 
 func MapV1Routes(args RouterArgs, router chi.Router) {
@@ -39,7 +39,7 @@ func MapV1Routes(args RouterArgs, router chi.Router) {
 	refreshJWTMiddleware := refresh_middleware.NewJWT(args.HandlerComponents.Writer, args.RefreshJWTManager)
 
 	router.Route("/v1", func(r chi.Router) {
-		auth.MapRoutes(args.Middleware, authHandlermiddleware, refreshJWTMiddleware, args.AccessJWTManager, args.RefreshJWTManager, args.VerificationJWTManager, r)
+		auth.MapRoutes(authHandlermiddleware, refreshJWTMiddleware, args.AccessJWTManager, args.RefreshJWTManager, args.VerificationJWTManager, r)
 		user.MapRoutes(args.Middleware, userHandlermiddleware, accessJWTMiddleware, onlyVerifiedMiddleware, r)
 	})
 }

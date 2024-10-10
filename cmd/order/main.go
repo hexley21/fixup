@@ -1,9 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
-	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -45,5 +45,4 @@ func main() {
 	// 	zapLogger.Fatal(err)
 	// }
 
-	
 }
