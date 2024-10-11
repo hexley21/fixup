@@ -279,8 +279,7 @@ func TestUpdatePicture_Success(t *testing.T) {
 		t.Fatalf("failed to insert user: %v", err)
 	}
 
-	var pictureArg pgtype.Text
-	pictureArg.Scan("picture.jpg")
+	pictureArg := pgtype.Text{String: "picture.jpg", Valid: true}
 	args := repository.UpdateUserPictureParams{
 		ID:          insert.ID,
 		PictureName: pictureArg,

@@ -10,7 +10,7 @@ import (
 
 	"github.com/hexley21/fixup/internal/common/app_error"
 	"github.com/hexley21/fixup/internal/common/auth_jwt"
-	mock_jwt "github.com/hexley21/fixup/internal/common/auth_jwt/mock"
+	mockJwt "github.com/hexley21/fixup/internal/common/auth_jwt/mock"
 	"github.com/hexley21/fixup/internal/common/enum"
 	"github.com/hexley21/fixup/internal/common/middleware"
 	"github.com/hexley21/fixup/pkg/http/rest"
@@ -22,12 +22,12 @@ var (
 	userClaims = auth_jwt.NewClaims("1", string(enum.UserRoleCUSTOMER), true, time.Hour)
 )
 
-func setupJWT(t *testing.T) (*gomock.Controller, func(http.Handler) http.Handler, *mock_jwt.MockVerifier) {
+func setupJWT(t *testing.T) (*gomock.Controller, func(http.Handler) http.Handler, *mockJwt.MockVerifier) {
 	mw := setupMiddleware()
 	ctrl := gomock.NewController(t)
-	mockJwtVerifier := mock_jwt.NewMockVerifier(ctrl)
+	JWTVerifierMock := mockJwt.NewMockVerifier(ctrl)
 
-	return ctrl, mw.NewJWT(mockJwtVerifier), mockJwtVerifier
+	return ctrl, mw.NewJWT(JWTVerifierMock), JWTVerifierMock
 }
 
 func TestJWT_MissingAuthorizationHeader(t *testing.T) {

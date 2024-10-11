@@ -8,7 +8,7 @@ import (
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-chi/chi/v5"
-	chi_middleware "github.com/go-chi/chi/v5/middleware"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -155,7 +155,7 @@ func NewServer(
 
 func (s *server) Run() error {
 	Middleware := middleware.NewMiddleware(s.handlerComponents.Binder, s.handlerComponents.Writer)
-	chiLogger := &chi_middleware.DefaultLogFormatter{
+	chiLogger := &chiMiddleware.DefaultLogFormatter{
 		Logger:  s.handlerComponents.Logger,
 		NoColor: false,
 	}
@@ -168,8 +168,8 @@ func (s *server) Run() error {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
-	s.router.Use(chi_middleware.Recoverer)
-	s.router.Use(chi_middleware.RequestLogger(chiLogger))
+	s.router.Use(chiMiddleware.Recoverer)
+	s.router.Use(chiMiddleware.RequestLogger(chiLogger))
 
 	v1.MapV1Routes(v1.RouterArgs{
 		AuthService:            s.services.authService,
@@ -181,7 +181,7 @@ func (s *server) Run() error {
 		VerificationJWTManager: s.jWTManagers.verificationJWTManager,
 	}, s.router)
 
-	s.metricsRouter.Use(chi_middleware.Recoverer)
+	s.metricsRouter.Use(chiMiddleware.Recoverer)
 	s.metricsRouter.Handle("/metrics", promhttp.Handler())
 
 	mainErrChan := make(chan error, 1)

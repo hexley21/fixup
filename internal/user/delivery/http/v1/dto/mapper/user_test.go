@@ -9,7 +9,7 @@ import (
 	"github.com/hexley21/fixup/internal/common/enum"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto/mapper"
 	"github.com/hexley21/fixup/internal/user/entity"
-	mock_cdn "github.com/hexley21/fixup/pkg/infra/cdn/mock"
+	mockCdn "github.com/hexley21/fixup/pkg/infra/cdn/mock"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -46,13 +46,23 @@ var (
 	}
 )
 
-func TestMapUserToDto_Success(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockUrlSigner := mock_cdn.NewMockURLSigner(ctrl)
-	mockUrlSigner.EXPECT().SignURL(gomock.Any()).Return(signedUrl, nil)
+func setup(t *testing.T) (
+	ctrl *gomock.Controller,
+	urlSignerMock *mockCdn.MockURLSigner,
+){
+	ctrl = gomock.NewController(t)
+	urlSignerMock = mockCdn.NewMockURLSigner(ctrl)
 
-	dto, err := mapper.MapUserToDto(customerEntity, mockUrlSigner)
+	return
+}
+
+func TestMapUserToDto_Success(t *testing.T) {
+	ctrl, urlSignerMock := setup(t)
+	defer ctrl.Finish()
+
+	urlSignerMock.EXPECT().SignURL(gomock.Any()).Return(signedUrl, nil)
+
+	dto, err := mapper.MapUserToDto(customerEntity, urlSignerMock)
 	assert.NoError(t, err)
 
 	assert.Equal(t, strconv.FormatInt(customerEntity.ID, 10), dto.ID)
@@ -66,23 +76,23 @@ func TestMapUserToDto_Success(t *testing.T) {
 }
 
 func TestMapUserToDto_SignError(t *testing.T) {
-	ctrl := gomock.NewController(t)
+	ctrl, urlSignerMock := setup(t)
 	defer ctrl.Finish()
-	mockUrlSigner := mock_cdn.NewMockURLSigner(ctrl)
-	mockUrlSigner.EXPECT().SignURL(gomock.Any()).Return("", errSigning)
 
-	dto, err := mapper.MapUserToDto(entity.User{PictureName: customerEntity.PictureName}, mockUrlSigner)
+	urlSignerMock.EXPECT().SignURL(gomock.Any()).Return("", errSigning)
+
+	dto, err := mapper.MapUserToDto(entity.User{PictureName: customerEntity.PictureName}, urlSignerMock)
 	assert.ErrorIs(t, err, errSigning)
 	assert.Empty(t, dto)
 }
 
 func TestMapCustomerToProfileDto_Success(t *testing.T) {
-	ctrl := gomock.NewController(t)
+	ctrl, urlSignerMock := setup(t)
 	defer ctrl.Finish()
-	mockUrlSigner := mock_cdn.NewMockURLSigner(ctrl)
-	mockUrlSigner.EXPECT().SignURL(gomock.Any()).Return(signedUrl, nil)
 
-	dto, err := mapper.MapUserToProfileDto(customerEntity, mockUrlSigner)
+	urlSignerMock.EXPECT().SignURL(gomock.Any()).Return(signedUrl, nil)
+
+	dto, err := mapper.MapUserToProfileDto(customerEntity, urlSignerMock)
 	assert.NoError(t, err)
 
 	assert.Equal(t, strconv.FormatInt(customerEntity.ID, 10), dto.ID)
@@ -96,12 +106,12 @@ func TestMapCustomerToProfileDto_Success(t *testing.T) {
 }
 
 func TestMapProviderToProfileDto_Success(t *testing.T) {
-	ctrl := gomock.NewController(t)
+	ctrl, urlSignerMock := setup(t)
 	defer ctrl.Finish()
-	mockUrlSigner := mock_cdn.NewMockURLSigner(ctrl)
-	mockUrlSigner.EXPECT().SignURL(gomock.Any()).Return(signedUrl, nil)
 
-	dto, err := mapper.MapUserToProfileDto(providerEntity, mockUrlSigner)
+	urlSignerMock.EXPECT().SignURL(gomock.Any()).Return(signedUrl, nil)
+
+	dto, err := mapper.MapUserToProfileDto(providerEntity, urlSignerMock)
 	assert.NoError(t, err)
 
 	assert.Equal(t, strconv.FormatInt(providerEntity.ID, 10), dto.ID)
@@ -115,12 +125,12 @@ func TestMapProviderToProfileDto_Success(t *testing.T) {
 }
 
 func TestMapUserToProfileDto_SignError(t *testing.T) {
-	ctrl := gomock.NewController(t)
+	ctrl, urlSignerMock := setup(t)
 	defer ctrl.Finish()
-	mockUrlSigner := mock_cdn.NewMockURLSigner(ctrl)
-	mockUrlSigner.EXPECT().SignURL(gomock.Any()).Return("", errSigning)
 
-	dto, err := mapper.MapUserToProfileDto(entity.User{PictureName: providerEntity.PictureName}, mockUrlSigner)
+	urlSignerMock.EXPECT().SignURL(gomock.Any()).Return("", errSigning)
+
+	dto, err := mapper.MapUserToProfileDto(entity.User{PictureName: providerEntity.PictureName}, urlSignerMock)
 	assert.ErrorIs(t, err, errSigning)
 	assert.Empty(t, dto)
 }

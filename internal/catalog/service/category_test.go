@@ -7,7 +7,7 @@ import (
 
 	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/catalog/entity"
-	mock_repository "github.com/hexley21/fixup/internal/catalog/repository/mock"
+	mockRepository "github.com/hexley21/fixup/internal/catalog/repository/mock"
 	"github.com/hexley21/fixup/internal/catalog/service"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -28,22 +28,22 @@ func setupCategory(t *testing.T) (
 	ctrl *gomock.Controller,
 	ctx context.Context,
 	svc service.CategoryService,
-	mockCategoryRepo *mock_repository.MockCategoryRepository,
+	categoryRepoMock *mockRepository.MockCategoryRepository,
 ) {
 	ctrl = gomock.NewController(t)
 	ctx = context.Background()
 
-	mockCategoryRepo = mock_repository.NewMockCategoryRepository(ctrl)
-	svc = service.NewCategoryService(mockCategoryRepo, 50, 100)
+	categoryRepoMock = mockRepository.NewMockCategoryRepository(ctrl)
+	svc = service.NewCategoryService(categoryRepoMock, 50, 100)
 
 	return
 }
 
 func TestCreateCategory_Success(t *testing.T) {
-	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
+	ctrl, ctx, svc, categoryRepoMock := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepo.EXPECT().CreateCategory(ctx, gomock.Any()).Return(categoryEntity, nil)
+	categoryRepoMock.EXPECT().CreateCategory(ctx, gomock.Any()).Return(categoryEntity, nil)
 
 	categoryDTO, err := svc.CreateCategory(ctx, createCategoryDTO)
 
@@ -64,10 +64,10 @@ func TestCreateCategory_InvalidId(t *testing.T) {
 }
 
 func TestCreateCategory_RepositoryError(t *testing.T) {
-	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
+	ctrl, ctx, svc, categoryRepoMock := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepo.EXPECT().CreateCategory(ctx, gomock.Any()).Return(entity.Category{}, errors.New(""))
+	categoryRepoMock.EXPECT().CreateCategory(ctx, gomock.Any()).Return(entity.Category{}, errors.New(""))
 
 	categoryDTO, err := svc.CreateCategory(ctx, createCategoryDTO)
 
@@ -76,28 +76,28 @@ func TestCreateCategory_RepositoryError(t *testing.T) {
 }
 
 func TestDeleteCategoryById_Success(t *testing.T) {
-	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
+	ctrl, ctx, svc, categoryRepoMock := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepo.EXPECT().DeleteCategoryById(ctx, id).Return(nil)
+	categoryRepoMock.EXPECT().DeleteCategoryById(ctx, id).Return(nil)
 
 	assert.NoError(t, svc.DeleteCategoryById(ctx, id))
 }
 
 func TestDeleteCategoryById_RepositoryError(t *testing.T) {
-	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
+	ctrl, ctx, svc, categoryRepoMock := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepo.EXPECT().DeleteCategoryById(ctx, id).Return(errors.New(""))
+	categoryRepoMock.EXPECT().DeleteCategoryById(ctx, id).Return(errors.New(""))
 
 	assert.Error(t, svc.DeleteCategoryById(ctx, id))
 }
 
 func TestGetCategoryById_Success(t *testing.T) {
-	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
+	ctrl, ctx, svc, categoryRepoMock := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepo.EXPECT().GetCategoryById(ctx, id).Return(categoryEntity, nil)
+	categoryRepoMock.EXPECT().GetCategoryById(ctx, id).Return(categoryEntity, nil)
 
 	categoryDTO, err := svc.GetCategoryById(ctx, id)
 
@@ -108,10 +108,10 @@ func TestGetCategoryById_Success(t *testing.T) {
 }
 
 func TestGetCategoryById_RepositoryError(t *testing.T) {
-	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
+	ctrl, ctx, svc, categoryRepoMock := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepo.EXPECT().GetCategoryById(ctx, id).Return(entity.Category{}, errors.New(""))
+	categoryRepoMock.EXPECT().GetCategoryById(ctx, id).Return(entity.Category{}, errors.New(""))
 
 	categoryDTO, err := svc.GetCategoryById(ctx, id)
 
@@ -120,54 +120,54 @@ func TestGetCategoryById_RepositoryError(t *testing.T) {
 }
 
 func TestGetCategories_Success(t *testing.T) {
-	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
+	ctrl, ctx, svc, categoryRepoMock := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepo.EXPECT().GetCategories(ctx, per_page*(page-1), per_page).Return([]entity.Category{categoryEntity, categoryEntity}, nil)
+	categoryRepoMock.EXPECT().GetCategories(ctx, perPage*(page-1), perPage).Return([]entity.Category{categoryEntity, categoryEntity}, nil)
 
-	dtos, err := svc.GetCategories(ctx, page, per_page)
+	dtos, err := svc.GetCategories(ctx, page, perPage)
 	assert.NoError(t, err)
-	assert.Len(t, dtos, int(per_page))
+	assert.Len(t, dtos, int(perPage))
 }
 
 func TestGetCategories_RepositoryError(t *testing.T) {
-	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
+	ctrl, ctx, svc, categoryRepoMock := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepo.EXPECT().GetCategories(ctx, per_page*(page-1), per_page).Return(nil, errors.New(""))
+	categoryRepoMock.EXPECT().GetCategories(ctx, perPage*(page-1), perPage).Return(nil, errors.New(""))
 
-	dtos, err := svc.GetCategories(ctx, page, per_page)
+	dtos, err := svc.GetCategories(ctx, page, perPage)
 	assert.Error(t, err)
 	assert.Empty(t, dtos)
 }
 
 func TestGetCategoriesByTypeId_Success(t *testing.T) {
-	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
+	ctrl, ctx, svc, categoryRepoMock := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepo.EXPECT().GetCategoriesByTypeId(ctx, id, per_page*(page-1), per_page).Return([]entity.Category{categoryEntity, categoryEntity}, nil)
+	categoryRepoMock.EXPECT().GetCategoriesByTypeId(ctx, id, perPage*(page-1), perPage).Return([]entity.Category{categoryEntity, categoryEntity}, nil)
 
-	dtos, err := svc.GetCategoriesByTypeId(ctx, id, page, per_page)
+	dtos, err := svc.GetCategoriesByTypeId(ctx, id, page, perPage)
 	assert.NoError(t, err)
 	assert.Len(t, dtos, 2)
 }
 
 func TestGetCategoriesByTypeId_RepositoryError(t *testing.T) {
-	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
+	ctrl, ctx, svc, categoryRepoMock := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepo.EXPECT().GetCategoriesByTypeId(ctx, id, per_page*(page-1), per_page).Return(nil, errors.New(""))
+	categoryRepoMock.EXPECT().GetCategoriesByTypeId(ctx, id, perPage*(page-1), perPage).Return(nil, errors.New(""))
 
-	dtos, err := svc.GetCategoriesByTypeId(ctx, id, page, per_page)
+	dtos, err := svc.GetCategoriesByTypeId(ctx, id, page, perPage)
 	assert.Error(t, err)
 	assert.Empty(t, dtos)
 }
 
 func TestUpdateCategoryById_Success(t *testing.T) {
-	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
+	ctrl, ctx, svc, categoryRepoMock := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepo.EXPECT().UpdateCategoryById(ctx, gomock.Any()).Return(categoryEntity, nil)
+	categoryRepoMock.EXPECT().UpdateCategoryById(ctx, gomock.Any()).Return(categoryEntity, nil)
 
 	category, err := svc.UpdateCategoryById(ctx, id, patchCategoryDTO)
 	assert.NoError(t, err)
@@ -177,10 +177,10 @@ func TestUpdateCategoryById_Success(t *testing.T) {
 }
 
 func TestUpdateCategoryById_RepositoryError(t *testing.T) {
-	ctrl, ctx, svc, mockCategoryRepo := setupCategory(t)
+	ctrl, ctx, svc, categoryRepoMock := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepo.EXPECT().UpdateCategoryById(ctx, gomock.Any()).Return(entity.Category{}, errors.New(""))
+	categoryRepoMock.EXPECT().UpdateCategoryById(ctx, gomock.Any()).Return(entity.Category{}, errors.New(""))
 
 	category, err := svc.UpdateCategoryById(ctx, id, patchCategoryDTO)
 	assert.Error(t, err)

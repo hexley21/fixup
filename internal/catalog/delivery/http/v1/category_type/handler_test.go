@@ -12,7 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/category_type"
 	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto"
-	mock_service "github.com/hexley21/fixup/internal/catalog/service/mock"
+	mockService "github.com/hexley21/fixup/internal/catalog/service/mock"
 	"github.com/hexley21/fixup/internal/common/app_error"
 	"github.com/hexley21/fixup/pkg/http/binder/std_binder"
 	"github.com/hexley21/fixup/pkg/http/handler"
@@ -21,7 +21,7 @@ import (
 	"github.com/hexley21/fixup/pkg/http/writer/json_writer"
 	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 	"github.com/hexley21/fixup/pkg/logger/std_logger"
-	mock_validator "github.com/hexley21/fixup/pkg/validator/mock"
+	mockValidator "github.com/hexley21/fixup/pkg/validator/mock"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -31,7 +31,7 @@ import (
 
 const (
 	createCategoryTypeJSON = `{"name":"Home"}`
-	patchCategoryTypeJSON = createCategoryTypeJSON
+	patchCategoryTypeJSON  = createCategoryTypeJSON
 )
 
 var (
@@ -44,31 +44,31 @@ var (
 
 func setup(t *testing.T) (
 	ctrl *gomock.Controller,
-	mockService *mock_service.MockCategoryTypeService,
-	mockValidator *mock_validator.MockValidator,
+	serviceMock *mockService.MockCategoryTypeService,
+	validatorMock *mockValidator.MockValidator,
 	h *category_type.Handler,
 ) {
 	ctrl = gomock.NewController(t)
-	mockService = mock_service.NewMockCategoryTypeService(ctrl)
-	mockValidator = mock_validator.NewMockValidator(ctrl)
+	serviceMock = mockService.NewMockCategoryTypeService(ctrl)
+	validatorMock = mockValidator.NewMockValidator(ctrl)
 
 	logger := std_logger.New()
 	jsonManager := std_json.New()
 
 	h = category_type.NewHandler(
-		handler.NewComponents(logger, std_binder.New(jsonManager), mockValidator, json_writer.New(logger, jsonManager)),
-		mockService,
+		handler.NewComponents(logger, std_binder.New(jsonManager), validatorMock, json_writer.New(logger, jsonManager)),
+		serviceMock,
 	)
 
-	return ctrl, mockService, mockValidator, h
+	return ctrl, serviceMock, validatorMock, h
 }
 
 func TestCreateCategoryType_Success(t *testing.T) {
-	ctrl, mockService, mockValidator, h := setup(t)
+	ctrl, serviceMock, validatorMock, h := setup(t)
 	defer ctrl.Finish()
 
-	mockService.EXPECT().CreateCategoryType(gomock.Any(), gomock.Any()).Return(categoryTypeDTO, nil)
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+	serviceMock.EXPECT().CreateCategoryType(gomock.Any(), gomock.Any()).Return(categoryTypeDTO, nil)
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(createCategoryTypeJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -116,10 +116,10 @@ func TestCreateCategoryType_BindError(t *testing.T) {
 }
 
 func TestCreateCategoryType_ValidationError(t *testing.T) {
-	ctrl, _, mockValidator, h := setup(t)
+	ctrl, _, validatorMock, h := setup(t)
 	defer ctrl.Finish()
 
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(rest.NewInvalidArgumentsError(errors.New("")))
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(rest.NewInvalidArgumentsError(errors.New("")))
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(createCategoryTypeJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -135,11 +135,11 @@ func TestCreateCategoryType_ValidationError(t *testing.T) {
 }
 
 func TestCreateCategoryType_NameTaken(t *testing.T) {
-	ctrl, mockService, mockValidator, h := setup(t)
+	ctrl, serviceMock, validatorMock, h := setup(t)
 	defer ctrl.Finish()
 
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockService.EXPECT().CreateCategoryType(gomock.Any(), gomock.Any()).Return(dto.CategoryTypeDTO{}, &pgconn.PgError{Code: pgerrcode.UniqueViolation})
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
+	serviceMock.EXPECT().CreateCategoryType(gomock.Any(), gomock.Any()).Return(dto.CategoryTypeDTO{}, &pgconn.PgError{Code: pgerrcode.UniqueViolation})
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(createCategoryTypeJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -155,11 +155,11 @@ func TestCreateCategoryType_NameTaken(t *testing.T) {
 }
 
 func TestCreateCategoryType_ServiceError(t *testing.T) {
-	ctrl, mockService, mockValidator, h := setup(t)
+	ctrl, serviceMock, validatorMock, h := setup(t)
 	defer ctrl.Finish()
 
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockService.EXPECT().CreateCategoryType(gomock.Any(), gomock.Any()).Return(dto.CategoryTypeDTO{}, errors.New(""))
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
+	serviceMock.EXPECT().CreateCategoryType(gomock.Any(), gomock.Any()).Return(dto.CategoryTypeDTO{}, errors.New(""))
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(createCategoryTypeJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -175,10 +175,10 @@ func TestCreateCategoryType_ServiceError(t *testing.T) {
 }
 
 func TestGetCategoryTypes_Success(t *testing.T) {
-	ctrl, mockService, _, h := setup(t)
+	ctrl, serviceMock, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockService.EXPECT().GetCategoryTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return(categoryTypesDTO, nil)
+	serviceMock.EXPECT().GetCategoryTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return(categoryTypesDTO, nil)
 
 	q := make(url.Values)
 	q.Set("page", "1")
@@ -235,10 +235,10 @@ func TestGetCategoryTypes_InvalidPerPage(t *testing.T) {
 }
 
 func TestGetCategoryTypes_NotFound(t *testing.T) {
-	ctrl, mockService, _, h := setup(t)
+	ctrl, serviceMock, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockService.EXPECT().GetCategoryTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, pgx.ErrNoRows)
+	serviceMock.EXPECT().GetCategoryTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, pgx.ErrNoRows)
 
 	q := make(url.Values)
 	q.Set("page", "1")
@@ -256,10 +256,10 @@ func TestGetCategoryTypes_NotFound(t *testing.T) {
 }
 
 func TestGetCategoryTypes_ServiceError(t *testing.T) {
-	ctrl, mockService, _, h := setup(t)
+	ctrl, serviceMock, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockService.EXPECT().GetCategoryTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New(""))
+	serviceMock.EXPECT().GetCategoryTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New(""))
 
 	q := make(url.Values)
 	q.Set("page", "1")
@@ -277,13 +277,13 @@ func TestGetCategoryTypes_ServiceError(t *testing.T) {
 }
 
 func TestGetCategoryTypeById_Success(t *testing.T) {
-	ctrl, mockService, _, h := setup(t)
+	ctrl, serviceMock, _, h := setup(t)
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
 	r.Get("/{id}", h.GetCategoryTypeById)
 
-	mockService.EXPECT().GetCategoryTypeById(gomock.Any(), gomock.Any()).Return(categoryTypeDTO, nil)
+	serviceMock.EXPECT().GetCategoryTypeById(gomock.Any(), gomock.Any()).Return(categoryTypeDTO, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/1", nil)
 	rec := httptest.NewRecorder()
@@ -317,13 +317,13 @@ func TestGetCategoryTypeById_InvalidId(t *testing.T) {
 }
 
 func TestGetCategoryTypeById_NotFound(t *testing.T) {
-	ctrl, mockService, _, h := setup(t)
+	ctrl, serviceMock, _, h := setup(t)
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
 	r.Get("/{id}", h.GetCategoryTypeById)
 
-	mockService.EXPECT().GetCategoryTypeById(gomock.Any(), gomock.Any()).Return(dto.CategoryTypeDTO{}, pgx.ErrNoRows)
+	serviceMock.EXPECT().GetCategoryTypeById(gomock.Any(), gomock.Any()).Return(dto.CategoryTypeDTO{}, pgx.ErrNoRows)
 
 	req := httptest.NewRequest(http.MethodGet, "/1", nil)
 	rec := httptest.NewRecorder()
@@ -338,13 +338,13 @@ func TestGetCategoryTypeById_NotFound(t *testing.T) {
 }
 
 func TestGetCategoryTypeById_ServiceError(t *testing.T) {
-	ctrl, mockService, _, h := setup(t)
+	ctrl, serviceMock, _, h := setup(t)
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
 	r.Get("/{id}", h.GetCategoryTypeById)
 
-	mockService.EXPECT().GetCategoryTypeById(gomock.Any(), gomock.Any()).Return(dto.CategoryTypeDTO{}, errors.New(""))
+	serviceMock.EXPECT().GetCategoryTypeById(gomock.Any(), gomock.Any()).Return(dto.CategoryTypeDTO{}, errors.New(""))
 
 	req := httptest.NewRequest(http.MethodGet, "/1", nil)
 	rec := httptest.NewRecorder()
@@ -359,14 +359,14 @@ func TestGetCategoryTypeById_ServiceError(t *testing.T) {
 }
 
 func TestPatchCategoryTypeById_Success(t *testing.T) {
-	ctrl, mockService, mockValidator, h := setup(t)
+	ctrl, serviceMock, validatorMock, h := setup(t)
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
 	r.Patch("/{id}", h.PatchCategoryTypeById)
 
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockService.EXPECT().UpdateCategoryTypeById(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
+	serviceMock.EXPECT().UpdateCategoryTypeById(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPatch, "/123", strings.NewReader(patchCategoryTypeJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -407,7 +407,6 @@ func TestPatchCategoryTypeById_BindError(t *testing.T) {
 	r := chi.NewRouter()
 	r.Patch("/{id}", h.PatchCategoryTypeById)
 
-
 	req := httptest.NewRequest(http.MethodPatch, "/123", strings.NewReader(patchCategoryTypeJSON))
 	rec := httptest.NewRecorder()
 
@@ -421,13 +420,13 @@ func TestPatchCategoryTypeById_BindError(t *testing.T) {
 }
 
 func TestPatchCategoryTypeById_ValidationError(t *testing.T) {
-	ctrl, _, mockValidator, h := setup(t)
+	ctrl, _, validatorMock, h := setup(t)
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
 	r.Patch("/{id}", h.PatchCategoryTypeById)
 
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(rest.NewInvalidArgumentsError(errors.New("")))
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(rest.NewInvalidArgumentsError(errors.New("")))
 
 	req := httptest.NewRequest(http.MethodPatch, "/123", strings.NewReader(patchCategoryTypeJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -443,14 +442,14 @@ func TestPatchCategoryTypeById_ValidationError(t *testing.T) {
 }
 
 func TestPatchCategoryTypeById_NotFound(t *testing.T) {
-	ctrl, mockService, mockValidator, h := setup(t)
+	ctrl, serviceMock, validatorMock, h := setup(t)
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
 	r.Patch("/{id}", h.PatchCategoryTypeById)
 
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockService.EXPECT().UpdateCategoryTypeById(gomock.Any(), gomock.Any(), gomock.Any()).Return(pg_error.ErrNotFound)
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
+	serviceMock.EXPECT().UpdateCategoryTypeById(gomock.Any(), gomock.Any(), gomock.Any()).Return(pg_error.ErrNotFound)
 
 	req := httptest.NewRequest(http.MethodPatch, "/123", strings.NewReader(patchCategoryTypeJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -466,14 +465,14 @@ func TestPatchCategoryTypeById_NotFound(t *testing.T) {
 }
 
 func TestPatchCategoryTypeById_AlreadyTaken(t *testing.T) {
-	ctrl, mockService, mockValidator, h := setup(t)
+	ctrl, serviceMock, validatorMock, h := setup(t)
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
 	r.Patch("/{id}", h.PatchCategoryTypeById)
 
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockService.EXPECT().UpdateCategoryTypeById(gomock.Any(), gomock.Any(), gomock.Any()).Return(&pgconn.PgError{Code: pgerrcode.UniqueViolation})
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
+	serviceMock.EXPECT().UpdateCategoryTypeById(gomock.Any(), gomock.Any(), gomock.Any()).Return(&pgconn.PgError{Code: pgerrcode.UniqueViolation})
 
 	req := httptest.NewRequest(http.MethodPatch, "/123", strings.NewReader(patchCategoryTypeJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -489,14 +488,14 @@ func TestPatchCategoryTypeById_AlreadyTaken(t *testing.T) {
 }
 
 func TestPatchCategoryTypeById_ServiceError(t *testing.T) {
-	ctrl, mockService, mockValidator, h := setup(t)
+	ctrl, serviceMock, validatorMock, h := setup(t)
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
 	r.Patch("/{id}", h.PatchCategoryTypeById)
 
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockService.EXPECT().UpdateCategoryTypeById(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New(""))
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
+	serviceMock.EXPECT().UpdateCategoryTypeById(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New(""))
 
 	req := httptest.NewRequest(http.MethodPatch, "/123", strings.NewReader(patchCategoryTypeJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -512,13 +511,13 @@ func TestPatchCategoryTypeById_ServiceError(t *testing.T) {
 }
 
 func TestDeleteCategoryTypeById_Success(t *testing.T) {
-	ctrl, mockService, _, h := setup(t)
+	ctrl, serviceMock, _, h := setup(t)
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
 	r.Delete("/{id}", h.DeleteCategoryTypeById)
 
-	mockService.EXPECT().DeleteCategoryTypeById(gomock.Any(), gomock.Any()).Return(nil)
+	serviceMock.EXPECT().DeleteCategoryTypeById(gomock.Any(), gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/123", nil)
 	rec := httptest.NewRecorder()
@@ -536,7 +535,6 @@ func TestDeleteCategoryTypeById_InvalidId(t *testing.T) {
 	r := chi.NewRouter()
 	r.Delete("/{id}", h.DeleteCategoryTypeById)
 
-
 	req := httptest.NewRequest(http.MethodDelete, "/ABC", nil)
 	rec := httptest.NewRecorder()
 
@@ -550,13 +548,13 @@ func TestDeleteCategoryTypeById_InvalidId(t *testing.T) {
 }
 
 func TestDeleteCategoryTypeById_NotFound(t *testing.T) {
-	ctrl, mockService, _, h := setup(t)
+	ctrl, serviceMock, _, h := setup(t)
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
 	r.Delete("/{id}", h.DeleteCategoryTypeById)
 
-	mockService.EXPECT().DeleteCategoryTypeById(gomock.Any(), gomock.Any()).Return(pg_error.ErrNotFound)
+	serviceMock.EXPECT().DeleteCategoryTypeById(gomock.Any(), gomock.Any()).Return(pg_error.ErrNotFound)
 
 	req := httptest.NewRequest(http.MethodDelete, "/123", nil)
 	rec := httptest.NewRecorder()
@@ -571,13 +569,13 @@ func TestDeleteCategoryTypeById_NotFound(t *testing.T) {
 }
 
 func TestDeleteCategoryTypeById_ServiceError(t *testing.T) {
-	ctrl, mockService, _, h := setup(t)
+	ctrl, serviceMock, _, h := setup(t)
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
 	r.Delete("/{id}", h.DeleteCategoryTypeById)
 
-	mockService.EXPECT().DeleteCategoryTypeById(gomock.Any(), gomock.Any()).Return(errors.New(""))
+	serviceMock.EXPECT().DeleteCategoryTypeById(gomock.Any(), gomock.Any()).Return(errors.New(""))
 
 	req := httptest.NewRequest(http.MethodDelete, "/123", nil)
 	rec := httptest.NewRecorder()

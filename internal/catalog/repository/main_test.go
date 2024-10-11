@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	infra "github.com/hexley21/fixup/pkg/infra/postgres"
-	pg_tt "github.com/hexley21/fixup/pkg/infra/postgres/testcontainer"
+	pgTt "github.com/hexley21/fixup/pkg/infra/postgres/testcontainer"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 		os.Exit(0)
 	}
 
-	image, config := pg_tt.GetConfig()
+	image, config := pgTt.GetConfig()
 	container, err := postgres.Run(ctx, image, config...)
 	if err != nil {
 		log.Fatalln("failed to load container:", err)

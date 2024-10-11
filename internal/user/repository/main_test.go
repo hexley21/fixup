@@ -9,11 +9,11 @@ import (
 
 	"github.com/bwmarrin/snowflake"
 	infra "github.com/hexley21/fixup/pkg/infra/postgres"
-	pg_tt "github.com/hexley21/fixup/pkg/infra/postgres/testcontainer"
+	pgTt "github.com/hexley21/fixup/pkg/infra/postgres/testcontainer"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
-	redis_tt "github.com/testcontainers/testcontainers-go/modules/redis"
+	redisTt "github.com/testcontainers/testcontainers-go/modules/redis"
 )
 
 var (
@@ -30,7 +30,7 @@ func TestMain(m *testing.M) {
 		os.Exit(0)
 	}
 
-	image, config := pg_tt.GetConfig()
+	image, config := pgTt.GetConfig()
 	container, err := postgres.Run(ctx, image, config...)
 	if err != nil {
 		log.Fatalln("failed to load container:", err)
@@ -70,13 +70,13 @@ func getPgPool(ctx context.Context) *pgxpool.Pool {
 	return pool
 }
 
-func getRedisClient(t *testing.T) (*redis_tt.RedisContainer, *redis.Client) {
+func getRedisClient(t *testing.T) (*redisTt.RedisContainer, *redis.Client) {
 	ctx := context.Background()
 
-	redisContainer, err := redis_tt.Run(ctx,
+	redisContainer, err := redisTt.Run(ctx,
 		"docker.io/redis:7",
-		redis_tt.WithSnapshotting(10, 1),
-		redis_tt.WithLogLevel(redis_tt.LogLevelVerbose),
+		redisTt.WithSnapshotting(10, 1),
+		redisTt.WithLogLevel(redisTt.LogLevelVerbose),
 	)
 
 	if err != nil {
@@ -91,7 +91,7 @@ func getRedisClient(t *testing.T) (*redis_tt.RedisContainer, *redis.Client) {
 	return redisContainer, redis.NewClient(&redis.Options{Addr: endpoint})
 }
 
-func setupRedisCleanup(t *testing.T, client *redis.Client, container *redis_tt.RedisContainer) {
+func setupRedisCleanup(t *testing.T, client *redis.Client, container *redisTt.RedisContainer) {
 	if err := client.Close(); err != nil {
 		t.Fatalf("Failed to close client: %v", err)
 	}

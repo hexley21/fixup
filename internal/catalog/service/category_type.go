@@ -9,67 +9,67 @@ import (
 )
 
 type CategoryTypeService interface {
-	CreateCategoryType(ctx context.Context, dto dto.CreateCategoryTypeDTO) (categoryType dto.CategoryTypeDTO, err error)
+	CreateCategoryType(ctx context.Context, createDTO dto.CreateCategoryTypeDTO) (dto.CategoryTypeDTO, error)
 	DeleteCategoryTypeById(ctx context.Context, id int32) error
-	GetCategoryTypeById(ctx context.Context, id int32) (dto dto.CategoryTypeDTO, err error)
-	GetCategoryTypes(ctx context.Context, page int32, per_page int32) (dtos []dto.CategoryTypeDTO, err error)
-	UpdateCategoryTypeById(ctx context.Context, id int32, dto dto.PatchCategoryTypeDTO) error
+	GetCategoryTypeById(ctx context.Context, id int32) (dto.CategoryTypeDTO, error)
+	GetCategoryTypes(ctx context.Context, page int32, perPage int32) ([]dto.CategoryTypeDTO, error)
+	UpdateCategoryTypeById(ctx context.Context, id int32, patchDTO dto.PatchCategoryTypeDTO) error
 }
 
 type categoryTypeServiceImpl struct {
 	categoryTypeRepository repository.CategoryTypeRepository
-	defaultPerPage     int32
-	maxPerPage         int32
+	defaultPerPage         int32
+	maxPerPage             int32
 }
 
 func NewCategoryTypeService(categoryTypeRepository repository.CategoryTypeRepository, defaultPerPage int32, maxPerPage int32) *categoryTypeServiceImpl {
 	return &categoryTypeServiceImpl{
 		categoryTypeRepository: categoryTypeRepository,
-		defaultPerPage:     defaultPerPage,
-		maxPerPage:         maxPerPage,
+		defaultPerPage:         defaultPerPage,
+		maxPerPage:             maxPerPage,
 	}
 }
 
-func (s *categoryTypeServiceImpl) CreateCategoryType(ctx context.Context, dto dto.CreateCategoryTypeDTO) (categoryType dto.CategoryTypeDTO, err error) {
-	entity, err := s.categoryTypeRepository.CreateCategoryType(ctx, dto.Name)
+func (s *categoryTypeServiceImpl) CreateCategoryType(ctx context.Context, createDTO dto.CreateCategoryTypeDTO) (dto.CategoryTypeDTO, error) {
+	entity, err := s.categoryTypeRepository.CreateCategoryType(ctx, createDTO.Name)
 	if err != nil {
-		return categoryType, err
+		return dto.CategoryTypeDTO{}, err
 	}
 
-	return mapper.MapCategoryTypeToDTO(entity), err
+	return mapper.MapCategoryTypeToDTO(entity), nil
 }
 
 func (s *categoryTypeServiceImpl) DeleteCategoryTypeById(ctx context.Context, id int32) error {
 	return s.categoryTypeRepository.DeleteCategoryTypeById(ctx, id)
 }
 
-func (s *categoryTypeServiceImpl) GetCategoryTypeById(ctx context.Context, id int32) (dto dto.CategoryTypeDTO, err error) {
+func (s *categoryTypeServiceImpl) GetCategoryTypeById(ctx context.Context, id int32) (dto.CategoryTypeDTO, error) {
 	entity, err := s.categoryTypeRepository.GetCategoryTypeById(ctx, id)
 	if err != nil {
-		return dto, err
+		return dto.CategoryTypeDTO{}, err
 	}
 
-	return mapper.MapCategoryTypeToDTO(entity), err
+	return mapper.MapCategoryTypeToDTO(entity), nil
 }
 
-func (s *categoryTypeServiceImpl) GetCategoryTypes(ctx context.Context, page int32, per_page int32) ([]dto.CategoryTypeDTO, error) {
-	if per_page == 0 || per_page > s.maxPerPage {
-		per_page = s.defaultPerPage
+func (s *categoryTypeServiceImpl) GetCategoryTypes(ctx context.Context, page int32, perPage int32) ([]dto.CategoryTypeDTO, error) {
+	if perPage == 0 || perPage > s.maxPerPage {
+		perPage = s.defaultPerPage
 	}
 
-	entities, err := s.categoryTypeRepository.GetCategoryTypes(ctx, per_page*(page-1), per_page)
+	entities, err := s.categoryTypeRepository.GetCategoryTypes(ctx, perPage*(page-1), perPage)
 	if err != nil {
 		return []dto.CategoryTypeDTO{}, err
 	}
 
-	dtos := make([]dto.CategoryTypeDTO, len(entities))
+	categoriesDTO := make([]dto.CategoryTypeDTO, len(entities))
 	for i, e := range entities {
-		dtos[i] = mapper.MapCategoryTypeToDTO(e)
+		categoriesDTO[i] = mapper.MapCategoryTypeToDTO(e)
 	}
 
-	return dtos, err
+	return categoriesDTO, nil
 }
 
-func (s *categoryTypeServiceImpl) UpdateCategoryTypeById(ctx context.Context, id int32, dto dto.PatchCategoryTypeDTO) error {
-	return s.categoryTypeRepository.UpdateCategoryTypeById(ctx, repository.UpdateCategoryTypeByIdParams{ID: id, Name: dto.Name})
+func (s *categoryTypeServiceImpl) UpdateCategoryTypeById(ctx context.Context, id int32, patchDTO dto.PatchCategoryTypeDTO) error {
+	return s.categoryTypeRepository.UpdateCategoryTypeById(ctx, repository.UpdateCategoryTypeByIdParams{ID: id, Name: patchDTO.Name})
 }

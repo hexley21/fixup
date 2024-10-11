@@ -7,7 +7,7 @@ import (
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/auth"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/user"
 	"github.com/hexley21/fixup/internal/user/jwt/refresh_jwt"
-	refresh_middleware "github.com/hexley21/fixup/internal/user/jwt/refresh_jwt/middleware"
+	refreshMiddleware "github.com/hexley21/fixup/internal/user/jwt/refresh_jwt/middleware"
 	"github.com/hexley21/fixup/internal/user/jwt/verify_jwt"
 	"github.com/hexley21/fixup/internal/user/service"
 	"github.com/hexley21/fixup/pkg/http/handler"
@@ -36,7 +36,7 @@ func MapV1Routes(args RouterArgs, router chi.Router) {
 
 	accessJWTMiddleware := args.Middleware.NewJWT(args.AccessJWTManager)
 	onlyVerifiedMiddleware := args.Middleware.NewAllowVerified(true)
-	refreshJWTMiddleware := refresh_middleware.NewJWT(args.HandlerComponents.Writer, args.RefreshJWTManager)
+	refreshJWTMiddleware := refreshMiddleware.NewJWT(args.HandlerComponents.Writer, args.RefreshJWTManager)
 
 	router.Route("/v1", func(r chi.Router) {
 		auth.MapRoutes(authHandlermiddleware, refreshJWTMiddleware, args.AccessJWTManager, args.RefreshJWTManager, args.VerificationJWTManager, r)

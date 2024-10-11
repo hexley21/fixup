@@ -12,12 +12,12 @@ import (
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/entity"
 	"github.com/hexley21/fixup/internal/user/repository"
-	mock_repository "github.com/hexley21/fixup/internal/user/repository/mock"
+	mockRepository "github.com/hexley21/fixup/internal/user/repository/mock"
 	"github.com/hexley21/fixup/internal/user/service"
 	"github.com/hexley21/fixup/pkg/hasher"
-	mock_hasher "github.com/hexley21/fixup/pkg/hasher/mock"
-	mock_cdn "github.com/hexley21/fixup/pkg/infra/cdn/mock"
-	mock_s3 "github.com/hexley21/fixup/pkg/infra/s3/mock"
+	mockHasher "github.com/hexley21/fixup/pkg/hasher/mock"
+	mockCdn "github.com/hexley21/fixup/pkg/infra/cdn/mock"
+	mockS3 "github.com/hexley21/fixup/pkg/infra/s3/mock"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/assert"
@@ -69,30 +69,30 @@ func setupUser(t *testing.T) (
 	ctx context.Context,
 	ctrl *gomock.Controller,
 	svc service.UserService,
-	mockUserRepo *mock_repository.MockUserRepository,
-	mockCdnUrlSigner *mock_cdn.MockURLSigner,
-	mockS3Bucket *mock_s3.MockBucket,
-	mockFileInvalidator *mock_cdn.MockFileInvalidator,
-	mockHasher *mock_hasher.MockHasher,
+	userRepoMock *mockRepository.MockUserRepository,
+	cdnUrlSignerMock *mockCdn.MockURLSigner,
+	s3BucketMock *mockS3.MockBucket,
+	fileInvalidatorMock *mockCdn.MockFileInvalidator,
+	hasherMock *mockHasher.MockHasher,
 ) {
 	ctx = context.Background()
 	ctrl = gomock.NewController(t)
-	mockUserRepo = mock_repository.NewMockUserRepository(ctrl)
-	mockCdnUrlSigner = mock_cdn.NewMockURLSigner(ctrl)
-	mockS3Bucket = mock_s3.NewMockBucket(ctrl)
-	mockFileInvalidator = mock_cdn.NewMockFileInvalidator(ctrl)
-	mockHasher = mock_hasher.NewMockHasher(ctrl)
-	svc = service.NewUserService(mockUserRepo, mockS3Bucket, mockFileInvalidator, mockCdnUrlSigner, mockHasher)
+	userRepoMock = mockRepository.NewMockUserRepository(ctrl)
+	cdnUrlSignerMock = mockCdn.NewMockURLSigner(ctrl)
+	s3BucketMock = mockS3.NewMockBucket(ctrl)
+	fileInvalidatorMock = mockCdn.NewMockFileInvalidator(ctrl)
+	hasherMock = mockHasher.NewMockHasher(ctrl)
+	svc = service.NewUserService(userRepoMock, s3BucketMock, fileInvalidatorMock, cdnUrlSignerMock, hasherMock)
 
 	return
 }
 
 func TestFindUserById_Success(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, mockCdnUrlSigner, _, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, cdnUrlSignerMock, _, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
-	mockCdnUrlSigner.EXPECT().SignURL(userEntity.PictureName.String).Return(signedPicture, nil)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
+	cdnUrlSignerMock.EXPECT().SignURL(userEntity.PictureName.String).Return(signedPicture, nil)
 
 	userDTO, err := svc.FindUserById(ctx, userEntity.ID)
 
@@ -110,10 +110,10 @@ func TestFindUserById_Success(t *testing.T) {
 }
 
 func TestFindUserById_NotFound(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, _, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, _, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(entity.User{}, pgx.ErrNoRows)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(entity.User{}, pgx.ErrNoRows)
 
 	userDTO, err := svc.FindUserById(ctx, userEntity.ID)
 
@@ -122,11 +122,11 @@ func TestFindUserById_NotFound(t *testing.T) {
 }
 
 func TestFindUserById_MapperError(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, mockCdnUrlSigner, _, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, cdnUrlSignerMock, _, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
-	mockCdnUrlSigner.EXPECT().SignURL(userEntity.PictureName.String).Return(signedPicture, errSigningUrl)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
+	cdnUrlSignerMock.EXPECT().SignURL(userEntity.PictureName.String).Return(signedPicture, errSigningUrl)
 
 	userDTO, err := svc.FindUserById(ctx, userEntity.ID)
 
@@ -135,11 +135,11 @@ func TestFindUserById_MapperError(t *testing.T) {
 }
 
 func TestFindUserProfileById_Success(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, mockCdnUrlSigner, _, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, cdnUrlSignerMock, _, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
-	mockCdnUrlSigner.EXPECT().SignURL(userEntity.PictureName.String).Return(signedPicture, nil)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
+	cdnUrlSignerMock.EXPECT().SignURL(userEntity.PictureName.String).Return(signedPicture, nil)
 
 	profileDTO, err := svc.FindUserProfileById(ctx, userEntity.ID)
 
@@ -155,10 +155,10 @@ func TestFindUserProfileById_Success(t *testing.T) {
 }
 
 func TestFindUserProfileById_NotFound(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, _, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, _, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(entity.User{}, pgx.ErrNoRows)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(entity.User{}, pgx.ErrNoRows)
 
 	profileDTO, err := svc.FindUserProfileById(ctx, userEntity.ID)
 
@@ -167,11 +167,11 @@ func TestFindUserProfileById_NotFound(t *testing.T) {
 }
 
 func TestFindUserProfileById_MapperError(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, mockCdnUrlSigner, _, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, cdnUrlSignerMock, _, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
-	mockCdnUrlSigner.EXPECT().SignURL(userEntity.PictureName.String).Return(signedPicture, errSigningUrl)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
+	cdnUrlSignerMock.EXPECT().SignURL(userEntity.PictureName.String).Return(signedPicture, errSigningUrl)
 
 	profileDTO, err := svc.FindUserProfileById(ctx, userEntity.ID)
 
@@ -180,14 +180,14 @@ func TestFindUserProfileById_MapperError(t *testing.T) {
 }
 
 func TestUpdateUserDataById_Success(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, mockCdnUrlSigner, _, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, cdnUrlSignerMock, _, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
 	updateUserDto := dto.UpdateUser{Email: &userEntity.Email, PhoneNumber: &userEntity.PhoneNumber, FirstName: &userEntity.FirstName, LastName: &userEntity.LastName}
 	updateUserParams := repository.UpdateUserParams{ID: userEntity.ID, FirstName: updateUserDto.FirstName, LastName: updateUserDto.LastName, PhoneNumber: updateUserDto.PhoneNumber, Email: updateUserDto.Email}
 
-	mockUserRepo.EXPECT().Update(ctx, updateUserParams).Return(userEntity, nil)
-	mockCdnUrlSigner.EXPECT().SignURL(userEntity.PictureName.String).Return(signedPicture, nil)
+	userRepoMock.EXPECT().Update(ctx, updateUserParams).Return(userEntity, nil)
+	cdnUrlSignerMock.EXPECT().SignURL(userEntity.PictureName.String).Return(signedPicture, nil)
 
 	userDTO, err := svc.UpdateUserDataById(ctx, userEntity.ID, updateUserDto)
 
@@ -201,13 +201,13 @@ func TestUpdateUserDataById_Success(t *testing.T) {
 }
 
 func TestUpdateUserDataById_NotFound(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, _, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, _, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
 	updateUserDto := dto.UpdateUser{Email: &userEntity.Email, PhoneNumber: &userEntity.PhoneNumber, FirstName: &userEntity.FirstName, LastName: &userEntity.LastName}
 	updateUserParams := repository.UpdateUserParams{ID: userEntity.ID, FirstName: updateUserDto.FirstName, LastName: updateUserDto.LastName, PhoneNumber: updateUserDto.PhoneNumber, Email: updateUserDto.Email}
 
-	mockUserRepo.EXPECT().Update(ctx, updateUserParams).Return(entity.User{}, pgx.ErrNoRows)
+	userRepoMock.EXPECT().Update(ctx, updateUserParams).Return(entity.User{}, pgx.ErrNoRows)
 
 	userDTO, err := svc.UpdateUserDataById(ctx, userEntity.ID, updateUserDto)
 
@@ -216,14 +216,14 @@ func TestUpdateUserDataById_NotFound(t *testing.T) {
 }
 
 func TestUpdateUserDataById_SignerError(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, mockCdnUrlSigner, _, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, cdnUrlSignerMock, _, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
 	updateUserDto := dto.UpdateUser{Email: &userEntity.Email, PhoneNumber: &userEntity.PhoneNumber, FirstName: &userEntity.FirstName, LastName: &userEntity.LastName}
 	updateUserParams := repository.UpdateUserParams{ID: userEntity.ID, FirstName: updateUserDto.FirstName, LastName: updateUserDto.LastName, PhoneNumber: updateUserDto.PhoneNumber, Email: updateUserDto.Email}
 
-	mockUserRepo.EXPECT().Update(ctx, updateUserParams).Return(userEntity, nil)
-	mockCdnUrlSigner.EXPECT().SignURL(userEntity.PictureName.String).Return("", errSigningUrl)
+	userRepoMock.EXPECT().Update(ctx, updateUserParams).Return(userEntity, nil)
+	cdnUrlSignerMock.EXPECT().SignURL(userEntity.PictureName.String).Return("", errSigningUrl)
 
 	userDTO, err := svc.UpdateUserDataById(ctx, userEntity.ID, updateUserDto)
 
@@ -232,194 +232,194 @@ func TestUpdateUserDataById_SignerError(t *testing.T) {
 }
 
 func TestSetProfilePicture_Success(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, mockS3Bucket, mockFileInvalidator, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, s3BucketMock, fileInvalidatorMock, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
-	mockUserRepo.EXPECT().UpdatePicture(ctx, gomock.Any()).Return(nil)
-	mockS3Bucket.EXPECT().PutObject(ctx, file, gomock.Any(), fileName, file.Size(), fileType).Return(randomFilename, nil)
-	mockS3Bucket.EXPECT().DeleteObject(ctx, userEntity.PictureName.String).Return(nil)
-	mockFileInvalidator.EXPECT().InvalidateFile(ctx, userEntity.PictureName.String).Return(nil)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
+	userRepoMock.EXPECT().UpdatePicture(ctx, gomock.Any()).Return(nil)
+	s3BucketMock.EXPECT().PutObject(ctx, file, gomock.Any(), fileName, file.Size(), fileType).Return(randomFilename, nil)
+	s3BucketMock.EXPECT().DeleteObject(ctx, userEntity.PictureName.String).Return(nil)
+	fileInvalidatorMock.EXPECT().InvalidateFile(ctx, userEntity.PictureName.String).Return(nil)
 
 	err := svc.SetProfilePicture(ctx, userEntity.ID, file, fileName, file.Size(), fileType)
 	assert.NoError(t, err)
 }
 
 func TestSetProfilePicture_WithoutPicture(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, mockS3Bucket, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, s3BucketMock, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().UpdatePicture(ctx, gomock.Any()).Return(nil)
-	mockUserRepo.EXPECT().GetById(ctx, userEntityWithoutPicture.ID).Return(userEntityWithoutPicture, nil)
-	mockS3Bucket.EXPECT().PutObject(ctx, file, gomock.Any(), fileName, file.Size(), fileType).Return(randomFilename, nil)
+	userRepoMock.EXPECT().UpdatePicture(ctx, gomock.Any()).Return(nil)
+	userRepoMock.EXPECT().GetById(ctx, userEntityWithoutPicture.ID).Return(userEntityWithoutPicture, nil)
+	s3BucketMock.EXPECT().PutObject(ctx, file, gomock.Any(), fileName, file.Size(), fileType).Return(randomFilename, nil)
 
 	err := svc.SetProfilePicture(ctx, userEntityWithoutPicture.ID, file, fileName, file.Size(), fileType)
 	assert.NoError(t, err)
 }
 
 func TestSetProfilePicture_NotFound(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, _, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, _, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, pgx.ErrNoRows)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, pgx.ErrNoRows)
 
 	err := svc.SetProfilePicture(ctx, userEntity.ID, file, fileName, file.Size(), fileType)
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 }
 
 func TestSetProfilePicture_PutObjectError(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, mockS3Bucket, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, s3BucketMock, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
-	mockS3Bucket.EXPECT().PutObject(ctx, file, gomock.Any(), fileName, file.Size(), fileType).Return("", errS3PutObject)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
+	s3BucketMock.EXPECT().PutObject(ctx, file, gomock.Any(), fileName, file.Size(), fileType).Return("", errS3PutObject)
 
 	err := svc.SetProfilePicture(ctx, userEntity.ID, file, fileName, file.Size(), fileType)
 	assert.ErrorIs(t, err, errS3PutObject)
 }
 
 func TestSetProfilePicture_UpdatePictureError(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, mockS3Bucket, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, s3BucketMock, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
-	mockUserRepo.EXPECT().UpdatePicture(ctx, gomock.Any()).Return(pgx.ErrNoRows)
-	mockS3Bucket.EXPECT().PutObject(ctx, file, gomock.Any(), fileName, file.Size(), fileType).Return(randomFilename, nil)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
+	userRepoMock.EXPECT().UpdatePicture(ctx, gomock.Any()).Return(pgx.ErrNoRows)
+	s3BucketMock.EXPECT().PutObject(ctx, file, gomock.Any(), fileName, file.Size(), fileType).Return(randomFilename, nil)
 
 	err := svc.SetProfilePicture(ctx, userEntity.ID, file, fileName, file.Size(), fileType)
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 }
 
 func TestSetProfilePicture_DeleteObjectError(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, mockS3Bucket, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, s3BucketMock, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
-	mockUserRepo.EXPECT().UpdatePicture(ctx, gomock.Any()).Return(nil)
-	mockS3Bucket.EXPECT().PutObject(ctx, file, gomock.Any(), fileName, file.Size(), fileType).Return(randomFilename, nil)
-	mockS3Bucket.EXPECT().DeleteObject(ctx, userEntity.PictureName.String).Return(errS3DeleteObject)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
+	userRepoMock.EXPECT().UpdatePicture(ctx, gomock.Any()).Return(nil)
+	s3BucketMock.EXPECT().PutObject(ctx, file, gomock.Any(), fileName, file.Size(), fileType).Return(randomFilename, nil)
+	s3BucketMock.EXPECT().DeleteObject(ctx, userEntity.PictureName.String).Return(errS3DeleteObject)
 
 	err := svc.SetProfilePicture(ctx, userEntity.ID, file, fileName, file.Size(), fileType)
 	assert.ErrorIs(t, err, errS3DeleteObject)
 }
 
 func TestSetProfilePicture_InvalidationError(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, mockS3Bucket, mockFileInvalidator, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, s3BucketMock, fileInvalidatorMock, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
-	mockUserRepo.EXPECT().UpdatePicture(ctx, gomock.Any()).Return(nil)
-	mockS3Bucket.EXPECT().PutObject(ctx, file, gomock.Any(), fileName, file.Size(), fileType).Return(randomFilename, nil)
-	mockS3Bucket.EXPECT().DeleteObject(ctx, userEntity.PictureName.String).Return(nil)
-	mockFileInvalidator.EXPECT().InvalidateFile(ctx, userEntity.PictureName.String).Return(errCdnFileInvalidation)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
+	userRepoMock.EXPECT().UpdatePicture(ctx, gomock.Any()).Return(nil)
+	s3BucketMock.EXPECT().PutObject(ctx, file, gomock.Any(), fileName, file.Size(), fileType).Return(randomFilename, nil)
+	s3BucketMock.EXPECT().DeleteObject(ctx, userEntity.PictureName.String).Return(nil)
+	fileInvalidatorMock.EXPECT().InvalidateFile(ctx, userEntity.PictureName.String).Return(errCdnFileInvalidation)
 
 	err := svc.SetProfilePicture(ctx, userEntity.ID, file, fileName, file.Size(), fileType)
 	assert.ErrorIs(t, err, errCdnFileInvalidation)
 }
 
 func TestChangePassword_Success(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, _, _, mockHasher := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, _, _, hasherMock := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetHashById(ctx, userEntity.ID).Return(userEntity.Hash, nil)
-	mockUserRepo.EXPECT().UpdateHash(ctx, gomock.Any()).Return(nil)
-	mockHasher.EXPECT().VerifyPassword(gomock.Any(), userEntity.Hash).Return(nil)
-	mockHasher.EXPECT().HashPassword(gomock.Any()).Return("", nil)
+	userRepoMock.EXPECT().GetHashById(ctx, userEntity.ID).Return(userEntity.Hash, nil)
+	userRepoMock.EXPECT().UpdateHash(ctx, gomock.Any()).Return(nil)
+	hasherMock.EXPECT().VerifyPassword(gomock.Any(), userEntity.Hash).Return(nil)
+	hasherMock.EXPECT().HashPassword(gomock.Any()).Return("", nil)
 
 	assert.NoError(t, svc.ChangePassword(ctx, userEntity.ID, dto.UpdatePassword{}))
 }
 
 func TestChangePassword_NotFound(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, _, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, _, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetHashById(ctx, userEntity.ID).Return("", pgx.ErrNoRows)
+	userRepoMock.EXPECT().GetHashById(ctx, userEntity.ID).Return("", pgx.ErrNoRows)
 
 	assert.ErrorIs(t, svc.ChangePassword(ctx, userEntity.ID, dto.UpdatePassword{}), pgx.ErrNoRows)
 }
 
 func TestChangePassword_IncorrectPassword(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, _, _, mockHasher := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, _, _, hasherMock := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetHashById(ctx, userEntity.ID).Return(userEntity.Hash, nil)
-	mockHasher.EXPECT().VerifyPassword(gomock.Any(), userEntity.Hash).Return(hasher.ErrPasswordMismatch)
+	userRepoMock.EXPECT().GetHashById(ctx, userEntity.ID).Return(userEntity.Hash, nil)
+	hasherMock.EXPECT().VerifyPassword(gomock.Any(), userEntity.Hash).Return(hasher.ErrPasswordMismatch)
 
 	assert.ErrorIs(t, svc.ChangePassword(ctx, userEntity.ID, dto.UpdatePassword{}), hasher.ErrPasswordMismatch)
 }
 
 func TestChangePassword_UpdateError(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, _, _, mockHasher := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, _, _, hasherMock := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetHashById(ctx, userEntity.ID).Return(userEntity.Hash, nil)
-	mockUserRepo.EXPECT().UpdateHash(ctx, gomock.Any()).Return(errUpdateError)
-	mockHasher.EXPECT().VerifyPassword(gomock.Any(), userEntity.Hash).Return(nil)
-	mockHasher.EXPECT().HashPassword(gomock.Any()).Return("", nil)
+	userRepoMock.EXPECT().GetHashById(ctx, userEntity.ID).Return(userEntity.Hash, nil)
+	userRepoMock.EXPECT().UpdateHash(ctx, gomock.Any()).Return(errUpdateError)
+	hasherMock.EXPECT().VerifyPassword(gomock.Any(), userEntity.Hash).Return(nil)
+	hasherMock.EXPECT().HashPassword(gomock.Any()).Return("", nil)
 
 	assert.ErrorIs(t, svc.ChangePassword(ctx, userEntity.ID, dto.UpdatePassword{}), errUpdateError)
 }
 
 func TestDeleteUserById_Success(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, mockS3Bucket, mockFileInvalidator, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, s3BucketMock, fileInvalidatorMock, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
-	mockUserRepo.EXPECT().DeleteById(ctx, userEntity.ID).Return(nil)
-	mockS3Bucket.EXPECT().DeleteObject(ctx, userEntity.PictureName.String).Return(nil)
-	mockFileInvalidator.EXPECT().InvalidateFile(ctx, userEntity.PictureName.String).Return(nil)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
+	userRepoMock.EXPECT().DeleteById(ctx, userEntity.ID).Return(nil)
+	s3BucketMock.EXPECT().DeleteObject(ctx, userEntity.PictureName.String).Return(nil)
+	fileInvalidatorMock.EXPECT().InvalidateFile(ctx, userEntity.PictureName.String).Return(nil)
 
 	assert.NoError(t, svc.DeleteUserById(ctx, userEntity.ID))
 }
 
 func TestDeleteUserById_EmptyPicture(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, _, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, _, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntityWithoutPicture.ID).Return(userEntityWithoutPicture, nil)
-	mockUserRepo.EXPECT().DeleteById(ctx, userEntityWithoutPicture.ID).Return(nil)
+	userRepoMock.EXPECT().GetById(ctx, userEntityWithoutPicture.ID).Return(userEntityWithoutPicture, nil)
+	userRepoMock.EXPECT().DeleteById(ctx, userEntityWithoutPicture.ID).Return(nil)
 
 	assert.NoError(t, svc.DeleteUserById(ctx, userEntity.ID))
 }
 
 func TestDeleteUserById_NotFound(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, _, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, _, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(entity.User{}, pgx.ErrNoRows)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(entity.User{}, pgx.ErrNoRows)
 
 	assert.ErrorIs(t, svc.DeleteUserById(ctx, userEntity.ID), pgx.ErrNoRows)
 }
 
 func TestDeleteUserById_DeleteObjectError(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, mockS3Bucket, _, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, s3BucketMock, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
-	mockS3Bucket.EXPECT().DeleteObject(ctx, userEntity.PictureName.String).Return(errS3DeleteObject)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
+	s3BucketMock.EXPECT().DeleteObject(ctx, userEntity.PictureName.String).Return(errS3DeleteObject)
 
 	assert.ErrorIs(t, svc.DeleteUserById(ctx, userEntity.ID), errS3DeleteObject)
 }
 
 func TestDeleteUserById_InvalidationError(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, mockS3Bucket, mockFileInvalidator, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, s3BucketMock, fileInvalidatorMock, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
-	mockS3Bucket.EXPECT().DeleteObject(ctx, userEntity.PictureName.String).Return(nil)
-	mockFileInvalidator.EXPECT().InvalidateFile(ctx, userEntity.PictureName.String).Return(errCdnFileInvalidation)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
+	s3BucketMock.EXPECT().DeleteObject(ctx, userEntity.PictureName.String).Return(nil)
+	fileInvalidatorMock.EXPECT().InvalidateFile(ctx, userEntity.PictureName.String).Return(errCdnFileInvalidation)
 
 	assert.ErrorIs(t, svc.DeleteUserById(ctx, userEntity.ID), errCdnFileInvalidation)
 }
 
 func TestDeleteUserById_RowDeletionError(t *testing.T) {
-	ctx, ctrl, svc, mockUserRepo, _, mockS3Bucket, mockFileInvalidator, _ := setupUser(t)
+	ctx, ctrl, svc, userRepoMock, _, s3BucketMock, fileInvalidatorMock, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	mockUserRepo.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
-	mockUserRepo.EXPECT().DeleteById(ctx, userEntity.ID).Return(errDeleteError)
-	mockS3Bucket.EXPECT().DeleteObject(ctx, userEntity.PictureName.String).Return(nil)
-	mockFileInvalidator.EXPECT().InvalidateFile(ctx, userEntity.PictureName.String).Return(nil)
+	userRepoMock.EXPECT().GetById(ctx, userEntity.ID).Return(userEntity, nil)
+	userRepoMock.EXPECT().DeleteById(ctx, userEntity.ID).Return(errDeleteError)
+	s3BucketMock.EXPECT().DeleteObject(ctx, userEntity.PictureName.String).Return(nil)
+	fileInvalidatorMock.EXPECT().InvalidateFile(ctx, userEntity.PictureName.String).Return(nil)
 
 	assert.ErrorIs(t, svc.DeleteUserById(ctx, userEntity.ID), errDeleteError)
 }

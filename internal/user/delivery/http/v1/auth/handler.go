@@ -26,8 +26,8 @@ import (
 )
 
 const (
-	access_token_cookie  = "access_token"
-	refresh_token_cookie = "refresh_token"
+	accessTokenCookie  = "access_token"
+	refreshTokenCookie = "refresh_token"
 )
 
 const (
@@ -267,8 +267,8 @@ func (h *Handler) Login(
 			return
 		}
 
-		setCookies(w, accessToken, access_token_cookie)
-		setCookies(w, refreshToken, refresh_token_cookie)
+		setCookies(w, accessToken, accessTokenCookie)
+		setCookies(w, refreshToken, refreshTokenCookie)
 
 		h.Logger.Infof("Login user - Role: %s, U-ID: %s", userIdentity.Role, userIdentity.ID)
 		h.Writer.WriteNoContent(w, http.StatusOK)
@@ -281,8 +281,8 @@ func (h *Handler) Login(
 // @Success 200 {string} string "Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token; HttpOnly"
 // @Router /auth/logout [post]
 func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
-	eraseCookie(w, access_token_cookie)
-	eraseCookie(w, refresh_token_cookie)
+	eraseCookie(w, accessTokenCookie)
+	eraseCookie(w, refreshTokenCookie)
 
 	h.Logger.Info("Logout user")
 	h.Writer.WriteNoContent(w, http.StatusOK)
@@ -327,7 +327,7 @@ func (h *Handler) Refresh(generator auth_jwt.Generator) http.HandlerFunc {
 			return
 		}
 
-		setCookies(w, accessToken, access_token_cookie)
+		setCookies(w, accessToken, accessTokenCookie)
 
 		h.Logger.Infof("Rotate JWT - Role: %s, UserStatus: %v, U-ID: %d", roleAndStatus.Role, roleAndStatus.UserStatus, id)
 		h.Writer.WriteNoContent(w, http.StatusOK)

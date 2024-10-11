@@ -9,7 +9,7 @@ import (
 	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/catalog/entity"
 	"github.com/hexley21/fixup/internal/catalog/repository"
-	mock_repository "github.com/hexley21/fixup/internal/catalog/repository/mock"
+	mockRepository "github.com/hexley21/fixup/internal/catalog/repository/mock"
 	"github.com/hexley21/fixup/internal/catalog/service"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -20,8 +20,8 @@ const (
 	id               = int32(1)
 	strId            = "1"
 
-	page     int32 = 1
-	per_page int32 = 2
+	page    int32 = 1
+	perPage int32 = 2
 )
 
 var (
@@ -47,22 +47,22 @@ func setupCategoryType(t *testing.T) (
 	ctrl *gomock.Controller,
 	ctx context.Context,
 	svc service.CategoryTypeService,
-	mockCategoryTypeRepo *mock_repository.MockCategoryTypeRepository,
+	categoryTypeRepoMock *mockRepository.MockCategoryTypeRepository,
 ) {
 	ctrl = gomock.NewController(t)
 	ctx = context.Background()
 
-	mockCategoryTypeRepo = mock_repository.NewMockCategoryTypeRepository(ctrl)
-	svc = service.NewCategoryTypeService(mockCategoryTypeRepo, 50, 100)
+	categoryTypeRepoMock = mockRepository.NewMockCategoryTypeRepository(ctrl)
+	svc = service.NewCategoryTypeService(categoryTypeRepoMock, 50, 100)
 
 	return
 }
 
 func TestCreateCategoryType_Success(t *testing.T) {
-	ctrl, ctx, svc, mockCategoryTypeRepo := setupCategoryType(t)
+	ctrl, ctx, svc, categoryTypeRepoMock := setupCategoryType(t)
 	defer ctrl.Finish()
 
-	mockCategoryTypeRepo.EXPECT().CreateCategoryType(ctx, categoryTypeName).Return(categoryTypeEntity, nil)
+	categoryTypeRepoMock.EXPECT().CreateCategoryType(ctx, categoryTypeName).Return(categoryTypeEntity, nil)
 
 	result, err := svc.CreateCategoryType(ctx, createCategoryTypeDTO)
 
@@ -73,10 +73,10 @@ func TestCreateCategoryType_Success(t *testing.T) {
 }
 
 func TestCreateCategoryType_RepositoryError(t *testing.T) {
-	ctrl, ctx, svc, mockCategoryTypeRepo := setupCategoryType(t)
+	ctrl, ctx, svc, categoryTypeRepoMock := setupCategoryType(t)
 	defer ctrl.Finish()
 
-	mockCategoryTypeRepo.EXPECT().CreateCategoryType(ctx, categoryTypeName).Return(entity.CategoryType{}, errors.New(""))
+	categoryTypeRepoMock.EXPECT().CreateCategoryType(ctx, categoryTypeName).Return(entity.CategoryType{}, errors.New(""))
 
 	result, err := svc.CreateCategoryType(ctx, createCategoryTypeDTO)
 
@@ -137,9 +137,9 @@ func TestGetCategoryTypes_Success(t *testing.T) {
 	ctrl, ctx, svc, mockRepo := setupCategoryType(t)
 	defer ctrl.Finish()
 
-	mockRepo.EXPECT().GetCategoryTypes(ctx, per_page*(page-1), per_page).Return(categoryTypeEntities, nil)
+	mockRepo.EXPECT().GetCategoryTypes(ctx, perPage*(page-1), perPage).Return(categoryTypeEntities, nil)
 
-	result, err := svc.GetCategoryTypes(ctx, page, per_page)
+	result, err := svc.GetCategoryTypes(ctx, page, perPage)
 
 	if assert.NoError(t, err) {
 		for i := range len(result) {
@@ -153,9 +153,9 @@ func TestGetCategoryTypes_RepositoryError(t *testing.T) {
 	ctrl, ctx, svc, mockRepo := setupCategoryType(t)
 	defer ctrl.Finish()
 
-	mockRepo.EXPECT().GetCategoryTypes(ctx, per_page*(page-1), per_page).Return(nil, errors.New(""))
+	mockRepo.EXPECT().GetCategoryTypes(ctx, perPage*(page-1), perPage).Return(nil, errors.New(""))
 
-	result, err := svc.GetCategoryTypes(ctx, page, per_page)
+	result, err := svc.GetCategoryTypes(ctx, page, perPage)
 
 	if assert.EqualError(t, err, "") {
 		assert.Empty(t, result)

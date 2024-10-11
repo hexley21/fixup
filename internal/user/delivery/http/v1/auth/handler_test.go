@@ -13,16 +13,16 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/hexley21/fixup/internal/common/app_error"
-	mock_auth_jwt "github.com/hexley21/fixup/internal/common/auth_jwt/mock"
+	mockAuthJwt "github.com/hexley21/fixup/internal/common/auth_jwt/mock"
 	"github.com/hexley21/fixup/internal/common/enum"
 	"github.com/hexley21/fixup/internal/common/util/ctx_util"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/auth"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
-	mock_refresh_jwt "github.com/hexley21/fixup/internal/user/jwt/refresh_jwt/mock"
+	mockRefreshJwt "github.com/hexley21/fixup/internal/user/jwt/refresh_jwt/mock"
 	"github.com/hexley21/fixup/internal/user/jwt/verify_jwt"
-	mock_verify_jwt "github.com/hexley21/fixup/internal/user/jwt/verify_jwt/mock"
+	mockVerifyJwt "github.com/hexley21/fixup/internal/user/jwt/verify_jwt/mock"
 	"github.com/hexley21/fixup/internal/user/service"
-	mock_service "github.com/hexley21/fixup/internal/user/service/mock"
+	mockService "github.com/hexley21/fixup/internal/user/service/mock"
 	"github.com/hexley21/fixup/pkg/hasher"
 	"github.com/hexley21/fixup/pkg/http/binder/std_binder"
 	"github.com/hexley21/fixup/pkg/http/handler"
@@ -31,7 +31,7 @@ import (
 	"github.com/hexley21/fixup/pkg/http/writer/json_writer"
 	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 	"github.com/hexley21/fixup/pkg/logger/std_logger"
-	mock_validator "github.com/hexley21/fixup/pkg/validator/mock"
+	mockValidator "github.com/hexley21/fixup/pkg/validator/mock"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -88,45 +88,45 @@ var (
 
 func setup(t *testing.T) (
 	ctrl *gomock.Controller,
-	mockAuthService *mock_service.MockAuthService,
-	mockValidator *mock_validator.MockValidator,
-	mockverify_jwtGenerator *mock_verify_jwt.MockManager,
-	mockAccessGenerator *mock_auth_jwt.MockGenerator,
-	mockRefreshGenerator *mock_refresh_jwt.MockGenerator,
+	authServiceMock *mockService.MockAuthService,
+	validatorMock *mockValidator.MockValidator,
+	verifyJWTManager *mockVerifyJwt.MockManager,
+	accessJWTGeneratorMock *mockAuthJwt.MockGenerator,
+	refreshJWTGeneratorMock *mockRefreshJwt.MockGenerator,
 	h *auth.Handler,
 ) {
 	ctrl = gomock.NewController(t)
-	mockAuthService = mock_service.NewMockAuthService(ctrl)
-	mockValidator = mock_validator.NewMockValidator(ctrl)
-	mockverify_jwtGenerator = mock_verify_jwt.NewMockManager(ctrl)
-	mockAccessGenerator = mock_auth_jwt.NewMockGenerator(ctrl)
-	mockRefreshGenerator = mock_refresh_jwt.NewMockGenerator(ctrl)
+	authServiceMock = mockService.NewMockAuthService(ctrl)
+	validatorMock = mockValidator.NewMockValidator(ctrl)
+	verifyJWTManager = mockVerifyJwt.NewMockManager(ctrl)
+	accessJWTGeneratorMock = mockAuthJwt.NewMockGenerator(ctrl)
+	refreshJWTGeneratorMock = mockRefreshJwt.NewMockGenerator(ctrl)
 
 	logger := std_logger.New()
 	jsonManager := std_json.New()
 
 	h = auth.NewHandler(
-		handler.NewComponents(logger, std_binder.New(jsonManager), mockValidator, json_writer.New(logger, jsonManager)),
-		mockAuthService,
+		handler.NewComponents(logger, std_binder.New(jsonManager), validatorMock, json_writer.New(logger, jsonManager)),
+		authServiceMock,
 	)
 
 	return
 }
 
 func TestRegisterCustomer_Success(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, mockverify_jwtGenerator, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, verifyJWTManager, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).Return(userDto, nil)
-	mockAuthService.EXPECT().SendConfirmationLetter(gomock.Any(), token, userDto.Email, userDto.FirstName).Return(nil)
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockverify_jwtGenerator.EXPECT().Generate(userDto.ID, userDto.Email).Return(token, nil)
+	authServiceMock.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).Return(userDto, nil)
+	authServiceMock.EXPECT().SendConfirmationLetter(gomock.Any(), token, userDto.Email, userDto.FirstName).Return(nil)
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
+	verifyJWTManager.EXPECT().Generate(userDto.ID, userDto.Email).Return(token, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(registerCustomerJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.RegisterCustomer(mockverify_jwtGenerator).ServeHTTP(rec, req)
+	h.RegisterCustomer(verifyJWTManager).ServeHTTP(rec, req)
 
 	assert.Empty(t, rec.Body.String())
 	assert.Equal(t, http.StatusCreated, rec.Code)
@@ -151,10 +151,10 @@ func TestRegisterCustomer_BindError(t *testing.T) {
 }
 
 func TestRegisterCustomer_InvalidArguments(t *testing.T) {
-	ctrl, _, mockValidator, _, _, _, h := setup(t)
+	ctrl, _, validatorMock, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(rest.NewInvalidArgumentsError(nil))
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(rest.NewInvalidArgumentsError(nil))
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(registerCustomerJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -170,13 +170,13 @@ func TestRegisterCustomer_InvalidArguments(t *testing.T) {
 }
 
 func TestRegisterCustomer_Conflict(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, _, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	uniqueViolationErr := &pgconn.PgError{Code: pgerrcode.UniqueViolation}
 
-	mockAuthService.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).Return(dto.User{}, uniqueViolationErr)
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+	authServiceMock.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).Return(dto.User{}, uniqueViolationErr)
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(registerCustomerJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -192,11 +192,11 @@ func TestRegisterCustomer_Conflict(t *testing.T) {
 }
 
 func TestRegisterCustomer_ServiceError(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, _, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).Return(dto.User{}, errors.New(""))
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+	authServiceMock.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).Return(dto.User{}, errors.New(""))
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(registerCustomerJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -212,19 +212,19 @@ func TestRegisterCustomer_ServiceError(t *testing.T) {
 }
 
 func TestRegisterProvider_Success(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, mockverify_jwtGenerator, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, verifyJWTManager, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().RegisterProvider(gomock.Any(), gomock.Any()).Return(userDto, nil)
-	mockAuthService.EXPECT().SendConfirmationLetter(gomock.Any(), token, userDto.Email, userDto.FirstName).Return(nil)
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockverify_jwtGenerator.EXPECT().Generate(userDto.ID, userDto.Email).Return(token, nil)
+	authServiceMock.EXPECT().RegisterProvider(gomock.Any(), gomock.Any()).Return(userDto, nil)
+	authServiceMock.EXPECT().SendConfirmationLetter(gomock.Any(), token, userDto.Email, userDto.FirstName).Return(nil)
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
+	verifyJWTManager.EXPECT().Generate(userDto.ID, userDto.Email).Return(token, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(registerProviderJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.RegisterProvider(mockverify_jwtGenerator).ServeHTTP(rec, req)
+	h.RegisterProvider(verifyJWTManager).ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusCreated, rec.Code)
 
@@ -248,10 +248,10 @@ func TestRegisterProvider_BindError(t *testing.T) {
 }
 
 func TestRegisterProvider_InvalidArguments(t *testing.T) {
-	ctrl, _, mockValidator, _, _, _, h := setup(t)
+	ctrl, _, validatorMock, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(rest.NewInvalidArgumentsError(errors.New("")))
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(rest.NewInvalidArgumentsError(errors.New("")))
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(registerProviderJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -267,11 +267,11 @@ func TestRegisterProvider_InvalidArguments(t *testing.T) {
 }
 
 func TestRegisterProvider_Conflict(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, _, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockAuthService.EXPECT().RegisterProvider(gomock.Any(), gomock.Any()).Return(dto.User{}, &pgconn.PgError{Code: pgerrcode.UniqueViolation})
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
+	authServiceMock.EXPECT().RegisterProvider(gomock.Any(), gomock.Any()).Return(dto.User{}, &pgconn.PgError{Code: pgerrcode.UniqueViolation})
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(registerProviderJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -287,11 +287,11 @@ func TestRegisterProvider_Conflict(t *testing.T) {
 }
 
 func TestRegisterProvider_ServiceError(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, _, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().RegisterProvider(gomock.Any(), gomock.Any()).Return(dto.User{}, errors.New(""))
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+	authServiceMock.EXPECT().RegisterProvider(gomock.Any(), gomock.Any()).Return(dto.User{}, errors.New(""))
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(registerProviderJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -307,19 +307,19 @@ func TestRegisterProvider_ServiceError(t *testing.T) {
 }
 
 func TestResendConfirmationLetter_Success(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, mockverify_jwtGenerator, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, verifyJWTManager, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(userConfirmationDetailsDTO, nil)
-	mockAuthService.EXPECT().SendConfirmationLetter(gomock.Any(), token, userDto.Email, userDto.FirstName).Return(nil)
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockverify_jwtGenerator.EXPECT().Generate(userDto.ID, userDto.Email).Return(token, nil)
+	authServiceMock.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(userConfirmationDetailsDTO, nil)
+	authServiceMock.EXPECT().SendConfirmationLetter(gomock.Any(), token, userDto.Email, userDto.FirstName).Return(nil)
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
+	verifyJWTManager.EXPECT().Generate(userDto.ID, userDto.Email).Return(token, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(emailJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.ResendConfirmationLetter(mockverify_jwtGenerator).ServeHTTP(rec, req)
+	h.ResendConfirmationLetter(verifyJWTManager).ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusNoContent, rec.Code)
 }
@@ -341,10 +341,10 @@ func TestResendConfirmationLetter_BindError(t *testing.T) {
 }
 
 func TestResendConfirmationLetter_InvalidArguments(t *testing.T) {
-	ctrl, _, mockValidator, _, _, _, h := setup(t)
+	ctrl, _, validatorMock, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(rest.NewInvalidArgumentsError(errors.New("")))
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(rest.NewInvalidArgumentsError(errors.New("")))
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(emailJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -360,11 +360,11 @@ func TestResendConfirmationLetter_InvalidArguments(t *testing.T) {
 }
 
 func TestResendConfirmationLetter_Conflict(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, _, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(service.UserConfirmationDetails{UserStatus: true}, nil)
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+	authServiceMock.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(service.UserConfirmationDetails{UserStatus: true}, nil)
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(emailJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -380,17 +380,17 @@ func TestResendConfirmationLetter_Conflict(t *testing.T) {
 }
 
 func TestResendConfirmationLetter_NotFound(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, mockverify_jwtGenerator, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, verifyJWTManager, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(service.UserConfirmationDetails{}, pg_error.ErrNotFound)
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+	authServiceMock.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(service.UserConfirmationDetails{}, pg_error.ErrNotFound)
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(emailJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.ResendConfirmationLetter(mockverify_jwtGenerator).ServeHTTP(rec, req)
+	h.ResendConfirmationLetter(verifyJWTManager).ServeHTTP(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -400,17 +400,17 @@ func TestResendConfirmationLetter_NotFound(t *testing.T) {
 }
 
 func TestResendConfirmationLetter_Already(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, mockverify_jwtGenerator, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, verifyJWTManager, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(service.UserConfirmationDetails{}, pg_error.ErrNotFound)
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+	authServiceMock.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(service.UserConfirmationDetails{}, pg_error.ErrNotFound)
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(emailJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.ResendConfirmationLetter(mockverify_jwtGenerator).ServeHTTP(rec, req)
+	h.ResendConfirmationLetter(verifyJWTManager).ServeHTTP(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -420,11 +420,11 @@ func TestResendConfirmationLetter_Already(t *testing.T) {
 }
 
 func TestResendConfirmationLetter_ServiceError(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, _, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(service.UserConfirmationDetails{}, errors.New(""))
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+	authServiceMock.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(service.UserConfirmationDetails{}, errors.New(""))
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(registerProviderJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -441,18 +441,18 @@ func TestResendConfirmationLetter_ServiceError(t *testing.T) {
 
 func TestResendConfirmationLetter_MailError(t *testing.T) {
 
-	ctrl, mockAuthService, mockValidator, mockverify_jwtGenerator, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, verifyJWTManager, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockAuthService.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(userConfirmationDetailsDTO, nil)
-	mockverify_jwtGenerator.EXPECT().Generate(userDto.ID, userDto.Email).Return("", rest.NewUnauthorizedError(errors.New(""), app_error.MsgInvalidToken))
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
+	authServiceMock.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(userConfirmationDetailsDTO, nil)
+	verifyJWTManager.EXPECT().Generate(userDto.ID, userDto.Email).Return("", rest.NewUnauthorizedError(errors.New(""), app_error.MsgInvalidToken))
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(emailJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.ResendConfirmationLetter(mockverify_jwtGenerator).ServeHTTP(rec, req)
+	h.ResendConfirmationLetter(verifyJWTManager).ServeHTTP(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -462,19 +462,19 @@ func TestResendConfirmationLetter_MailError(t *testing.T) {
 }
 
 func TestLogin_Success(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, _, mockAccessGenerator, mockRefreshGenerator, h := setup(t)
+	ctrl, authServiceMock, validatorMock, _, accessJWTGeneratorMock, refreshJWTGeneratorMock, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(UserIdentity, nil)
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockAccessGenerator.EXPECT().Generate(userDto.ID, userDto.Role, userDto.UserStatus).Return(token, nil)
-	mockRefreshGenerator.EXPECT().Generate(userDto.ID).Return(token, nil)
+	authServiceMock.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(UserIdentity, nil)
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
+	accessJWTGeneratorMock.EXPECT().Generate(userDto.ID, userDto.Role, userDto.UserStatus).Return(token, nil)
+	refreshJWTGeneratorMock.EXPECT().Generate(userDto.ID).Return(token, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(loginJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.Login(mockAccessGenerator, mockRefreshGenerator).ServeHTTP(rec, req)
+	h.Login(accessJWTGeneratorMock, refreshJWTGeneratorMock).ServeHTTP(rec, req)
 
 	cookies := rec.Header().Values("Set-Cookie")
 	assert.Equal(t, http.StatusOK, rec.Code)
@@ -499,10 +499,10 @@ func TestLogin_BindError(t *testing.T) {
 }
 
 func TestLogin_InvalidArguments(t *testing.T) {
-	ctrl, _, mockValidator, _, _, _, h := setup(t)
+	ctrl, _, validatorMock, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(rest.NewInvalidArgumentsError(errors.New("")))
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(rest.NewInvalidArgumentsError(errors.New("")))
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(loginJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -518,11 +518,11 @@ func TestLogin_InvalidArguments(t *testing.T) {
 }
 
 func TestLogin_AuthError(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, _, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(service.UserIdentity{}, hasher.ErrPasswordMismatch)
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+	authServiceMock.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(service.UserIdentity{}, hasher.ErrPasswordMismatch)
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(loginJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -538,11 +538,11 @@ func TestLogin_AuthError(t *testing.T) {
 }
 
 func TestLogin_ServiceError(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, _, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(service.UserIdentity{}, errors.New(""))
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
+	authServiceMock.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(service.UserIdentity{}, errors.New(""))
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(loginJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -558,18 +558,18 @@ func TestLogin_ServiceError(t *testing.T) {
 }
 
 func TestLogin_AccessTokenError(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, _, mockAccessGenerator, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, _, accessJWTGeneratorMock, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(UserIdentity, nil)
-	mockAccessGenerator.EXPECT().Generate(userDto.ID, userDto.Role, userDto.UserStatus).Return("", rest.NewInternalServerError(errors.New("")))
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
+	authServiceMock.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(UserIdentity, nil)
+	accessJWTGeneratorMock.EXPECT().Generate(userDto.ID, userDto.Role, userDto.UserStatus).Return("", rest.NewInternalServerError(errors.New("")))
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(loginJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.Login(mockAccessGenerator, nil).ServeHTTP(rec, req)
+	h.Login(accessJWTGeneratorMock, nil).ServeHTTP(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -579,19 +579,19 @@ func TestLogin_AccessTokenError(t *testing.T) {
 }
 
 func TestLogin_RefreshTokenError(t *testing.T) {
-	ctrl, mockAuthService, mockValidator, _, mockAccessGenerator, mockRefreshGenerator, h := setup(t)
+	ctrl, authServiceMock, validatorMock, _, accessJWTGeneratorMock, refreshJWTGeneratorMock, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(UserIdentity, nil)
-	mockValidator.EXPECT().Validate(gomock.Any()).Return(nil)
-	mockAccessGenerator.EXPECT().Generate(userDto.ID, userDto.Role, userDto.UserStatus).Return(token, nil)
-	mockRefreshGenerator.EXPECT().Generate(userDto.ID).Return("", rest.NewInternalServerError(errors.New("")))
+	authServiceMock.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(UserIdentity, nil)
+	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
+	accessJWTGeneratorMock.EXPECT().Generate(userDto.ID, userDto.Role, userDto.UserStatus).Return(token, nil)
+	refreshJWTGeneratorMock.EXPECT().Generate(userDto.ID).Return("", rest.NewInternalServerError(errors.New("")))
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(loginJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.Login(mockAccessGenerator, mockRefreshGenerator).ServeHTTP(rec, req)
+	h.Login(accessJWTGeneratorMock, refreshJWTGeneratorMock).ServeHTTP(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -617,11 +617,11 @@ func TestLogout_Success(t *testing.T) {
 }
 
 func TestRefresh_Success(t *testing.T) {
-	ctrl, mockAuthService, _, _, mockAccessGenerator, _, h := setup(t)
+	ctrl, authServiceMock, _, _, accessJWTGeneratorMock, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(UserRoleAndStatus, nil)
-	mockAccessGenerator.EXPECT().Generate(userDto.ID, userDto.Role, userDto.UserStatus).Return(token, nil)
+	authServiceMock.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(UserRoleAndStatus, nil)
+	accessJWTGeneratorMock.EXPECT().Generate(userDto.ID, userDto.Role, userDto.UserStatus).Return(token, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
@@ -630,17 +630,17 @@ func TestRefresh_Success(t *testing.T) {
 	ctx = ctx_util.SetJWTRole(ctx, enum.UserRole(userDto.Role))
 	ctx = ctx_util.SetJWTUserStatus(ctx, userDto.UserStatus)
 
-	h.Refresh(mockAccessGenerator).ServeHTTP(rec, req.WithContext(ctx))
+	h.Refresh(accessJWTGeneratorMock).ServeHTTP(rec, req.WithContext(ctx))
 
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Contains(t, rec.Header().Get("Set-Cookie"), fmt.Sprintf("access_token=%s; HttpOnly; Secure", token))
 }
 
 func TestRefresh_NotFound(t *testing.T) {
-	ctrl, mockAuthService, _, _, _, _, h := setup(t)
+	ctrl, authServiceMock, _, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(service.UserRoleAndStatus{}, pgx.ErrNoRows)
+	authServiceMock.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(service.UserRoleAndStatus{}, pgx.ErrNoRows)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
@@ -660,10 +660,10 @@ func TestRefresh_NotFound(t *testing.T) {
 }
 
 func TestRefresh_ServiceError(t *testing.T) {
-	ctrl, mockAuthService, _, _, _, _, h := setup(t)
+	ctrl, authServiceMock, _, _, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockAuthService.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(service.UserRoleAndStatus{}, errors.New(""))
+	authServiceMock.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(service.UserRoleAndStatus{}, errors.New(""))
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
@@ -704,12 +704,12 @@ func TestRefresh_JwtIdNotSet(t *testing.T) {
 }
 
 func TestVerifyEmail_Success(t *testing.T) {
-	ctrl, mockAuthService, _, mockVrfJwtManager, _, _, h := setup(t)
+	ctrl, authServiceMock, _, vrfJWTManager, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockVrfJwtManager.EXPECT().Verify(gomock.Any()).Return(verifyClaims, nil)
-	mockAuthService.EXPECT().VerifyUser(gomock.Any(), gomock.Any(), gomock.Any(), int64(1)).Return(nil)
-	mockAuthService.EXPECT().SendVerifiedLetter(verifyClaims.Email).Return(nil)
+	vrfJWTManager.EXPECT().Verify(gomock.Any()).Return(verifyClaims, nil)
+	authServiceMock.EXPECT().VerifyUser(gomock.Any(), gomock.Any(), gomock.Any(), int64(1)).Return(nil)
+	authServiceMock.EXPECT().SendVerifiedLetter(verifyClaims.Email).Return(nil)
 
 	q := make(url.Values)
 	q.Set("token", token)
@@ -717,24 +717,24 @@ func TestVerifyEmail_Success(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
 	rec := httptest.NewRecorder()
 
-	h.VerifyEmail(mockVrfJwtManager).ServeHTTP(rec, req)
+	h.VerifyEmail(vrfJWTManager).ServeHTTP(rec, req)
 	assert.Equal(t, http.StatusOK, rec.Code)
 
 	time.Sleep(500 * time.Millisecond)
 }
 
 func TestVerifyEmail_InvalidToken(t *testing.T) {
-	ctrl, _, _, mockVrfJwtManager, _, _, h := setup(t)
+	ctrl, _, _, vrfJWTManager, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockVrfJwtManager.EXPECT().Verify(token).Return(verify_jwt.VerifyClaims{}, rest.NewUnauthorizedError(errors.New(""), app_error.MsgInvalidToken))
+	vrfJWTManager.EXPECT().Verify(token).Return(verify_jwt.VerifyClaims{}, rest.NewUnauthorizedError(errors.New(""), app_error.MsgInvalidToken))
 
 	q := make(url.Values)
 	q.Set("token", token)
 	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
 	rec := httptest.NewRecorder()
 
-	h.VerifyEmail(mockVrfJwtManager).ServeHTTP(rec, req)
+	h.VerifyEmail(vrfJWTManager).ServeHTTP(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -744,17 +744,17 @@ func TestVerifyEmail_InvalidToken(t *testing.T) {
 }
 
 func TestVerifyEmail_ParseIDError(t *testing.T) {
-	ctrl, _, _, mockVrfJwtManager, _, _, h := setup(t)
+	ctrl, _, _, vrfJWTManager, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockVrfJwtManager.EXPECT().Verify(token).Return(verify_jwt.VerifyClaims{ID: "invalid-id"}, nil)
+	vrfJWTManager.EXPECT().Verify(token).Return(verify_jwt.VerifyClaims{ID: "invalid-id"}, nil)
 
 	q := make(url.Values)
 	q.Set("token", token)
 	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
 	rec := httptest.NewRecorder()
 
-	h.VerifyEmail(mockVrfJwtManager).ServeHTTP(rec, req)
+	h.VerifyEmail(vrfJWTManager).ServeHTTP(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -764,18 +764,18 @@ func TestVerifyEmail_ParseIDError(t *testing.T) {
 }
 
 func TestVerifyEmail_AlreadyActivated(t *testing.T) {
-	ctrl, mockAuthService, _, mockVrfJwtManager, _, _, h := setup(t)
+	ctrl, authServiceMock, _, vrfJWTManager, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockVrfJwtManager.EXPECT().Verify(token).Return(verifyClaims, nil)
-	mockAuthService.EXPECT().VerifyUser(gomock.Any(), gomock.Any(), gomock.Any(), int64(1)).Return(redis.TxFailedErr)
+	vrfJWTManager.EXPECT().Verify(token).Return(verifyClaims, nil)
+	authServiceMock.EXPECT().VerifyUser(gomock.Any(), gomock.Any(), gomock.Any(), int64(1)).Return(redis.TxFailedErr)
 
 	q := make(url.Values)
 	q.Set("token", token)
 	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
 	rec := httptest.NewRecorder()
 
-	h.VerifyEmail(mockVrfJwtManager).ServeHTTP(rec, req)
+	h.VerifyEmail(vrfJWTManager).ServeHTTP(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -785,18 +785,18 @@ func TestVerifyEmail_AlreadyActivated(t *testing.T) {
 }
 
 func TestVerifyEmail_NotFound(t *testing.T) {
-	ctrl, mockAuthService, _, mockVrfJwtManager, _, _, h := setup(t)
+	ctrl, authServiceMock, _, vrfJWTManager, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockVrfJwtManager.EXPECT().Verify(token).Return(verifyClaims, nil)
-	mockAuthService.EXPECT().VerifyUser(gomock.Any(), gomock.Any(), gomock.Any(), int64(1)).Return(pg_error.ErrNotFound)
+	vrfJWTManager.EXPECT().Verify(token).Return(verifyClaims, nil)
+	authServiceMock.EXPECT().VerifyUser(gomock.Any(), gomock.Any(), gomock.Any(), int64(1)).Return(pg_error.ErrNotFound)
 
 	q := make(url.Values)
 	q.Set("token", token)
 	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
 	rec := httptest.NewRecorder()
 
-	h.VerifyEmail(mockVrfJwtManager).ServeHTTP(rec, req)
+	h.VerifyEmail(vrfJWTManager).ServeHTTP(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -806,18 +806,18 @@ func TestVerifyEmail_NotFound(t *testing.T) {
 }
 
 func TestVerifyEmail_ServiceError(t *testing.T) {
-	ctrl, mockAuthService, _, mockVrfJwtManager, _, _, h := setup(t)
+	ctrl, authServiceMock, _, vrfJWTManager, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockVrfJwtManager.EXPECT().Verify(token).Return(verifyClaims, nil)
-	mockAuthService.EXPECT().VerifyUser(gomock.Any(), gomock.Any(), gomock.Any(), int64(1)).Return(errors.New(""))
+	vrfJWTManager.EXPECT().Verify(token).Return(verifyClaims, nil)
+	authServiceMock.EXPECT().VerifyUser(gomock.Any(), gomock.Any(), gomock.Any(), int64(1)).Return(errors.New(""))
 
 	q := make(url.Values)
 	q.Set("token", token)
 	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
 	rec := httptest.NewRecorder()
 
-	h.VerifyEmail(mockVrfJwtManager).ServeHTTP(rec, req)
+	h.VerifyEmail(vrfJWTManager).ServeHTTP(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -827,19 +827,19 @@ func TestVerifyEmail_ServiceError(t *testing.T) {
 }
 
 func TestVerifyEmail_MailError(t *testing.T) {
-	ctrl, mockAuthService, _, mockVrfJwtManager, _, _, h := setup(t)
+	ctrl, authServiceMock, _, vrfJWTManager, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	mockVrfJwtManager.EXPECT().Verify(gomock.Any()).Return(verifyClaims, nil)
-	mockAuthService.EXPECT().VerifyUser(gomock.Any(), gomock.Any(), gomock.Any(), int64(1)).Return(nil)
-	mockAuthService.EXPECT().SendVerifiedLetter(verifyClaims.Email).Return(errors.New(""))
+	vrfJWTManager.EXPECT().Verify(gomock.Any()).Return(verifyClaims, nil)
+	authServiceMock.EXPECT().VerifyUser(gomock.Any(), gomock.Any(), gomock.Any(), int64(1)).Return(nil)
+	authServiceMock.EXPECT().SendVerifiedLetter(verifyClaims.Email).Return(errors.New(""))
 
 	q := make(url.Values)
 	q.Set("token", token)
 	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
 	rec := httptest.NewRecorder()
 
-	h.VerifyEmail(mockVrfJwtManager).ServeHTTP(rec, req)
+	h.VerifyEmail(vrfJWTManager).ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
 

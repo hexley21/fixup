@@ -59,12 +59,3 @@ func (e UserRole) Valid() bool {
 	}
 	return false
 }
-
-func AllUserRoleValues() []UserRole {
-	return []UserRole{
-		UserRoleCUSTOMER,
-		UserRolePROVIDER,
-		UserRoleMODERATOR,
-		UserRoleADMIN,
-	}
-}
