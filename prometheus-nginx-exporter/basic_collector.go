@@ -50,7 +50,7 @@ func (c *basicCollector) Describe(ch chan<- *prometheus.Desc) {
 
 // Collect implements prometheus.Collector.
 func (c *basicCollector) Collect(ch chan<- prometheus.Metric) {
-	// Take a stats snapshot. Must be concurrency safe.
+	// Take a stats' snapshot. Must be concurrency safe.
 	stats, err := c.stats()
 	if err != nil {
 		// If an error occurs, send an invalid metric to notify

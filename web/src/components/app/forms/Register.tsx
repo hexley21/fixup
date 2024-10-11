@@ -58,7 +58,7 @@ function Component() {
   })
 
   function onSubmit(data: AccountFormValues) {
-    let dto = {
+    const dto = {
       first_name: data.first_name,
       last_name: data.last_name,
       email: data.email,
@@ -66,7 +66,7 @@ function Component() {
       password: data.password,
     }
 
-    let body = JSON.stringify(dto)
+    const body = JSON.stringify(dto)
     console.log(body)
 
     toast({

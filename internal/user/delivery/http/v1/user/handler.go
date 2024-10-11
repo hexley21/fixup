@@ -267,7 +267,7 @@ func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Param body body dto.UpdatePassword true "Update Password DTO"
+// @Param password 	body dto.UpdatePassword true "Update Password DTO"
 // @Success 204 "No Content"
 // @Failure 400 {object} rest.ErrorResponse "Invalid arguments"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"

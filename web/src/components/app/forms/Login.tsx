@@ -34,12 +34,12 @@ function LoginForm() {
   })
 
   function onSubmit(data: LoginFormValues) {
-    let dto = {
+    const dto = {
       email: data.email,
       password: data.password,
     }
 
-    let body = JSON.stringify(dto)
+    const body = JSON.stringify(dto)
     console.log(body)
 
     toast({

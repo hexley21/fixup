@@ -424,7 +424,7 @@ paths:
         type: integer
       - description: Update Password DTO
         in: body
-        name: body
+        name: password
         required: true
         schema:
           $ref: '#/definitions/UpdatePasswordInput'

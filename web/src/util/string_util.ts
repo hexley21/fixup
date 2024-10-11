@@ -1,5 +1,5 @@
 export function trimStart(character: string, value: string) {
-    var startIndex = 0;
+    let startIndex = 0;
   
     while (value[startIndex] === character) {
       startIndex++;
