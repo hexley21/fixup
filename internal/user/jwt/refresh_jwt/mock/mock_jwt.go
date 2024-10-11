@@ -17,31 +17,31 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockJWTManager is a mock of JWTManager interface.
-type MockJWTManager struct {
+// MockManager is a mock of Manager interface.
+type MockManager struct {
 	ctrl     *gomock.Controller
-	recorder *MockJWTManagerMockRecorder
+	recorder *MockManagerMockRecorder
 }
 
-// MockJWTManagerMockRecorder is the mock recorder for MockJWTManager.
-type MockJWTManagerMockRecorder struct {
-	mock *MockJWTManager
+// MockManagerMockRecorder is the mock recorder for MockManager.
+type MockManagerMockRecorder struct {
+	mock *MockManager
 }
 
-// NewMockJWTManager creates a new mock instance.
-func NewMockJWTManager(ctrl *gomock.Controller) *MockJWTManager {
-	mock := &MockJWTManager{ctrl: ctrl}
-	mock.recorder = &MockJWTManagerMockRecorder{mock}
+// NewMockManager creates a new mock instance.
+func NewMockManager(ctrl *gomock.Controller) *MockManager {
+	mock := &MockManager{ctrl: ctrl}
+	mock.recorder = &MockManagerMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockJWTManager) EXPECT() *MockJWTManagerMockRecorder {
+func (m *MockManager) EXPECT() *MockManagerMockRecorder {
 	return m.recorder
 }
 
 // Generate mocks base method.
-func (m *MockJWTManager) Generate(id string) (string, *rest.ErrorResponse) {
+func (m *MockManager) Generate(id string) (string, *rest.ErrorResponse) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Generate", id)
 	ret0, _ := ret[0].(string)
@@ -50,13 +50,13 @@ func (m *MockJWTManager) Generate(id string) (string, *rest.ErrorResponse) {
 }
 
 // Generate indicates an expected call of Generate.
-func (mr *MockJWTManagerMockRecorder) Generate(id any) *gomock.Call {
+func (mr *MockManagerMockRecorder) Generate(id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Generate", reflect.TypeOf((*MockJWTManager)(nil).Generate), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Generate", reflect.TypeOf((*MockManager)(nil).Generate), id)
 }
 
 // Verify mocks base method.
-func (m *MockJWTManager) Verify(tokenString string) (refresh_jwt.RefreshClaims, *rest.ErrorResponse) {
+func (m *MockManager) Verify(tokenString string) (refresh_jwt.RefreshClaims, *rest.ErrorResponse) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Verify", tokenString)
 	ret0, _ := ret[0].(refresh_jwt.RefreshClaims)
@@ -65,9 +65,9 @@ func (m *MockJWTManager) Verify(tokenString string) (refresh_jwt.RefreshClaims, 
 }
 
 // Verify indicates an expected call of Verify.
-func (mr *MockJWTManagerMockRecorder) Verify(tokenString any) *gomock.Call {
+func (mr *MockManagerMockRecorder) Verify(tokenString any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Verify", reflect.TypeOf((*MockJWTManager)(nil).Verify), tokenString)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Verify", reflect.TypeOf((*MockManager)(nil).Verify), tokenString)
 }
 
 // MockGenerator is a mock of Generator interface.
