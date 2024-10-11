@@ -42,17 +42,17 @@ func (m *MockUserService) EXPECT() *MockUserServiceMockRecorder {
 }
 
 // ChangePassword mocks base method.
-func (m *MockUserService) ChangePassword(ctx context.Context, id int64, updateDto dto.UpdatePassword) error {
+func (m *MockUserService) ChangePassword(ctx context.Context, id int64, updateDTO dto.UpdatePassword) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ChangePassword", ctx, id, updateDto)
+	ret := m.ctrl.Call(m, "ChangePassword", ctx, id, updateDTO)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ChangePassword indicates an expected call of ChangePassword.
-func (mr *MockUserServiceMockRecorder) ChangePassword(ctx, id, updateDto any) *gomock.Call {
+func (mr *MockUserServiceMockRecorder) ChangePassword(ctx, id, updateDTO any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockUserService)(nil).ChangePassword), ctx, id, updateDto)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockUserService)(nil).ChangePassword), ctx, id, updateDTO)
 }
 
 // DeleteUserById mocks base method.
@@ -114,16 +114,16 @@ func (mr *MockUserServiceMockRecorder) SetProfilePicture(ctx, userId, file, file
 }
 
 // UpdateUserDataById mocks base method.
-func (m *MockUserService) UpdateUserDataById(ctx context.Context, id int64, updateDto dto.UpdateUser) (dto.User, error) {
+func (m *MockUserService) UpdateUserDataById(ctx context.Context, id int64, updateDTO dto.UpdateUser) (dto.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUserDataById", ctx, id, updateDto)
+	ret := m.ctrl.Call(m, "UpdateUserDataById", ctx, id, updateDTO)
 	ret0, _ := ret[0].(dto.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateUserDataById indicates an expected call of UpdateUserDataById.
-func (mr *MockUserServiceMockRecorder) UpdateUserDataById(ctx, id, updateDto any) *gomock.Call {
+func (mr *MockUserServiceMockRecorder) UpdateUserDataById(ctx, id, updateDTO any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserDataById", reflect.TypeOf((*MockUserService)(nil).UpdateUserDataById), ctx, id, updateDto)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserDataById", reflect.TypeOf((*MockUserService)(nil).UpdateUserDataById), ctx, id, updateDTO)
 }

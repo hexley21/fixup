@@ -32,7 +32,7 @@ import (
 )
 
 var (
-	userDto = dto.User{
+	userDTO = dto.User{
 		ID:          "1",
 		FirstName:   "Larry",
 		LastName:    "Page",
@@ -97,7 +97,7 @@ func TestFindUserById_Success(t *testing.T) {
 	ctrl, userServiceMock, _, h := setup(t)
 	defer ctrl.Finish()
 
-	userServiceMock.EXPECT().FindUserById(gomock.Any(), int64(1)).Return(userDto, nil)
+	userServiceMock.EXPECT().FindUserById(gomock.Any(), int64(1)).Return(userDTO, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
@@ -287,7 +287,7 @@ func TestUpdateUserData_Success(t *testing.T) {
 	ctrl, userServiceMock, validatorMock, h := setup(t)
 	defer ctrl.Finish()
 
-	userServiceMock.EXPECT().UpdateUserDataById(gomock.Any(), int64(1), gomock.Any()).Return(userDto, nil)
+	userServiceMock.EXPECT().UpdateUserDataById(gomock.Any(), int64(1), gomock.Any()).Return(userDTO, nil)
 	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(updateUserJSON))

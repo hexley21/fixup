@@ -166,20 +166,20 @@ func (h *Handler) PatchCategoryTypeById(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	var patchDto dto.PatchCategoryTypeDTO
-	errResp := h.Binder.BindJSON(r, &patchDto)
+	var patchDTO dto.PatchCategoryTypeDTO
+	errResp := h.Binder.BindJSON(r, &patchDTO)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	errResp = h.Validator.Validate(patchDto)
+	errResp = h.Validator.Validate(patchDTO)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	err = h.service.UpdateCategoryTypeById(r.Context(), int32(id), patchDto)
+	err = h.service.UpdateCategoryTypeById(r.Context(), int32(id), patchDTO)
 	if err != nil {
 		if errors.Is(err, pg_error.ErrNotFound) {
 			h.Writer.WriteError(w, rest.NewNotFoundError(err, MsgCategoryTypeNotFound))
@@ -196,8 +196,8 @@ func (h *Handler) PatchCategoryTypeById(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	h.Logger.Infof("Patch category type: %s, ID: %d", patchDto.Name, id)
-	h.Writer.WriteData(w, http.StatusOK, dto.CategoryTypeDTO{ID: strconv.Itoa(id), Name: patchDto.Name})
+	h.Logger.Infof("Patch category type: %s, ID: %d", patchDTO.Name, id)
+	h.Writer.WriteData(w, http.StatusOK, dto.CategoryTypeDTO{ID: strconv.Itoa(id), Name: patchDTO.Name})
 }
 
 // @Summary Delete a category type by ID

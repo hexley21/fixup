@@ -10,12 +10,12 @@ import (
 )
 
 type CategoryService interface {
-	CreateCategory(ctx context.Context, dto dto.CreateCategoryDTO) (category dto.CategoryDTO, err error)
+	CreateCategory(ctx context.Context, createDTO dto.CreateCategoryDTO) (dto.CategoryDTO, error)
 	DeleteCategoryById(ctx context.Context, id int32) error
-	GetCategoryById(ctx context.Context, id int32) (dto dto.CategoryDTO, err error)
-	GetCategories(ctx context.Context, page int32, perPage int32) (categoriesDTO []dto.CategoryDTO, err error)
+	GetCategoryById(ctx context.Context, id int32) (dto.CategoryDTO, error)
+	GetCategories(ctx context.Context, page int32, perPage int32) ([]dto.CategoryDTO, error)
 	GetCategoriesByTypeId(ctx context.Context, id int32, page int32, perPage int32) ([]dto.CategoryDTO, error)
-	UpdateCategoryById(ctx context.Context, id int32, dto dto.PatchCategoryDTO) (categoryDTO dto.CategoryDTO, err error)
+	UpdateCategoryById(ctx context.Context, id int32, patchDTO dto.PatchCategoryDTO) (dto.CategoryDTO, error)
 }
 
 type categoryServiceImpl struct {
@@ -32,18 +32,18 @@ func NewCategoryService(categoryRepository repository.CategoryRepository, defaul
 	}
 }
 
-func (s *categoryServiceImpl) CreateCategory(ctx context.Context, dto dto.CreateCategoryDTO) (category dto.CategoryDTO, err error) {
-	intTypeId, err := strconv.Atoi(dto.TypeID)
+func (s *categoryServiceImpl) CreateCategory(ctx context.Context, createDTO dto.CreateCategoryDTO) (dto.CategoryDTO, error) {
+	intTypeId, err := strconv.Atoi(createDTO.TypeID)
 	if err != nil {
-		return category, err
+		return dto.CategoryDTO{}, err
 	}
 
-	entity, err := s.categoryRepository.CreateCategory(ctx, repository.CreateCategoryParams{TypeID: int32(intTypeId), Name: dto.Name})
+	entity, err := s.categoryRepository.CreateCategory(ctx, repository.CreateCategoryParams{TypeID: int32(intTypeId), Name: createDTO.Name})
 	if err != nil {
-		return category, err
+		return dto.CategoryDTO{}, err
 	}
 
-	return mapper.MapCategoryToDTO(entity), err
+	return mapper.MapCategoryToDTO(entity), nil
 }
 
 func (s *categoryServiceImpl) DeleteCategoryById(ctx context.Context, id int32) error {
@@ -51,14 +51,12 @@ func (s *categoryServiceImpl) DeleteCategoryById(ctx context.Context, id int32) 
 }
 
 func (s *categoryServiceImpl) GetCategoryById(ctx context.Context, id int32) (dto.CategoryDTO, error) {
-	var categoryDTO dto.CategoryDTO
-
 	entity, err := s.categoryRepository.GetCategoryById(ctx, id)
 	if err != nil {
-		return categoryDTO, err
+		return dto.CategoryDTO{}, err
 	}
 
-	return mapper.MapCategoryToDTO(entity), err
+	return mapper.MapCategoryToDTO(entity), nil
 }
 
 func (s *categoryServiceImpl) GetCategories(ctx context.Context, page int32, perPage int32) ([]dto.CategoryDTO, error) {
@@ -76,7 +74,7 @@ func (s *categoryServiceImpl) GetCategories(ctx context.Context, page int32, per
 		categories[i] = mapper.MapCategoryToDTO(e)
 	}
 
-	return categories, err
+	return categories, nil
 }
 
 func (s *categoryServiceImpl) GetCategoriesByTypeId(ctx context.Context, id int32, page int32, perPage int32) ([]dto.CategoryDTO, error) {
@@ -94,16 +92,15 @@ func (s *categoryServiceImpl) GetCategoriesByTypeId(ctx context.Context, id int3
 		categories[i] = mapper.MapCategoryToDTO(e)
 	}
 
-	return categories, err
+	return categories, nil
 }
 
 func (s *categoryServiceImpl) UpdateCategoryById(ctx context.Context, id int32, patchDTO dto.PatchCategoryDTO) (dto.CategoryDTO, error) {
-	var categoryDTO dto.CategoryDTO
 	entity, err := s.categoryRepository.UpdateCategoryById(ctx, repository.UpdateCategoryByIdParams{ID: id, Name: patchDTO.Name})
 
 	if err != nil {
-		return categoryDTO, err
+		return dto.CategoryDTO{}, err
 	}
 
-	return mapper.MapCategoryToDTO(entity), err
+	return mapper.MapCategoryToDTO(entity), nil
 }

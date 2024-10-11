@@ -19,9 +19,9 @@ var directory = "pfp/"
 type UserService interface {
 	FindUserById(ctx context.Context, userId int64) (dto.User, error)
 	FindUserProfileById(ctx context.Context, userId int64) (dto.Profile, error)
-	UpdateUserDataById(ctx context.Context, id int64, updateDto dto.UpdateUser) (dto.User, error)
+	UpdateUserDataById(ctx context.Context, id int64, updateDTO dto.UpdateUser) (dto.User, error)
 	SetProfilePicture(ctx context.Context, userId int64, file io.Reader, fileName string, fileSize int64, fileType string) error
-	ChangePassword(ctx context.Context, id int64, updateDto dto.UpdatePassword) error
+	ChangePassword(ctx context.Context, id int64, updateDTO dto.UpdatePassword) error
 	DeleteUserById(ctx context.Context, userId int64) error
 }
 
@@ -57,7 +57,7 @@ func (s *userServiceImpl) FindUserById(ctx context.Context, userId int64) (dto.U
 		return userDTO, err
 	}
 
-	userDTO, err = mapper.MapUserToDto(entity, s.cdnUrlSigner)
+	userDTO, err = mapper.MapUserToDTO(entity, s.cdnUrlSigner)
 	if err != nil {
 		return userDTO, err
 	}
@@ -73,7 +73,7 @@ func (s *userServiceImpl) FindUserProfileById(ctx context.Context, userId int64)
 		return profile, err
 	}
 
-	profile, err = mapper.MapUserToProfileDto(entity, s.cdnUrlSigner)
+	profile, err = mapper.MapUserToProfileDTO(entity, s.cdnUrlSigner)
 	if err != nil {
 		return profile, err
 	}
@@ -81,21 +81,21 @@ func (s *userServiceImpl) FindUserProfileById(ctx context.Context, userId int64)
 	return profile, nil
 }
 
-func (s *userServiceImpl) UpdateUserDataById(ctx context.Context, id int64, updateDto dto.UpdateUser) (dto.User, error) {
+func (s *userServiceImpl) UpdateUserDataById(ctx context.Context, id int64, updateDTO dto.UpdateUser) (dto.User, error) {
 	var userDTO dto.User
 
 	entity, err := s.userRepository.Update(ctx, repository.UpdateUserParams{
 		ID:          id,
-		FirstName:   updateDto.FirstName,
-		LastName:    updateDto.LastName,
-		Email:       updateDto.Email,
-		PhoneNumber: updateDto.PhoneNumber,
+		FirstName:   updateDTO.FirstName,
+		LastName:    updateDTO.LastName,
+		Email:       updateDTO.Email,
+		PhoneNumber: updateDTO.PhoneNumber,
 	})
 	if err != nil {
 		return userDTO, err
 	}
 
-	return mapper.MapUserToDto(entity, s.cdnUrlSigner)
+	return mapper.MapUserToDTO(entity, s.cdnUrlSigner)
 }
 
 func (s *userServiceImpl) SetProfilePicture(ctx context.Context, userId int64, file io.Reader, fileName string, fileSize int64, fileType string) error {
@@ -138,18 +138,18 @@ func (s *userServiceImpl) SetProfilePicture(ctx context.Context, userId int64, f
 	return s.cdnFileInvalidator.InvalidateFile(ctx, entity.PictureName.String)
 }
 
-func (s *userServiceImpl) ChangePassword(ctx context.Context, id int64, updateDto dto.UpdatePassword) error {
+func (s *userServiceImpl) ChangePassword(ctx context.Context, id int64, updateDTO dto.UpdatePassword) error {
 	oldHash, err := s.userRepository.GetHashById(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	err = s.hasher.VerifyPassword(updateDto.OldPassword, oldHash)
+	err = s.hasher.VerifyPassword(updateDTO.OldPassword, oldHash)
 	if err != nil {
 		return err
 	}
 
-	hash, err := s.hasher.HashPassword(updateDto.NewPassword)
+	hash, err := s.hasher.HashPassword(updateDTO.NewPassword)
 	if err != nil {
 		return err
 	}

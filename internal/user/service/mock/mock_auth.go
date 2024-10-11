@@ -43,18 +43,18 @@ func (m *MockAuthService) EXPECT() *MockAuthServiceMockRecorder {
 }
 
 // AuthenticateUser mocks base method.
-func (m *MockAuthService) AuthenticateUser(ctx context.Context, loginDto dto.Login) (service.UserIdentity, error) {
+func (m *MockAuthService) AuthenticateUser(ctx context.Context, loginDTO dto.Login) (service.UserIdentity, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AuthenticateUser", ctx, loginDto)
+	ret := m.ctrl.Call(m, "AuthenticateUser", ctx, loginDTO)
 	ret0, _ := ret[0].(service.UserIdentity)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AuthenticateUser indicates an expected call of AuthenticateUser.
-func (mr *MockAuthServiceMockRecorder) AuthenticateUser(ctx, loginDto any) *gomock.Call {
+func (mr *MockAuthServiceMockRecorder) AuthenticateUser(ctx, loginDTO any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateUser", reflect.TypeOf((*MockAuthService)(nil).AuthenticateUser), ctx, loginDto)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateUser", reflect.TypeOf((*MockAuthService)(nil).AuthenticateUser), ctx, loginDTO)
 }
 
 // GetUserConfirmationDetails mocks base method.
@@ -88,33 +88,33 @@ func (mr *MockAuthServiceMockRecorder) GetUserRoleAndStatus(ctx, id any) *gomock
 }
 
 // RegisterCustomer mocks base method.
-func (m *MockAuthService) RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error) {
+func (m *MockAuthService) RegisterCustomer(ctx context.Context, registerDTO dto.RegisterUser) (dto.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RegisterCustomer", ctx, registerDto)
+	ret := m.ctrl.Call(m, "RegisterCustomer", ctx, registerDTO)
 	ret0, _ := ret[0].(dto.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RegisterCustomer indicates an expected call of RegisterCustomer.
-func (mr *MockAuthServiceMockRecorder) RegisterCustomer(ctx, registerDto any) *gomock.Call {
+func (mr *MockAuthServiceMockRecorder) RegisterCustomer(ctx, registerDTO any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterCustomer", reflect.TypeOf((*MockAuthService)(nil).RegisterCustomer), ctx, registerDto)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterCustomer", reflect.TypeOf((*MockAuthService)(nil).RegisterCustomer), ctx, registerDTO)
 }
 
 // RegisterProvider mocks base method.
-func (m *MockAuthService) RegisterProvider(ctx context.Context, registerDto dto.RegisterProvider) (dto.User, error) {
+func (m *MockAuthService) RegisterProvider(ctx context.Context, registerDTO dto.RegisterProvider) (dto.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RegisterProvider", ctx, registerDto)
+	ret := m.ctrl.Call(m, "RegisterProvider", ctx, registerDTO)
 	ret0, _ := ret[0].(dto.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RegisterProvider indicates an expected call of RegisterProvider.
-func (mr *MockAuthServiceMockRecorder) RegisterProvider(ctx, registerDto any) *gomock.Call {
+func (mr *MockAuthServiceMockRecorder) RegisterProvider(ctx, registerDTO any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterProvider", reflect.TypeOf((*MockAuthService)(nil).RegisterProvider), ctx, registerDto)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterProvider", reflect.TypeOf((*MockAuthService)(nil).RegisterProvider), ctx, registerDTO)
 }
 
 // SendConfirmationLetter mocks base method.

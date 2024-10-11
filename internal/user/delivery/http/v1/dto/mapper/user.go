@@ -9,7 +9,7 @@ import (
 	"github.com/hexley21/fixup/pkg/infra/cdn"
 )
 
-func MapUserToDto(entity entity.User, urlSigner cdn.URLSigner) (dto.User, error) {
+func MapUserToDTO(entity entity.User, urlSigner cdn.URLSigner) (dto.User, error) {
 	var url string
 	if entity.PictureName.String != "" {
 		signedUrl, err := urlSigner.SignURL(entity.PictureName.String)
@@ -32,7 +32,7 @@ func MapUserToDto(entity entity.User, urlSigner cdn.URLSigner) (dto.User, error)
 	}, nil
 }
 
-func MapUserToProfileDto(entity entity.User, urlSigner cdn.URLSigner) (dto.Profile, error) {
+func MapUserToProfileDTO(entity entity.User, urlSigner cdn.URLSigner) (dto.Profile, error) {
 	var url string
 	if entity.PictureName.String != "" {
 		signedUrl, err := urlSigner.SignURL(entity.PictureName.String)

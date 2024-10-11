@@ -51,9 +51,9 @@ func NewTemplates(confirmation *template.Template, verified *template.Template) 
 }
 
 type AuthService interface {
-	RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error)
-	RegisterProvider(ctx context.Context, registerDto dto.RegisterProvider) (dto.User, error)
-	AuthenticateUser(ctx context.Context, loginDto dto.Login) (UserIdentity, error)
+	RegisterCustomer(ctx context.Context, registerDTO dto.RegisterUser) (dto.User, error)
+	RegisterProvider(ctx context.Context, registerDTO dto.RegisterProvider) (dto.User, error)
+	AuthenticateUser(ctx context.Context, loginDTO dto.Login) (UserIdentity, error)
 	VerifyUser(ctx context.Context, token string, ttl time.Duration, id int64) error
 	GetUserConfirmationDetails(ctx context.Context, email string) (UserConfirmationDetails, error)
 	GetUserRoleAndStatus(ctx context.Context, id int64) (UserRoleAndStatus, error)
@@ -119,20 +119,20 @@ func (s *authServiceImpl) SetTemplates(confirmation *template.Template, verified
 	s.templates = NewTemplates(confirmation, verified)
 }
 
-func (s *authServiceImpl) RegisterCustomer(ctx context.Context, registerDto dto.RegisterUser) (dto.User, error) {
+func (s *authServiceImpl) RegisterCustomer(ctx context.Context, registerDTO dto.RegisterUser) (dto.User, error) {
 	var userDTO dto.User
 
-	hash, err := s.hasher.HashPassword(registerDto.Password)
+	hash, err := s.hasher.HashPassword(registerDTO.Password)
 	if err != nil {
 		return userDTO, err
 	}
 
 	user, err := s.userRepository.CreateUser(ctx,
 		repository.CreateUserParams{
-			FirstName:   registerDto.FirstName,
-			LastName:    registerDto.LastName,
-			PhoneNumber: registerDto.PhoneNumber,
-			Email:       registerDto.Email,
+			FirstName:   registerDTO.FirstName,
+			LastName:    registerDTO.LastName,
+			PhoneNumber: registerDTO.PhoneNumber,
+			Email:       registerDTO.Email,
 			Hash:        hash,
 			Role:        enum.UserRoleCUSTOMER,
 		})
@@ -140,7 +140,7 @@ func (s *authServiceImpl) RegisterCustomer(ctx context.Context, registerDto dto.
 		return userDTO, err
 	}
 
-	userDTO, err = mapper.MapUserToDto(user, s.cdnUrlSigner)
+	userDTO, err = mapper.MapUserToDTO(user, s.cdnUrlSigner)
 	if err != nil {
 		return userDTO, err
 	}
@@ -148,10 +148,10 @@ func (s *authServiceImpl) RegisterCustomer(ctx context.Context, registerDto dto.
 	return userDTO, nil
 }
 
-func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.RegisterProvider) (dto.User, error) {
+func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDTO dto.RegisterProvider) (dto.User, error) {
 	var userDTO dto.User
 
-	hash, err := s.hasher.HashPassword(registerDto.Password)
+	hash, err := s.hasher.HashPassword(registerDTO.Password)
 	if err != nil {
 		return userDTO, err
 	}
@@ -163,10 +163,10 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 
 	user, err := s.userRepository.WithTx(tx).CreateUser(ctx,
 		repository.CreateUserParams{
-			FirstName:   registerDto.FirstName,
-			LastName:    registerDto.LastName,
-			PhoneNumber: registerDto.PhoneNumber,
-			Email:       registerDto.Email,
+			FirstName:   registerDTO.FirstName,
+			LastName:    registerDTO.LastName,
+			PhoneNumber: registerDTO.PhoneNumber,
+			Email:       registerDTO.Email,
 			Hash:        hash,
 			Role:        enum.UserRoleCUSTOMER,
 		},
@@ -178,7 +178,7 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 		return userDTO, err
 	}
 
-	enc, err := s.encryptor.Encrypt([]byte(registerDto.PersonalIDNumber))
+	enc, err := s.encryptor.Encrypt([]byte(registerDTO.PersonalIDNumber))
 	if err != nil {
 		if err := tx.Rollback(ctx); err != nil {
 			return userDTO, err
@@ -188,7 +188,7 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 
 	err = s.providerRepository.WithTx(tx).Create(ctx, repository.CreateProviderParams{
 		PersonalIDNumber:  enc,
-		PersonalIDPreview: registerDto.PersonalIDNumber[len(registerDto.PersonalIDNumber)-5:],
+		PersonalIDPreview: registerDTO.PersonalIDNumber[len(registerDTO.PersonalIDNumber)-5:],
 		UserID:            user.ID,
 	})
 	if err != nil {
@@ -202,7 +202,7 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 		return userDTO, err
 	}
 
-	res, err := mapper.MapUserToDto(user, s.cdnUrlSigner)
+	res, err := mapper.MapUserToDTO(user, s.cdnUrlSigner)
 	if err != nil {
 		return userDTO, err
 	}
@@ -210,14 +210,14 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, registerDto dto.
 	return res, nil
 }
 
-func (s *authServiceImpl) AuthenticateUser(ctx context.Context, loginDto dto.Login) (UserIdentity, error) {
+func (s *authServiceImpl) AuthenticateUser(ctx context.Context, loginDTO dto.Login) (UserIdentity, error) {
 	var identityDTO UserIdentity
-	creds, err := s.userRepository.GetCredentialsByEmail(ctx, loginDto.Email)
+	creds, err := s.userRepository.GetCredentialsByEmail(ctx, loginDTO.Email)
 	if err != nil {
 		return identityDTO, err
 	}
 
-	err = s.hasher.VerifyPassword(loginDto.Password, creds.Hash)
+	err = s.hasher.VerifyPassword(loginDTO.Password, creds.Hash)
 	if err != nil {
 		return identityDTO, err
 	}

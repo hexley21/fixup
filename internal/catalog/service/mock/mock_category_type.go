@@ -41,18 +41,18 @@ func (m *MockCategoryTypeService) EXPECT() *MockCategoryTypeServiceMockRecorder 
 }
 
 // CreateCategoryType mocks base method.
-func (m *MockCategoryTypeService) CreateCategoryType(ctx context.Context, createCategoryDto dto.CreateCategoryTypeDTO) (dto.CategoryTypeDTO, error) {
+func (m *MockCategoryTypeService) CreateCategoryType(ctx context.Context, createDTO dto.CreateCategoryTypeDTO) (dto.CategoryTypeDTO, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateCategoryType", ctx, createCategoryDto)
+	ret := m.ctrl.Call(m, "CreateCategoryType", ctx, createDTO)
 	ret0, _ := ret[0].(dto.CategoryTypeDTO)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateCategoryType indicates an expected call of CreateCategoryType.
-func (mr *MockCategoryTypeServiceMockRecorder) CreateCategoryType(ctx, dto any) *gomock.Call {
+func (mr *MockCategoryTypeServiceMockRecorder) CreateCategoryType(ctx, createDTO any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCategoryType", reflect.TypeOf((*MockCategoryTypeService)(nil).CreateCategoryType), ctx, dto)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCategoryType", reflect.TypeOf((*MockCategoryTypeService)(nil).CreateCategoryType), ctx, createDTO)
 }
 
 // DeleteCategoryTypeById mocks base method.
@@ -85,30 +85,30 @@ func (mr *MockCategoryTypeServiceMockRecorder) GetCategoryTypeById(ctx, id any) 
 }
 
 // GetCategoryTypes mocks base method.
-func (m *MockCategoryTypeService) GetCategoryTypes(ctx context.Context, page, per_page int32) ([]dto.CategoryTypeDTO, error) {
+func (m *MockCategoryTypeService) GetCategoryTypes(ctx context.Context, page, perPage int32) ([]dto.CategoryTypeDTO, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCategoryTypes", ctx, page, per_page)
+	ret := m.ctrl.Call(m, "GetCategoryTypes", ctx, page, perPage)
 	ret0, _ := ret[0].([]dto.CategoryTypeDTO)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetCategoryTypes indicates an expected call of GetCategoryTypes.
-func (mr *MockCategoryTypeServiceMockRecorder) GetCategoryTypes(ctx, page, per_page any) *gomock.Call {
+func (mr *MockCategoryTypeServiceMockRecorder) GetCategoryTypes(ctx, page, perPage any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCategoryTypes", reflect.TypeOf((*MockCategoryTypeService)(nil).GetCategoryTypes), ctx, page, per_page)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCategoryTypes", reflect.TypeOf((*MockCategoryTypeService)(nil).GetCategoryTypes), ctx, page, perPage)
 }
 
 // UpdateCategoryTypeById mocks base method.
-func (m *MockCategoryTypeService) UpdateCategoryTypeById(ctx context.Context, id int32, dto dto.PatchCategoryTypeDTO) error {
+func (m *MockCategoryTypeService) UpdateCategoryTypeById(ctx context.Context, id int32, patchDTO dto.PatchCategoryTypeDTO) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateCategoryTypeById", ctx, id, dto)
+	ret := m.ctrl.Call(m, "UpdateCategoryTypeById", ctx, id, patchDTO)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateCategoryTypeById indicates an expected call of UpdateCategoryTypeById.
-func (mr *MockCategoryTypeServiceMockRecorder) UpdateCategoryTypeById(ctx, id, dto any) *gomock.Call {
+func (mr *MockCategoryTypeServiceMockRecorder) UpdateCategoryTypeById(ctx, id, patchDTO any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCategoryTypeById", reflect.TypeOf((*MockCategoryTypeService)(nil).UpdateCategoryTypeById), ctx, id, dto)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCategoryTypeById", reflect.TypeOf((*MockCategoryTypeService)(nil).UpdateCategoryTypeById), ctx, id, patchDTO)
 }

@@ -28,7 +28,7 @@ import (
 )
 
 var (
-	registerUserDto = dto.RegisterUser{
+	registerUserDTO = dto.RegisterUser{
 		Email:       "larry@page.com",
 		PhoneNumber: "995111222333",
 		FirstName:   "Larry",
@@ -36,12 +36,12 @@ var (
 		Password:    "12345678",
 	}
 
-	registerProviderDto = dto.RegisterProvider{
-		RegisterUser:     registerUserDto,
+	registerProviderDTO = dto.RegisterProvider{
+		RegisterUser:     registerUserDTO,
 		PersonalIDNumber: "1234567890",
 	}
 
-	loginDto = dto.Login{
+	loginDTO = dto.Login{
 		Email:    "larry@page.com",
 		Password: "12345678",
 	}
@@ -106,12 +106,12 @@ func TestRegisterCustomer(t *testing.T) {
 	hasherMock.EXPECT().HashPassword(gomock.Any()).Return(newHash, nil)
 	urlSignerMock.EXPECT().SignURL(gomock.Any()).Return(newUrl, nil)
 
-	registerDTO, err := svc.RegisterCustomer(ctx, registerUserDto)
+	registerDTO, err := svc.RegisterCustomer(ctx, registerUserDTO)
 	assert.NoError(t, err)
-	assert.Equal(t, registerUserDto.Email, registerDTO.Email)
-	assert.Equal(t, registerUserDto.PhoneNumber, registerDTO.PhoneNumber)
-	assert.Equal(t, registerUserDto.FirstName, registerDTO.FirstName)
-	assert.Equal(t, registerUserDto.LastName, registerDTO.LastName)
+	assert.Equal(t, registerUserDTO.Email, registerDTO.Email)
+	assert.Equal(t, registerUserDTO.PhoneNumber, registerDTO.PhoneNumber)
+	assert.Equal(t, registerUserDTO.FirstName, registerDTO.FirstName)
+	assert.Equal(t, registerUserDTO.LastName, registerDTO.LastName)
 
 	time.Sleep(time.Microsecond)
 }
@@ -131,15 +131,15 @@ func TestRegisterProvider(t *testing.T) {
 	txMock.EXPECT().Commit(ctx).Return(nil)
 
 	hasherMock.EXPECT().HashPassword(gomock.Any()).Return(newHash, nil)
-	encryptorMock.EXPECT().Encrypt(gomock.Any()).Return([]byte(registerProviderDto.PersonalIDNumber), nil)
+	encryptorMock.EXPECT().Encrypt(gomock.Any()).Return([]byte(registerProviderDTO.PersonalIDNumber), nil)
 	urlSignerMock.EXPECT().SignURL(gomock.Any()).Return(newUrl, nil)
 
-	registerDTO, err := svc.RegisterProvider(ctx, registerProviderDto)
+	registerDTO, err := svc.RegisterProvider(ctx, registerProviderDTO)
 	assert.NoError(t, err)
-	assert.Equal(t, registerUserDto.Email, registerDTO.Email)
-	assert.Equal(t, registerUserDto.PhoneNumber, registerDTO.PhoneNumber)
-	assert.Equal(t, registerUserDto.FirstName, registerDTO.FirstName)
-	assert.Equal(t, registerUserDto.LastName, registerDTO.LastName)
+	assert.Equal(t, registerUserDTO.Email, registerDTO.Email)
+	assert.Equal(t, registerUserDTO.PhoneNumber, registerDTO.PhoneNumber)
+	assert.Equal(t, registerUserDTO.FirstName, registerDTO.FirstName)
+	assert.Equal(t, registerUserDTO.LastName, registerDTO.LastName)
 
 	time.Sleep(time.Microsecond)
 }
@@ -150,14 +150,14 @@ func TestAuthenticateUser_Success(t *testing.T) {
 	ctrl, svc, userRepoMock, _, _, _, _, hasherMock, _, _, _ := setupAuth(t)
 	defer ctrl.Finish()
 
-	userRepoMock.EXPECT().GetCredentialsByEmail(ctx, loginDto.Email).Return(creds, nil)
-	hasherMock.EXPECT().VerifyPassword(loginDto.Password, creds.Hash).Return(nil)
+	userRepoMock.EXPECT().GetCredentialsByEmail(ctx, loginDTO.Email).Return(creds, nil)
+	hasherMock.EXPECT().VerifyPassword(loginDTO.Password, creds.Hash).Return(nil)
 
-	credentialsDto, err := svc.AuthenticateUser(ctx, loginDto)
+	credentialsDTO, err := svc.AuthenticateUser(ctx, loginDTO)
 	assert.NoError(t, err)
-	assert.Equal(t, strconv.FormatInt(creds.ID, 10), credentialsDto.ID)
-	assert.Equal(t, credentialsDto.Role, credentialsDto.Role)
-	assert.Equal(t, creds.UserStatus.Bool, credentialsDto.UserStatus)
+	assert.Equal(t, strconv.FormatInt(creds.ID, 10), credentialsDTO.ID)
+	assert.Equal(t, credentialsDTO.Role, credentialsDTO.Role)
+	assert.Equal(t, creds.UserStatus.Bool, credentialsDTO.UserStatus)
 }
 
 func TestAuthenticateUser_NotFound(t *testing.T) {
@@ -166,11 +166,11 @@ func TestAuthenticateUser_NotFound(t *testing.T) {
 	ctrl, svc, userRepoMock, _, _, _, _, _, _, _, _ := setupAuth(t)
 	defer ctrl.Finish()
 
-	userRepoMock.EXPECT().GetCredentialsByEmail(ctx, loginDto.Email).Return(repository.GetCredentialsByEmailRow{}, pgx.ErrNoRows)
+	userRepoMock.EXPECT().GetCredentialsByEmail(ctx, loginDTO.Email).Return(repository.GetCredentialsByEmailRow{}, pgx.ErrNoRows)
 
-	credentialsDto, err := svc.AuthenticateUser(ctx, loginDto)
+	credentialsDTO, err := svc.AuthenticateUser(ctx, loginDTO)
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
-	assert.Empty(t, credentialsDto)
+	assert.Empty(t, credentialsDTO)
 }
 
 func TestAuthenticateUser_PasswordMissmatch(t *testing.T) {
@@ -179,12 +179,12 @@ func TestAuthenticateUser_PasswordMissmatch(t *testing.T) {
 	ctrl, svc, userRepoMock, _, _, _, _, hasherMock, _, _, _ := setupAuth(t)
 	defer ctrl.Finish()
 
-	userRepoMock.EXPECT().GetCredentialsByEmail(ctx, loginDto.Email).Return(creds, nil)
-	hasherMock.EXPECT().VerifyPassword(loginDto.Password, creds.Hash).Return(hasher.ErrPasswordMismatch)
+	userRepoMock.EXPECT().GetCredentialsByEmail(ctx, loginDTO.Email).Return(creds, nil)
+	hasherMock.EXPECT().VerifyPassword(loginDTO.Password, creds.Hash).Return(hasher.ErrPasswordMismatch)
 
-	credentialsDto, err := svc.AuthenticateUser(ctx, loginDto)
+	credentialsDTO, err := svc.AuthenticateUser(ctx, loginDTO)
 	assert.ErrorIs(t, err, hasher.ErrPasswordMismatch)
-	assert.Empty(t, credentialsDto)
+	assert.Empty(t, credentialsDTO)
 }
 
 func TestVerifyUser_Success(t *testing.T) {

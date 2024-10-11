@@ -41,7 +41,7 @@ import (
 )
 
 var (
-	userDto = dto.User{
+	userDTO = dto.User{
 		ID:          "1",
 		FirstName:   "Larry",
 		LastName:    "Page",
@@ -90,7 +90,7 @@ func setup(t *testing.T) (
 	ctrl *gomock.Controller,
 	authServiceMock *mockService.MockAuthService,
 	validatorMock *mockValidator.MockValidator,
-	verifyJWTManager *mockVerifyJwt.MockManager,
+	verifyJWTManagerMock *mockVerifyJwt.MockManager,
 	accessJWTGeneratorMock *mockAuthJwt.MockGenerator,
 	refreshJWTGeneratorMock *mockRefreshJwt.MockGenerator,
 	h *auth.Handler,
@@ -98,7 +98,7 @@ func setup(t *testing.T) (
 	ctrl = gomock.NewController(t)
 	authServiceMock = mockService.NewMockAuthService(ctrl)
 	validatorMock = mockValidator.NewMockValidator(ctrl)
-	verifyJWTManager = mockVerifyJwt.NewMockManager(ctrl)
+	verifyJWTManagerMock = mockVerifyJwt.NewMockManager(ctrl)
 	accessJWTGeneratorMock = mockAuthJwt.NewMockGenerator(ctrl)
 	refreshJWTGeneratorMock = mockRefreshJwt.NewMockGenerator(ctrl)
 
@@ -114,19 +114,19 @@ func setup(t *testing.T) (
 }
 
 func TestRegisterCustomer_Success(t *testing.T) {
-	ctrl, authServiceMock, validatorMock, verifyJWTManager, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, verifyJWTManagerMock, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	authServiceMock.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).Return(userDto, nil)
-	authServiceMock.EXPECT().SendConfirmationLetter(gomock.Any(), token, userDto.Email, userDto.FirstName).Return(nil)
+	authServiceMock.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).Return(userDTO, nil)
+	authServiceMock.EXPECT().SendConfirmationLetter(gomock.Any(), token, userDTO.Email, userDTO.FirstName).Return(nil)
 	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
-	verifyJWTManager.EXPECT().Generate(userDto.ID, userDto.Email).Return(token, nil)
+	verifyJWTManagerMock.EXPECT().Generate(userDTO.ID, userDTO.Email).Return(token, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(registerCustomerJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.RegisterCustomer(verifyJWTManager).ServeHTTP(rec, req)
+	h.RegisterCustomer(verifyJWTManagerMock).ServeHTTP(rec, req)
 
 	assert.Empty(t, rec.Body.String())
 	assert.Equal(t, http.StatusCreated, rec.Code)
@@ -212,19 +212,19 @@ func TestRegisterCustomer_ServiceError(t *testing.T) {
 }
 
 func TestRegisterProvider_Success(t *testing.T) {
-	ctrl, authServiceMock, validatorMock, verifyJWTManager, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, verifyJWTManagerMock, _, _, h := setup(t)
 	defer ctrl.Finish()
 
-	authServiceMock.EXPECT().RegisterProvider(gomock.Any(), gomock.Any()).Return(userDto, nil)
-	authServiceMock.EXPECT().SendConfirmationLetter(gomock.Any(), token, userDto.Email, userDto.FirstName).Return(nil)
+	authServiceMock.EXPECT().RegisterProvider(gomock.Any(), gomock.Any()).Return(userDTO, nil)
+	authServiceMock.EXPECT().SendConfirmationLetter(gomock.Any(), token, userDTO.Email, userDTO.FirstName).Return(nil)
 	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
-	verifyJWTManager.EXPECT().Generate(userDto.ID, userDto.Email).Return(token, nil)
+	verifyJWTManagerMock.EXPECT().Generate(userDTO.ID, userDTO.Email).Return(token, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(registerProviderJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.RegisterProvider(verifyJWTManager).ServeHTTP(rec, req)
+	h.RegisterProvider(verifyJWTManagerMock).ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusCreated, rec.Code)
 
@@ -307,19 +307,19 @@ func TestRegisterProvider_ServiceError(t *testing.T) {
 }
 
 func TestResendConfirmationLetter_Success(t *testing.T) {
-	ctrl, authServiceMock, validatorMock, verifyJWTManager, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, verifyJWTManagerMock, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	authServiceMock.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(userConfirmationDetailsDTO, nil)
-	authServiceMock.EXPECT().SendConfirmationLetter(gomock.Any(), token, userDto.Email, userDto.FirstName).Return(nil)
+	authServiceMock.EXPECT().SendConfirmationLetter(gomock.Any(), token, userDTO.Email, userDTO.FirstName).Return(nil)
 	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
-	verifyJWTManager.EXPECT().Generate(userDto.ID, userDto.Email).Return(token, nil)
+	verifyJWTManagerMock.EXPECT().Generate(userDTO.ID, userDTO.Email).Return(token, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(emailJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.ResendConfirmationLetter(verifyJWTManager).ServeHTTP(rec, req)
+	h.ResendConfirmationLetter(verifyJWTManagerMock).ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusNoContent, rec.Code)
 }
@@ -380,7 +380,7 @@ func TestResendConfirmationLetter_Conflict(t *testing.T) {
 }
 
 func TestResendConfirmationLetter_NotFound(t *testing.T) {
-	ctrl, authServiceMock, validatorMock, verifyJWTManager, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, verifyJWTManagerMock, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	authServiceMock.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(service.UserConfirmationDetails{}, pg_error.ErrNotFound)
@@ -390,7 +390,7 @@ func TestResendConfirmationLetter_NotFound(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.ResendConfirmationLetter(verifyJWTManager).ServeHTTP(rec, req)
+	h.ResendConfirmationLetter(verifyJWTManagerMock).ServeHTTP(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -400,7 +400,7 @@ func TestResendConfirmationLetter_NotFound(t *testing.T) {
 }
 
 func TestResendConfirmationLetter_Already(t *testing.T) {
-	ctrl, authServiceMock, validatorMock, verifyJWTManager, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, verifyJWTManagerMock, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	authServiceMock.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(service.UserConfirmationDetails{}, pg_error.ErrNotFound)
@@ -410,7 +410,7 @@ func TestResendConfirmationLetter_Already(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.ResendConfirmationLetter(verifyJWTManager).ServeHTTP(rec, req)
+	h.ResendConfirmationLetter(verifyJWTManagerMock).ServeHTTP(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -441,18 +441,18 @@ func TestResendConfirmationLetter_ServiceError(t *testing.T) {
 
 func TestResendConfirmationLetter_MailError(t *testing.T) {
 
-	ctrl, authServiceMock, validatorMock, verifyJWTManager, _, _, h := setup(t)
+	ctrl, authServiceMock, validatorMock, verifyJWTManagerMock, _, _, h := setup(t)
 	defer ctrl.Finish()
 
 	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
 	authServiceMock.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(userConfirmationDetailsDTO, nil)
-	verifyJWTManager.EXPECT().Generate(userDto.ID, userDto.Email).Return("", rest.NewUnauthorizedError(errors.New(""), app_error.MsgInvalidToken))
+	verifyJWTManagerMock.EXPECT().Generate(userDTO.ID, userDTO.Email).Return("", rest.NewUnauthorizedError(errors.New(""), app_error.MsgInvalidToken))
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(emailJSON))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	h.ResendConfirmationLetter(verifyJWTManager).ServeHTTP(rec, req)
+	h.ResendConfirmationLetter(verifyJWTManagerMock).ServeHTTP(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -467,8 +467,8 @@ func TestLogin_Success(t *testing.T) {
 
 	authServiceMock.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(UserIdentity, nil)
 	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
-	accessJWTGeneratorMock.EXPECT().Generate(userDto.ID, userDto.Role, userDto.UserStatus).Return(token, nil)
-	refreshJWTGeneratorMock.EXPECT().Generate(userDto.ID).Return(token, nil)
+	accessJWTGeneratorMock.EXPECT().Generate(userDTO.ID, userDTO.Role, userDTO.UserStatus).Return(token, nil)
+	refreshJWTGeneratorMock.EXPECT().Generate(userDTO.ID).Return(token, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(loginJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -563,7 +563,7 @@ func TestLogin_AccessTokenError(t *testing.T) {
 
 	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
 	authServiceMock.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(UserIdentity, nil)
-	accessJWTGeneratorMock.EXPECT().Generate(userDto.ID, userDto.Role, userDto.UserStatus).Return("", rest.NewInternalServerError(errors.New("")))
+	accessJWTGeneratorMock.EXPECT().Generate(userDTO.ID, userDTO.Role, userDTO.UserStatus).Return("", rest.NewInternalServerError(errors.New("")))
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(loginJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -584,8 +584,8 @@ func TestLogin_RefreshTokenError(t *testing.T) {
 
 	authServiceMock.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(UserIdentity, nil)
 	validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
-	accessJWTGeneratorMock.EXPECT().Generate(userDto.ID, userDto.Role, userDto.UserStatus).Return(token, nil)
-	refreshJWTGeneratorMock.EXPECT().Generate(userDto.ID).Return("", rest.NewInternalServerError(errors.New("")))
+	accessJWTGeneratorMock.EXPECT().Generate(userDTO.ID, userDTO.Role, userDTO.UserStatus).Return(token, nil)
+	refreshJWTGeneratorMock.EXPECT().Generate(userDTO.ID).Return("", rest.NewInternalServerError(errors.New("")))
 
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(loginJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -621,14 +621,14 @@ func TestRefresh_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	authServiceMock.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(UserRoleAndStatus, nil)
-	accessJWTGeneratorMock.EXPECT().Generate(userDto.ID, userDto.Role, userDto.UserStatus).Return(token, nil)
+	accessJWTGeneratorMock.EXPECT().Generate(userDTO.ID, userDTO.Role, userDTO.UserStatus).Return(token, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
 
-	ctx := ctx_util.SetJWTId(req.Context(), userDto.ID)
-	ctx = ctx_util.SetJWTRole(ctx, enum.UserRole(userDto.Role))
-	ctx = ctx_util.SetJWTUserStatus(ctx, userDto.UserStatus)
+	ctx := ctx_util.SetJWTId(req.Context(), userDTO.ID)
+	ctx = ctx_util.SetJWTRole(ctx, enum.UserRole(userDTO.Role))
+	ctx = ctx_util.SetJWTUserStatus(ctx, userDTO.UserStatus)
 
 	h.Refresh(accessJWTGeneratorMock).ServeHTTP(rec, req.WithContext(ctx))
 
@@ -645,9 +645,9 @@ func TestRefresh_NotFound(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
 
-	ctx := ctx_util.SetJWTId(req.Context(), userDto.ID)
-	ctx = ctx_util.SetJWTRole(ctx, enum.UserRole(userDto.Role))
-	ctx = ctx_util.SetJWTUserStatus(ctx, userDto.UserStatus)
+	ctx := ctx_util.SetJWTId(req.Context(), userDTO.ID)
+	ctx = ctx_util.SetJWTRole(ctx, enum.UserRole(userDTO.Role))
+	ctx = ctx_util.SetJWTUserStatus(ctx, userDTO.UserStatus)
 
 	h.Refresh(nil).ServeHTTP(rec, req.WithContext(ctx))
 
@@ -668,9 +668,9 @@ func TestRefresh_ServiceError(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	rec := httptest.NewRecorder()
 
-	ctx := ctx_util.SetJWTId(req.Context(), userDto.ID)
-	ctx = ctx_util.SetJWTRole(ctx, enum.UserRole(userDto.Role))
-	ctx = ctx_util.SetJWTUserStatus(ctx, userDto.UserStatus)
+	ctx := ctx_util.SetJWTId(req.Context(), userDTO.ID)
+	ctx = ctx_util.SetJWTRole(ctx, enum.UserRole(userDTO.Role))
+	ctx = ctx_util.SetJWTUserStatus(ctx, userDTO.UserStatus)
 
 	h.Refresh(nil).ServeHTTP(rec, req.WithContext(ctx))
 

@@ -183,13 +183,13 @@ func TestUpdateUserDataById_Success(t *testing.T) {
 	ctx, ctrl, svc, userRepoMock, cdnUrlSignerMock, _, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	updateUserDto := dto.UpdateUser{Email: &userEntity.Email, PhoneNumber: &userEntity.PhoneNumber, FirstName: &userEntity.FirstName, LastName: &userEntity.LastName}
-	updateUserParams := repository.UpdateUserParams{ID: userEntity.ID, FirstName: updateUserDto.FirstName, LastName: updateUserDto.LastName, PhoneNumber: updateUserDto.PhoneNumber, Email: updateUserDto.Email}
+	updateUserDTO := dto.UpdateUser{Email: &userEntity.Email, PhoneNumber: &userEntity.PhoneNumber, FirstName: &userEntity.FirstName, LastName: &userEntity.LastName}
+	updateUserParams := repository.UpdateUserParams{ID: userEntity.ID, FirstName: updateUserDTO.FirstName, LastName: updateUserDTO.LastName, PhoneNumber: updateUserDTO.PhoneNumber, Email: updateUserDTO.Email}
 
 	userRepoMock.EXPECT().Update(ctx, updateUserParams).Return(userEntity, nil)
 	cdnUrlSignerMock.EXPECT().SignURL(userEntity.PictureName.String).Return(signedPicture, nil)
 
-	userDTO, err := svc.UpdateUserDataById(ctx, userEntity.ID, updateUserDto)
+	userDTO, err := svc.UpdateUserDataById(ctx, userEntity.ID, updateUserDTO)
 
 	assert.NoError(t, err)
 
@@ -204,12 +204,12 @@ func TestUpdateUserDataById_NotFound(t *testing.T) {
 	ctx, ctrl, svc, userRepoMock, _, _, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	updateUserDto := dto.UpdateUser{Email: &userEntity.Email, PhoneNumber: &userEntity.PhoneNumber, FirstName: &userEntity.FirstName, LastName: &userEntity.LastName}
-	updateUserParams := repository.UpdateUserParams{ID: userEntity.ID, FirstName: updateUserDto.FirstName, LastName: updateUserDto.LastName, PhoneNumber: updateUserDto.PhoneNumber, Email: updateUserDto.Email}
+	updateUserDTO := dto.UpdateUser{Email: &userEntity.Email, PhoneNumber: &userEntity.PhoneNumber, FirstName: &userEntity.FirstName, LastName: &userEntity.LastName}
+	updateUserParams := repository.UpdateUserParams{ID: userEntity.ID, FirstName: updateUserDTO.FirstName, LastName: updateUserDTO.LastName, PhoneNumber: updateUserDTO.PhoneNumber, Email: updateUserDTO.Email}
 
 	userRepoMock.EXPECT().Update(ctx, updateUserParams).Return(entity.User{}, pgx.ErrNoRows)
 
-	userDTO, err := svc.UpdateUserDataById(ctx, userEntity.ID, updateUserDto)
+	userDTO, err := svc.UpdateUserDataById(ctx, userEntity.ID, updateUserDTO)
 
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 	assert.Empty(t, userDTO)
@@ -219,13 +219,13 @@ func TestUpdateUserDataById_SignerError(t *testing.T) {
 	ctx, ctrl, svc, userRepoMock, cdnUrlSignerMock, _, _, _ := setupUser(t)
 	defer ctrl.Finish()
 
-	updateUserDto := dto.UpdateUser{Email: &userEntity.Email, PhoneNumber: &userEntity.PhoneNumber, FirstName: &userEntity.FirstName, LastName: &userEntity.LastName}
-	updateUserParams := repository.UpdateUserParams{ID: userEntity.ID, FirstName: updateUserDto.FirstName, LastName: updateUserDto.LastName, PhoneNumber: updateUserDto.PhoneNumber, Email: updateUserDto.Email}
+	updateUserDTO := dto.UpdateUser{Email: &userEntity.Email, PhoneNumber: &userEntity.PhoneNumber, FirstName: &userEntity.FirstName, LastName: &userEntity.LastName}
+	updateUserParams := repository.UpdateUserParams{ID: userEntity.ID, FirstName: updateUserDTO.FirstName, LastName: updateUserDTO.LastName, PhoneNumber: updateUserDTO.PhoneNumber, Email: updateUserDTO.Email}
 
 	userRepoMock.EXPECT().Update(ctx, updateUserParams).Return(userEntity, nil)
 	cdnUrlSignerMock.EXPECT().SignURL(userEntity.PictureName.String).Return("", errSigningUrl)
 
-	userDTO, err := svc.UpdateUserDataById(ctx, userEntity.ID, updateUserDto)
+	userDTO, err := svc.UpdateUserDataById(ctx, userEntity.ID, updateUserDTO)
 
 	assert.ErrorIs(t, err, errSigningUrl)
 	assert.Empty(t, userDTO)

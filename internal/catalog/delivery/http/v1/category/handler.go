@@ -208,20 +208,20 @@ func (h *Handler) PatchCategoryById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var patchDto dto.PatchCategoryDTO
-	errResp := h.Binder.BindJSON(r, &patchDto)
+	var patchDTO dto.PatchCategoryDTO
+	errResp := h.Binder.BindJSON(r, &patchDTO)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	errResp = h.Validator.Validate(patchDto)
+	errResp = h.Validator.Validate(patchDTO)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	updated, err := h.service.UpdateCategoryById(r.Context(), int32(id), patchDto)
+	updated, err := h.service.UpdateCategoryById(r.Context(), int32(id), patchDTO)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			h.Writer.WriteError(w, rest.NewNotFoundError(err, MsgCategoryNotFound))
@@ -238,7 +238,7 @@ func (h *Handler) PatchCategoryById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Patch category: %s, ID: %d", patchDto.Name, id)
+	h.Logger.Infof("Patch category: %s, ID: %d", patchDTO.Name, id)
 	h.Writer.WriteData(w, http.StatusOK, updated)
 }
 
