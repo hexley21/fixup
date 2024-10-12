@@ -332,7 +332,7 @@ paths:
       summary: Resent confirmation letter
       tags:
       - auth
-  /auth/verify-email:
+  /auth/verify:
     get:
       consumes:
       - application/json

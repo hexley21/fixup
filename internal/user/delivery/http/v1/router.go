@@ -24,12 +24,12 @@ type RouterArgs struct {
 }
 
 func MapV1Routes(args RouterArgs, router chi.Router) {
-	authHandlermiddleware := auth.NewHandler(
+	authHandler := auth.NewHandler(
 		args.HandlerComponents,
 		args.AuthService,
 	)
 
-	userHandlermiddleware := user.NewHandler(
+	userHandler := user.NewHandler(
 		args.HandlerComponents,
 		args.UserService,
 	)
@@ -39,7 +39,7 @@ func MapV1Routes(args RouterArgs, router chi.Router) {
 	refreshJWTMiddleware := refreshMiddleware.NewJWT(args.HandlerComponents.Writer, args.RefreshJWTManager)
 
 	router.Route("/v1", func(r chi.Router) {
-		auth.MapRoutes(authHandlermiddleware, refreshJWTMiddleware, args.AccessJWTManager, args.RefreshJWTManager, args.VerificationJWTManager, r)
-		user.MapRoutes(args.Middleware, userHandlermiddleware, accessJWTMiddleware, onlyVerifiedMiddleware, r)
+		auth.MapRoutes(authHandler, refreshJWTMiddleware, args.AccessJWTManager, args.RefreshJWTManager, args.VerificationJWTManager, r)
+		user.MapRoutes(args.Middleware, userHandler, accessJWTMiddleware, onlyVerifiedMiddleware, r)
 	})
 }

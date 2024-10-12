@@ -22,9 +22,9 @@ func MapRoutes(
 			r.Delete("/{id}", h.DeleteCategoryById)
 		})
 
-		r.Get("/", h.GetCategoryies)
+		r.Get("/", h.GetCategories)
 		r.Get("/{id}", h.GetCategoryById)
 	})
 
-	router.Get("/category-types/{id}/categories", h.GetCategoryiesByTypeId)
+	router.Get("/category-types/{id}/categories", h.GetCategoriesByTypeId)
 }

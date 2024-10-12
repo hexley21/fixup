@@ -53,7 +53,7 @@ func NewServer(
 	cfg *config.Config,
 	dbPool *pgxpool.Pool,
 	logger logger.Logger,
-	snowflakeNode *snowflake.Node,
+	_ *snowflake.Node,
 	validator validator.Validator,
 ) *server {
 	categoryTypeRepository := repository.NewCategoryTypeRepository(dbPool)

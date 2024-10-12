@@ -35,7 +35,7 @@ func TestAllowRoles_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
 
-func TestAllowRoles_InsuffucientRights(t *testing.T) {
+func TestAllowRoles_InsufficientRights(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 

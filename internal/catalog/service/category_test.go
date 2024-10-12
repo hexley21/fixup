@@ -46,7 +46,6 @@ func TestCreateCategory_Success(t *testing.T) {
 	categoryRepoMock.EXPECT().CreateCategory(ctx, gomock.Any()).Return(categoryEntity, nil)
 
 	categoryDTO, err := svc.CreateCategory(ctx, createCategoryDTO)
-
 	assert.NoError(t, err)
 	assert.Equal(t, strId, categoryDTO.ID)
 	assert.Equal(t, strId, categoryDTO.TypeID)
@@ -125,9 +124,9 @@ func TestGetCategories_Success(t *testing.T) {
 
 	categoryRepoMock.EXPECT().GetCategories(ctx, perPage*(page-1), perPage).Return([]entity.Category{categoryEntity, categoryEntity}, nil)
 
-	dtos, err := svc.GetCategories(ctx, page, perPage)
+	categoriesDTO, err := svc.GetCategories(ctx, page, perPage)
 	assert.NoError(t, err)
-	assert.Len(t, dtos, int(perPage))
+	assert.Len(t, categoriesDTO, int(perPage))
 }
 
 func TestGetCategories_RepositoryError(t *testing.T) {
@@ -136,9 +135,9 @@ func TestGetCategories_RepositoryError(t *testing.T) {
 
 	categoryRepoMock.EXPECT().GetCategories(ctx, perPage*(page-1), perPage).Return(nil, errors.New(""))
 
-	dtos, err := svc.GetCategories(ctx, page, perPage)
+	categoriesDTO, err := svc.GetCategories(ctx, page, perPage)
 	assert.Error(t, err)
-	assert.Empty(t, dtos)
+	assert.Empty(t, categoriesDTO)
 }
 
 func TestGetCategoriesByTypeId_Success(t *testing.T) {
@@ -147,9 +146,9 @@ func TestGetCategoriesByTypeId_Success(t *testing.T) {
 
 	categoryRepoMock.EXPECT().GetCategoriesByTypeId(ctx, id, perPage*(page-1), perPage).Return([]entity.Category{categoryEntity, categoryEntity}, nil)
 
-	dtos, err := svc.GetCategoriesByTypeId(ctx, id, page, perPage)
+	categoriesDTO, err := svc.GetCategoriesByTypeId(ctx, id, page, perPage)
 	assert.NoError(t, err)
-	assert.Len(t, dtos, 2)
+	assert.Len(t, categoriesDTO, 2)
 }
 
 func TestGetCategoriesByTypeId_RepositoryError(t *testing.T) {
@@ -158,9 +157,9 @@ func TestGetCategoriesByTypeId_RepositoryError(t *testing.T) {
 
 	categoryRepoMock.EXPECT().GetCategoriesByTypeId(ctx, id, perPage*(page-1), perPage).Return(nil, errors.New(""))
 
-	dtos, err := svc.GetCategoriesByTypeId(ctx, id, page, perPage)
+	categoriesDTO, err := svc.GetCategoriesByTypeId(ctx, id, page, perPage)
 	assert.Error(t, err)
-	assert.Empty(t, dtos)
+	assert.Empty(t, categoriesDTO)
 }
 
 func TestUpdateCategoryById_Success(t *testing.T) {
@@ -169,11 +168,11 @@ func TestUpdateCategoryById_Success(t *testing.T) {
 
 	categoryRepoMock.EXPECT().UpdateCategoryById(ctx, gomock.Any()).Return(categoryEntity, nil)
 
-	category, err := svc.UpdateCategoryById(ctx, id, patchCategoryDTO)
+	categoryDTO, err := svc.UpdateCategoryById(ctx, id, patchCategoryDTO)
 	assert.NoError(t, err)
-	assert.Equal(t, categoryName, category.Name)
-	assert.Equal(t, strId, category.TypeID)
-	assert.Equal(t, strId, category.ID)
+	assert.Equal(t, categoryName, categoryDTO.Name)
+	assert.Equal(t, strId, categoryDTO.TypeID)
+	assert.Equal(t, strId, categoryDTO.ID)
 }
 
 func TestUpdateCategoryById_RepositoryError(t *testing.T) {
@@ -182,7 +181,7 @@ func TestUpdateCategoryById_RepositoryError(t *testing.T) {
 
 	categoryRepoMock.EXPECT().UpdateCategoryById(ctx, gomock.Any()).Return(entity.Category{}, errors.New(""))
 
-	category, err := svc.UpdateCategoryById(ctx, id, patchCategoryDTO)
+	categoryDTO, err := svc.UpdateCategoryById(ctx, id, patchCategoryDTO)
 	assert.Error(t, err)
-	assert.Empty(t, category)
+	assert.Empty(t, categoryDTO)
 }

@@ -118,6 +118,7 @@ func (h *Handler) RegisterCustomer(
 	}
 }
 
+// RegisterProvider
 // @Summary Register a new provider
 // @Description Register a new provider with the provided details
 // @Tags auth
@@ -163,6 +164,7 @@ func (h *Handler) RegisterProvider(
 	}
 }
 
+// ResendConfirmationLetter
 // @Summary Resent confirmation letter
 // @Description Resends a confirmation letter to email
 // @Tags auth
@@ -214,6 +216,7 @@ func (h *Handler) ResendConfirmationLetter(
 	}
 }
 
+// Login
 // @Summary Login a user
 // @Description Authenticate a user and set access and refresh tokens
 // @Tags auth
@@ -269,18 +272,18 @@ func (h *Handler) Login(
 
 		setCookies(w, accessToken, accessTokenCookie)
 		setCookies(w, refreshToken, refreshTokenCookie)
-
 		h.Logger.Infof("Login user - Role: %s, U-ID: %s", userIdentity.Role, userIdentity.ID)
 		h.Writer.WriteNoContent(w, http.StatusOK)
 	}
 }
 
+// Logout
 // @Summary Logout a user
 // @Description Erase access and refresh tokens
 // @Tags auth
 // @Success 200 {string} string "Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token; HttpOnly"
 // @Router /auth/logout [post]
-func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Logout(w http.ResponseWriter, _ *http.Request) {
 	eraseCookie(w, accessTokenCookie)
 	eraseCookie(w, refreshTokenCookie)
 
@@ -288,6 +291,7 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteNoContent(w, http.StatusOK)
 }
 
+// Refresh
 // @Summary Refresh access token
 // @Description Refresh the access token using the refresh token
 // @Tags auth
@@ -334,6 +338,7 @@ func (h *Handler) Refresh(generator auth_jwt.Generator) http.HandlerFunc {
 	}
 }
 
+// VerifyEmail
 // @Summary Verify email
 // @Description Verifies the email of a user using a JWT token provided as a query parameter.
 // @Tags auth
@@ -345,7 +350,7 @@ func (h *Handler) Refresh(generator auth_jwt.Generator) http.HandlerFunc {
 // @Failure 401 {object} rest.ErrorResponse "Invalid token"
 // @Failure 404 {object} rest.ErrorResponse "User was not found"
 // @Failure 500 {object} rest.ErrorResponse "Internal server error"
-// @Router /auth/verify-email [get]
+// @Router /auth/verify [get]
 func (h *Handler) VerifyEmail(
 	verifier verify_jwt.Verifier,
 ) http.HandlerFunc {

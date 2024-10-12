@@ -71,7 +71,7 @@ type authServiceImpl struct {
 	encryptor              encryption.Encryptor
 	mailer                 mailer.Mailer
 	cdnUrlSigner           cdn.URLSigner
-	emailAddres            string
+	emailAddress           string
 	templates              *templates
 }
 
@@ -84,7 +84,7 @@ func NewAuthService(
 	hasher hasher.Hasher,
 	encryptor encryption.Encryptor,
 	mailer mailer.Mailer,
-	emailAddres string,
+	emailAddress string,
 	cdnUrlSigner cdn.URLSigner,
 ) *authServiceImpl {
 	return &authServiceImpl{
@@ -96,7 +96,7 @@ func NewAuthService(
 		hasher:                 hasher,
 		encryptor:              encryptor,
 		mailer:                 mailer,
-		emailAddres:            emailAddres,
+		emailAddress:           emailAddress,
 		cdnUrlSigner:           cdnUrlSigner,
 	}
 }
@@ -279,7 +279,7 @@ func (s *authServiceImpl) SendConfirmationLetter(ctx context.Context, token stri
 	}
 
 	return s.mailer.SendHTML(
-		s.emailAddres,
+		s.emailAddress,
 		email,
 		"Account Confirmation",
 		s.templates.confirmation,
@@ -295,7 +295,7 @@ func (s *authServiceImpl) SendConfirmationLetter(ctx context.Context, token stri
 
 func (s *authServiceImpl) SendVerifiedLetter(email string) error {
 	return s.mailer.SendHTML(
-		s.emailAddres,
+		s.emailAddress,
 		email,
 		"Verification Success",
 		s.templates.verified,

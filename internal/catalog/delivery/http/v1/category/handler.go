@@ -34,6 +34,7 @@ func NewHandler(handlerComponents *handler.Components, service service.CategoryS
 	}
 }
 
+// CreateCategory
 // @Summary Create a new category
 // @Description Creates a new category with the provided data.
 // @Tags Category
@@ -76,6 +77,7 @@ func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteData(w, http.StatusCreated, category)
 }
 
+// GetCategories
 // @Summary Retrieve categories
 // @Description Retrieves a category range
 // @Tags Category
@@ -89,7 +91,7 @@ func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error - An error occurred while retrieving categories"
 // @Router /categories [get]
 // @Security access_token
-func (h *Handler) GetCategoryies(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetCategories(w http.ResponseWriter, r *http.Request) {
 	errResp, page, perPage := request_util.ParsePagination(r)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
@@ -111,6 +113,7 @@ func (h *Handler) GetCategoryies(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteData(w, http.StatusOK, category)
 }
 
+// GetCategoriesByTypeId
 // @Summary Retrieve categories
 // @Description Retrieves a category range
 // @Tags Category
@@ -125,7 +128,7 @@ func (h *Handler) GetCategoryies(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error - An error occurred while retrieving categories"
 // @Router /category-types/{id}/categories [get]
 // @Security access_token
-func (h *Handler) GetCategoryiesByTypeId(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetCategoriesByTypeId(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
@@ -153,6 +156,7 @@ func (h *Handler) GetCategoryiesByTypeId(w http.ResponseWriter, r *http.Request)
 	h.Writer.WriteData(w, http.StatusOK, categories)
 }
 
+// GetCategoryById
 // @Summary Retrieve a category by ID
 // @Description Retrieves a category specified by the ID.
 // @Tags Category
@@ -187,6 +191,7 @@ func (h *Handler) GetCategoryById(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteData(w, http.StatusOK, categoryDTO)
 }
 
+// PatchCategoryById
 // @Summary Update a category by ID
 // @Description Updates a category specified by the ID.
 // @Tags Category
@@ -242,6 +247,7 @@ func (h *Handler) PatchCategoryById(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteData(w, http.StatusOK, updated)
 }
 
+// DeleteCategoryById
 // @Summary Delete a category by ID
 // @Description Deletes a category specified by the ID.
 // @Tags Category

@@ -1,4 +1,4 @@
-export const BASE_URL: string = "http://localhost:8080/v1/";
+export const BASE_URL: string = "http://localhost:80/v1/";
 
 export function post(url: string, body: any, header?: RequestInit) {
   return fetchWrapper(url, "POST", body, header);

@@ -160,7 +160,8 @@ func (s *server) Run() error {
 		NoColor: false,
 	}
 
-	// TODO: Add CSRF middleware
+	s.router.Use(chiMiddleware.Recoverer)
+	s.router.Use(chiMiddleware.RequestLogger(chiLogger))
 	s.router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   strings.Split(s.cfg.HTTP.CorsOrigins, ","),
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -168,8 +169,6 @@ func (s *server) Run() error {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
-	s.router.Use(chiMiddleware.Recoverer)
-	s.router.Use(chiMiddleware.RequestLogger(chiLogger))
 
 	v1.MapV1Routes(v1.RouterArgs{
 		AuthService:            s.services.authService,

@@ -34,6 +34,7 @@ func NewHandler(handlerComponents *handler.Components, service service.CategoryT
 	}
 }
 
+// CreateCategoryType
 // @Summary Create a new category type
 // @Description Creates a new category type with the provided data.
 // @Tags CategoryType
@@ -76,6 +77,7 @@ func (h *Handler) CreateCategoryType(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteData(w, http.StatusCreated, categoryType)
 }
 
+// GetCategoryTypes
 // @Summary Retrieve a category types
 // @Description Retrieves a category type range
 // @Tags CategoryType
@@ -111,6 +113,7 @@ func (h *Handler) GetCategoryTypes(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteData(w, http.StatusOK, categoryTypes)
 }
 
+// GetCategoryTypeById
 // @Summary Retrieve a category type by ID
 // @Description Retrieves a category type specified by the ID.
 // @Tags CategoryType
@@ -145,6 +148,7 @@ func (h *Handler) GetCategoryTypeById(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteData(w, http.StatusOK, categoryTypeDTO)
 }
 
+// PatchCategoryTypeById
 // @Summary Update a category type by ID
 // @Description Updates a category type specified by the ID.
 // @Tags CategoryType
@@ -200,6 +204,7 @@ func (h *Handler) PatchCategoryTypeById(w http.ResponseWriter, r *http.Request) 
 	h.Writer.WriteData(w, http.StatusOK, dto.CategoryTypeDTO{ID: strconv.Itoa(id), Name: patchDTO.Name})
 }
 
+// DeleteCategoryTypeById
 // @Summary Delete a category type by ID
 // @Description Deletes a category type specified by the ID.
 // @Tags CategoryType

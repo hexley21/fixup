@@ -44,5 +44,5 @@ func MapRoutes(
 		r.Patch("/me/change-password", h.ChangePassword)
 	})
 
-	router.Patch("/profile/{id}", h.FindUserProfileById)
+	router.Get("/profile/{id}", h.FindUserProfileById)
 }

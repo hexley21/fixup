@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/hexley21/fixup/internal/common/app_error"
 	"github.com/hexley21/fixup/internal/common/util/ctx_util"
 	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
@@ -35,6 +36,7 @@ func NewHandler(components *handler.Components, service service.UserService) *Ha
 	}
 }
 
+// FindUserById
 // @Summary Find user by ID
 // @Description Retrieve user details by user ID
 // @Tags users
@@ -71,6 +73,7 @@ func (h *Handler) FindUserById(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteData(w, http.StatusOK, user)
 }
 
+// FindUserProfileById
 // @Summary Find user profile by ID
 // @Description Retrieve profile details by user ID
 // @Tags profile
@@ -86,15 +89,13 @@ func (h *Handler) FindUserById(w http.ResponseWriter, r *http.Request) {
 // @Security access_token
 // @Router /profile/{id} [get]
 func (h *Handler) FindUserProfileById(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	id, errResp := ctx_util.GetParamId(r.Context())
-	if errResp != nil {
-		h.Writer.WriteError(w, errResp)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		h.Writer.WriteError(w, rest.NewInvalidArgumentsError(err))
 		return
 	}
 
-	profile, err := h.service.FindUserProfileById(ctx, id)
+	profile, err := h.service.FindUserProfileById(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, pg_error.ErrNotFound) {
 			h.Writer.WriteError(w, rest.NewNotFoundError(err, app_error.MsgUserNotFound))
@@ -109,6 +110,7 @@ func (h *Handler) FindUserProfileById(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteData(w, http.StatusOK, profile)
 }
 
+// UploadProfilePicture
 // @Summary Upload profile picture
 // @Description Upload a profile picture for the user by ID
 // @Tags users
@@ -172,6 +174,7 @@ func (h *Handler) UploadProfilePicture(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteNoContent(w, http.StatusNoContent)
 }
 
+// UpdateUserData
 // @Summary Update user data
 // @Description Update user data by ID
 // @Tags users
@@ -225,6 +228,7 @@ func (h *Handler) UpdateUserData(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteData(w, http.StatusOK, user)
 }
 
+// DeleteUser
 // @Summary Delete a user
 // @Description Delete a user by ID or the currently authenticated user if "me" is provided
 // @Tags users
@@ -261,6 +265,7 @@ func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteNoContent(w, http.StatusNoContent)
 }
 
+// ChangePassword
 // @Summary Update user password
 // @Description Update the password of an existing user
 // @Tags users

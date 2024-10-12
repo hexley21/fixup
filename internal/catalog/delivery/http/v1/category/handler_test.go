@@ -188,7 +188,7 @@ func TestGetCategories_Success(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
 	rec := httptest.NewRecorder()
 
-	h.GetCategoryies(rec, req)
+	h.GetCategories(rec, req)
 
 	var response rest.ApiResponse[[]dto.CategoryTypeDTO]
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&response)) {
@@ -207,7 +207,7 @@ func TestGetCategories_InvalidPage(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
 	rec := httptest.NewRecorder()
 
-	h.GetCategoryies(rec, req)
+	h.GetCategories(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -227,7 +227,7 @@ func TestGetCategories_InvalidPerPage(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
 	rec := httptest.NewRecorder()
 
-	h.GetCategoryies(rec, req)
+	h.GetCategories(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -248,7 +248,7 @@ func TestGetCategories_NotFound(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
 	rec := httptest.NewRecorder()
 
-	h.GetCategoryies(rec, req)
+	h.GetCategories(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -269,7 +269,7 @@ func TestGetCategories_ServiceError(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
 	rec := httptest.NewRecorder()
 
-	h.GetCategoryies(rec, req)
+	h.GetCategories(rec, req)
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
@@ -283,7 +283,7 @@ func TestGetCategoriesByTypeId_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
-	r.Get("/{id}", h.GetCategoryiesByTypeId)
+	r.Get("/{id}", h.GetCategoriesByTypeId)
 
 	q := make(url.Values)
 	q.Set("page", "1")
@@ -307,7 +307,7 @@ func TestGetCategoriesByTypeId_InvalidId(t *testing.T) {
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
-	r.Get("/{id}", h.GetCategoryiesByTypeId)
+	r.Get("/{id}", h.GetCategoriesByTypeId)
 
 	req := httptest.NewRequest(http.MethodGet, "/ABC", nil)
 	rec := httptest.NewRecorder()
@@ -326,7 +326,7 @@ func TestGetCategoriesByTypeId_InvalidPage(t *testing.T) {
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
-	r.Get("/{id}", h.GetCategoryiesByTypeId)
+	r.Get("/{id}", h.GetCategoriesByTypeId)
 
 	q := make(url.Values)
 	q.Set("page", "0")
@@ -348,7 +348,7 @@ func TestGetCategoriesByTypeId_InvalidPerPage(t *testing.T) {
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
-	r.Get("/{id}", h.GetCategoryiesByTypeId)
+	r.Get("/{id}", h.GetCategoriesByTypeId)
 
 	q := make(url.Values)
 	q.Set("page", "1")
@@ -371,7 +371,7 @@ func TestGetCategoriesByTypeId_NotFound(t *testing.T) {
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
-	r.Get("/{id}", h.GetCategoryiesByTypeId)
+	r.Get("/{id}", h.GetCategoriesByTypeId)
 
 	q := make(url.Values)
 	q.Set("page", "1")
@@ -395,7 +395,7 @@ func TestGetCategoriesByTypeId_ServiceError(t *testing.T) {
 	defer ctrl.Finish()
 
 	r := chi.NewRouter()
-	r.Get("/{id}", h.GetCategoryiesByTypeId)
+	r.Get("/{id}", h.GetCategoriesByTypeId)
 
 	q := make(url.Values)
 	q.Set("page", "1")

@@ -173,7 +173,7 @@ func TestAuthenticateUser_NotFound(t *testing.T) {
 	assert.Empty(t, credentialsDTO)
 }
 
-func TestAuthenticateUser_PasswordMissmatch(t *testing.T) {
+func TestAuthenticateUser_PasswordMismatch(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl, svc, userRepoMock, _, _, _, _, hasherMock, _, _, _ := setupAuth(t)
