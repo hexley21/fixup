@@ -10,7 +10,6 @@ import (
 
 type CategoryTypeRepository interface {
 	postgres.Repository[CategoryTypeRepository]
-	WithTx(tx postgres.PGXQuerier) CategoryTypeRepository
 	CreateCategoryType(ctx context.Context, name string) (entity.CategoryType, error)
 	DeleteCategoryTypeById(ctx context.Context, id int32) error
 	GetCategoryTypeById(ctx context.Context, id int32) (entity.CategoryType, error)
