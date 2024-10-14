@@ -7,6 +7,6 @@ type (
 	}
 	SubcategoryInfo struct {
 		Name       string `json:"name" validate:"alpha,min=2,max=100,required"`
-		CategoryID int32  `json:"category_id" validate:"numeric"`
+		CategoryID int32  `json:"category_id" validate:"number"`
 	}
 )

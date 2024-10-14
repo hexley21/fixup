@@ -42,7 +42,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	categoryDTO, err := h.service.Get(r.Context(), int32(id))
+	subcategoryDTO, err := h.service.Get(r.Context(), int32(id))
 	if err != nil {
 		if errors.Is(err, service.ErrSubcategoryNotFound) {
 			h.Writer.WriteError(w, rest.NewNotFoundError(err, err.Error()))
@@ -53,8 +53,8 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Fetch subcategory: %s, ID: %s", categoryDTO.Name, categoryDTO.ID)
-	h.Writer.WriteData(w, http.StatusOK, categoryDTO)
+	h.Logger.Infof("Fetch subcategory: %s, ID: %d", subcategoryDTO.Name, subcategoryDTO.ID)
+	h.Writer.WriteData(w, http.StatusOK, subcategoryDTO)
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +89,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.Logger.Infof("Fetch subcategories - %d", subcategoriesLen)
-	h.Writer.WriteData(w, http.StatusOK, subcategories)
+	h.Writer.WriteData(w, http.StatusOK, subcategoriesDTO)
 }
 
 func (h *Handler) ListByCategoryId(w http.ResponseWriter, r *http.Request) {
@@ -112,7 +112,7 @@ func (h *Handler) ListByCategoryId(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if subcategories == nil {
-		h.Logger.Infof("Fetch subcategories by category id: %s - 0", categoryId)
+		h.Logger.Infof("Fetch subcategories by category id: %d - 0", categoryId)
 		h.Writer.WriteData(w, http.StatusOK, []dto.Subcategory{})
 		return
 	}
@@ -129,8 +129,8 @@ func (h *Handler) ListByCategoryId(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	h.Logger.Infof("Fetch subcategories by category id: %s - %d", categoryId, subcategoriesLen)
-	h.Writer.WriteData(w, http.StatusOK, subcategories)
+	h.Logger.Infof("Fetch subcategories by category id: %d - %d", categoryId, subcategoriesLen)
+	h.Writer.WriteData(w, http.StatusOK, subcategoriesDTO)
 }
 
 func (h *Handler) ListByTypeId(w http.ResponseWriter, r *http.Request) {
@@ -153,7 +153,7 @@ func (h *Handler) ListByTypeId(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if subcategories == nil {
-		h.Logger.Infof("Fetch subcategories by type id: %s - 0", typeId)
+		h.Logger.Infof("Fetch subcategories by type id: %d - 0", typeId)
 		h.Writer.WriteData(w, http.StatusOK, []dto.Subcategory{})
 		return
 	}
@@ -171,7 +171,7 @@ func (h *Handler) ListByTypeId(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.Logger.Infof("Fetch subcategories by type id: %s - %d", typeId, subcategoriesLen)
-	h.Writer.WriteData(w, http.StatusOK, subcategories)
+	h.Writer.WriteData(w, http.StatusOK, subcategoriesDTO)
 }
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
@@ -251,7 +251,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.Logger.Infof("Update subcategory: %s, Category-ID: %d ID: %d", subcategory.Name, subcategory.CategoryID, subcategory.ID)
-	h.Writer.WriteData(w, http.StatusCreated, dto.Subcategory{
+	h.Writer.WriteData(w, http.StatusOK, dto.Subcategory{
 		ID: subcategory.ID,
 		SubcategoryInfo: dto.SubcategoryInfo{
 			Name:       subcategory.Name,

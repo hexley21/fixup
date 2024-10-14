@@ -47,7 +47,7 @@ func TestGetSubcategory(t *testing.T) {
         {
             name:          "Success",
             id:            1,
-            mockReturn:    entity.Subcategory{ID: 1, SubcategoryInfo: &entity.SubcategoryInfo{Name: "Test Subcategory"}},
+            mockReturn:    entity.Subcategory{ID: 1, SubcategoryInfo: entity.SubcategoryInfo{Name: "Test Subcategory"}},
         },
         {
             name:          "NotFound",
@@ -98,7 +98,7 @@ func TestListSubcategories(t *testing.T) {
             name:       "Success",
             limit:      10,
             offset:     0,
-            mockReturn: []entity.Subcategory{{ID: 1, SubcategoryInfo: &entity.SubcategoryInfo{Name: "Test Subcategory"}}},
+            mockReturn: []entity.Subcategory{{ID: 1, SubcategoryInfo: entity.SubcategoryInfo{Name: "Test Subcategory"}}},
         },
         {
             name:          "EmptyList",
@@ -152,7 +152,7 @@ func TestListByCategoryId(t *testing.T) {
             categoryID: 1,
             limit:      10,
             offset:     0,
-            mockReturn: []entity.Subcategory{{ID: 1, SubcategoryInfo: &entity.SubcategoryInfo{Name: "Test Subcategory"}}},
+            mockReturn: []entity.Subcategory{{ID: 1, SubcategoryInfo: entity.SubcategoryInfo{Name: "Test Subcategory"}}},
         },
         {
             name:       "EmptyList",
@@ -207,7 +207,7 @@ func TestListByTypeId(t *testing.T) {
             typeID:     1,
             limit:      10,
             offset:     0,
-            mockReturn: []entity.Subcategory{{ID: 1, SubcategoryInfo: &entity.SubcategoryInfo{Name: "Test Subcategory"}}},
+            mockReturn: []entity.Subcategory{{ID: 1, SubcategoryInfo: entity.SubcategoryInfo{Name: "Test Subcategory"}}},
         },
         {
             name:       "EmptyList",
@@ -310,7 +310,7 @@ func TestUpdateSubcategory(t *testing.T) {
             name:       "Success",
             id:         1,
             info:       entity.SubcategoryInfo{Name: "Updated Subcategory"},
-            mockReturn: entity.Subcategory{ID: 1, SubcategoryInfo: &entity.SubcategoryInfo{Name: "Updated Subcategory"}},
+            mockReturn: entity.Subcategory{ID: 1, SubcategoryInfo: entity.SubcategoryInfo{Name: "Updated Subcategory"}},
         },
         {
             name:          "NotFound",
