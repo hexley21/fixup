@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	id int32 = 1
+	id      int32 = 1
 	page    int32 = 0
 	perPage int32 = 10
 )
@@ -43,7 +43,7 @@ var (
 		SubcategoryInfo: subcategoryInfoEntity,
 	}
 
-	subcategoryDTO     = mapper.SubcategoryToDTO(subcategoryEntity)
+	subcategoryDTO = mapper.MapSubcategoryToDTO(subcategoryEntity)
 )
 
 func setup(t *testing.T) (

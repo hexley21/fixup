@@ -51,10 +51,10 @@ func ParseOffsetAndLimit(r *http.Request, maxPerPage int, defaultPerPage int) (i
 		if err != nil || perPage < 0 {
 			return 0, 0, rest.NewBadRequestError(err, app_error.MsgInvalidPage)
 		}
+	}
 
-		if perPage == 0 || perPage > maxPerPage {
-			perPage = defaultPerPage
-		}
+	if perPage == 0 || perPage > maxPerPage {
+		perPage = defaultPerPage
 	}
 
 	if page < 1 {
