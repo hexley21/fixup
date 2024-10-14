@@ -31,6 +31,7 @@ import (
 type services struct {
 	categoryTypes service.CategoryTypeService
 	category      service.CategoryService
+	subcategory   service.Subcategory
 }
 
 type jWTManagers struct {
@@ -58,10 +59,12 @@ func NewServer(
 ) *server {
 	categoryTypeRepository := repository.NewCategoryTypeRepository(dbPool)
 	categoryRepository := repository.NewCategoryRepository(dbPool)
+	subcategoryRepository := repository.NewSubcategoryRepository(dbPool)
 
 	services := &services{
 		categoryTypes: service.NewCategoryTypeService(categoryTypeRepository, cfg.Pagination.LargePages, cfg.Pagination.XLargePages),
 		category:      service.NewCategoryService(categoryRepository, cfg.Pagination.LargePages, cfg.Pagination.XLargePages),
+		subcategory:   service.NewSubcategoryService(subcategoryRepository),
 	}
 
 	jWTManagers := &jWTManagers{
@@ -128,6 +131,7 @@ func (s *server) Run() error {
 	v1.MapV1Routes(v1.RouterArgs{
 		CategoryTypeService: s.services.categoryTypes,
 		CategoryService:     s.services.category,
+		SubcategoryService:  s.services.subcategory,
 		Middleware:          Middleware,
 		HandlerComponents:   s.handlerComponents,
 		AccessJWTManager:    s.jWTManagers.accessJWTManager,

@@ -3,7 +3,7 @@ package entity
 type (
 	Subcategory struct {
 		ID   int32
-		SubcategoryInfo
+		*SubcategoryInfo
 	}
 
 	SubcategoryInfo struct {

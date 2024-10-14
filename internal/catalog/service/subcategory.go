@@ -27,7 +27,7 @@ type subcategoryImpl struct {
 	subcategoryRepo repository.Subcategory
 }
 
-func NewSubcategoryRepository(subcategoryRepo repository.Subcategory) *subcategoryImpl {
+func NewSubcategoryService(subcategoryRepo repository.Subcategory) *subcategoryImpl {
 	return &subcategoryImpl{subcategoryRepo: subcategoryRepo}
 }
 
