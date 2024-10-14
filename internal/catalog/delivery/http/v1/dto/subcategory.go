@@ -6,7 +6,7 @@ type (
 		SubcategoryInfo
 	}
 	SubcategoryInfo struct {
-		Name       string `json:"name"`
-		CategoryID int32  `json:"category_id"`
+		Name       string `json:"name" validate:"alpha,min=2,max=100,required"`
+		CategoryID int32  `json:"category_id" validate:"numeric"`
 	}
 )

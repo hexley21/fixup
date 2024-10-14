@@ -131,6 +131,7 @@ func (s *server) Run() error {
 		Middleware:          Middleware,
 		HandlerComponents:   s.handlerComponents,
 		AccessJWTManager:    s.jWTManagers.accessJWTManager,
+		PaginationConfig:    &s.cfg.Pagination,
 	}, s.router)
 
 	s.metricsRouter.Use(chiMiddleware.Recoverer)
