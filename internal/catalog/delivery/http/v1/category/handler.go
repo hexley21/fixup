@@ -73,7 +73,7 @@ func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Create category: %s, ID: %s", category.Name, category.ID)
+	h.Logger.Infof("Create category: %s, Type-ID: %s ID: %s", category.Name, category.TypeID, category.ID)
 	h.Writer.WriteData(w, http.StatusCreated, category)
 }
 
@@ -109,7 +109,7 @@ func (h *Handler) GetCategories(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Fetch category  - elements: %d", len(category))
+	h.Logger.Infof("Fetch categories - elements: %d", len(category))
 	h.Writer.WriteData(w, http.StatusOK, category)
 }
 

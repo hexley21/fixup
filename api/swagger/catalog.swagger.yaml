@@ -45,6 +45,30 @@ definitions:
     required:
     - name
     type: object
+  github_com_hexley21_fixup_internal_catalog_delivery_http_v1_dto.Subcategory:
+    properties:
+      category_id:
+        type: string
+      id:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+    required:
+    - name
+    type: object
+  github_com_hexley21_fixup_internal_catalog_delivery_http_v1_dto.SubcategoryInfo:
+    properties:
+      category_id:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+    required:
+    - name
+    type: object
   rest.ApiResponse-Category:
     properties:
       data:
@@ -68,6 +92,18 @@ definitions:
         items:
           $ref: '#/definitions/CategoryType'
         type: array
+    type: object
+  rest.ApiResponse-array_github_com_hexley21_fixup_internal_catalog_delivery_http_v1_dto_Subcategory:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_hexley21_fixup_internal_catalog_delivery_http_v1_dto.Subcategory'
+        type: array
+    type: object
+  rest.ApiResponse-github_com_hexley21_fixup_internal_catalog_delivery_http_v1_dto_Subcategory:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_hexley21_fixup_internal_catalog_delivery_http_v1_dto.Subcategory'
     type: object
   rest.ErrorResponse:
     properties:
@@ -168,6 +204,50 @@ paths:
       summary: Create a new category
       tags:
       - Category
+  /categories/{category_id}/subcategories:
+    get:
+      description: Retrieves a subcategory range
+      parameters:
+      - description: Category id
+        in: path
+        name: category_id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: per_page
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ApiResponse-array_github_com_hexley21_fixup_internal_catalog_delivery_http_v1_dto_Subcategory'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Retrieve subcategory
+      tags:
+      - Subcategory
   /categories/{id}:
     delete:
       description: Deletes a category specified by the ID.
@@ -557,6 +637,257 @@ paths:
       summary: Retrieve categories
       tags:
       - Category
+  /category-types/{type_id}/subcategories:
+    get:
+      description: Retrieves a subcategory range
+      parameters:
+      - description: Category Type id
+        in: path
+        name: type_id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: per_page
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ApiResponse-array_github_com_hexley21_fixup_internal_catalog_delivery_http_v1_dto_Subcategory'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Retrieve subcategory
+      tags:
+      - Subcategory
+  /subcategories:
+    get:
+      description: Retrieves a subcategory range
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: per_page
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ApiResponse-array_github_com_hexley21_fixup_internal_catalog_delivery_http_v1_dto_Subcategory'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Retrieve subcategory
+      tags:
+      - Subcategory
+    post:
+      description: Creates a new subcategory with the provided data.
+      parameters:
+      - description: Subcategory info
+        in: body
+        name: dto
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_hexley21_fixup_internal_catalog_delivery_http_v1_dto.SubcategoryInfo'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/rest.ApiResponse-github_com_hexley21_fixup_internal_catalog_delivery_http_v1_dto_Subcategory'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Create a new subcategory
+      tags:
+      - Subcategory
+  /subcategories/{subcategory_id}:
+    delete:
+      description: Deletes a subcategory specified by the ID.
+      parameters:
+      - description: The ID of the subcategory to delete
+        in: path
+        name: subcategory_id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content - Successfully deleted
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Delete a subcategory by ID
+      tags:
+      - Subcategory
+    get:
+      description: Retrieves a subcategory range
+      parameters:
+      - description: Subcategory id
+        in: path
+        name: subcategory_id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ApiResponse-github_com_hexley21_fixup_internal_catalog_delivery_http_v1_dto_Subcategory'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Retrieve subcategory
+      tags:
+      - Subcategory
+    patch:
+      description: Creates a new subcategory with the provided data.
+      parameters:
+      - description: The ID of the subcategory to update
+        in: path
+        name: subcategory_id
+        required: true
+        type: integer
+      - description: Subcategory info
+        in: body
+        name: dto
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_hexley21_fixup_internal_catalog_delivery_http_v1_dto.SubcategoryInfo'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ApiResponse-github_com_hexley21_fixup_internal_catalog_delivery_http_v1_dto_Subcategory'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Create a new subcategory
+      tags:
+      - Subcategory
 schemes:
 - http
 securityDefinitions:
