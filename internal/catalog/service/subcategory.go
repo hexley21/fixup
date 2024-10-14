@@ -92,8 +92,13 @@ func (s *subcategoryImpl) Update(ctx context.Context, id int32, info entity.Subc
 		}
 
 		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.RaiseException {
-			return entity.Subcategory{}, ErrSubcateogryNameTaken
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == pgerrcode.RaiseException {
+				return entity.Subcategory{}, ErrSubcateogryNameTaken
+			}
+			if pgErr.Code == pgerrcode.ForeignKeyViolation {
+				return entity.Subcategory{}, ErrCategoryNotFound
+			}
 		}
 
 		return entity.Subcategory{}, fmt.Errorf("failed to update subcategory: %w", err)
