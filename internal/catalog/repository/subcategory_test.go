@@ -87,21 +87,17 @@ func TestCreateSubcategory(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 
-			subcategory, err := repo.Create(ctx, entity.SubcategoryInfo{Name: tt.subcategoryName1, CategoryID: category.ID})
+			id, err := repo.Create(ctx, entity.SubcategoryInfo{Name: tt.subcategoryName1, CategoryID: category.ID})
 
 			if tt.expectedCode == "" {
 				assert.NoError(t, err)
-				assert.NotEmpty(t, subcategory.ID)
-				assert.Equal(t, tt.subcategoryName1, subcategory.Name)
-				assert.Equal(t, category.ID, subcategory.CategoryID)
+				assert.NotEmpty(t, id)
 			} else {
 				var pgErr *pgconn.PgError
 				if assert.ErrorAs(t, err, &pgErr) {
 					assert.Equal(t, tt.expectedCode, pgErr.Code)
 				}
-				assert.Empty(t, subcategory.ID)
-				assert.Empty(t, subcategory.Name)
-				assert.Empty(t, subcategory.CategoryID)
+				assert.Empty(t, id)
 			}
 		})
 	}
