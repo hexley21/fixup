@@ -1,5 +1,3 @@
--- // TODO: Add trigger when inserting categories with the same name in a single category type
-
 -- Category Types Table
 CREATE TABLE category_types (
     id SERIAL PRIMARY KEY,
@@ -17,7 +15,7 @@ CREATE TABLE categories (
 CREATE TABLE subcategories (
     id SERIAL PRIMARY KEY,
     category_id INT NOT NULL REFERENCES categories(id),
-    name VARCHAR(100) NOT NULL
+    name VARCHAR(100) NOT NULL CHECK (LENGTH(name) > 1)
 );
 
 -- Services Table
@@ -56,3 +54,21 @@ CREATE TRIGGER prevent_duplicate_trigger
 BEFORE INSERT OR UPDATE ON categories
 FOR EACH ROW
 EXECUTE FUNCTION prevent_duplicate_type_name();
+
+CREATE OR REPLACE FUNCTION prevent_duplicate_subcategory()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 
+        FROM subcategories 
+        WHERE name = NEW.name AND category_id = NEW.category_id
+    ) THEN
+        RAISE EXCEPTION 'Duplicate subcategory name and category id combination';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER prevent_duplicate_subcategory_trigger
+BEFORE INSERT OR UPDATE ON subcategories
+FOR EACH ROW EXECUTE FUNCTION prevent_duplicate_subcategory();

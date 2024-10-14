@@ -33,3 +33,33 @@ func ParsePagination(r *http.Request) (*rest.ErrorResponse, int, int) {
 
 	return nil, page, perPage
 }
+
+func ParseOffsetAndLimit(r *http.Request, maxPerPage int, defaultPerPage int) (int32, int32, *rest.ErrorResponse) {
+	pageParam := r.URL.Query().Get("page")
+	perPageParam := r.URL.Query().Get("per_page")
+
+	var page int
+	var perPage int
+
+	page, err := strconv.Atoi(pageParam)
+	if err != nil {
+		return 0, 0, rest.NewBadRequestError(err, app_error.MsgInvalidPage)
+	}
+
+	if perPageParam != "" {
+		perPage, err = strconv.Atoi(perPageParam)
+		if err != nil || perPage < 0 {
+			return 0, 0, rest.NewBadRequestError(err, app_error.MsgInvalidPage)
+		}
+	}
+
+	if perPage == 0 || perPage > maxPerPage {
+		perPage = defaultPerPage
+	}
+
+	if page < 1 {
+		return 0, 0, rest.NewBadRequestError(err, app_error.MsgInvalidPage)
+	}
+
+	return int32(perPage * (page - 1)), int32(perPage), nil
+}
