@@ -23,7 +23,7 @@ const (
 func setupSubategory() (
 	ctx context.Context,
 	pgPool *pgxpool.Pool,
-	repo repository.SubcategoryRepository,
+	repo repository.Subcategory,
 ) {
 	ctx = context.Background()
 
@@ -77,7 +77,7 @@ func TestCreateSubcategory(t *testing.T) {
 			name:             "Conflict",
 			subcategoryName1: subcategoryName1,
 			setup: func() {
-				_, _ = repo.CreateSubcategory(ctx, repository.CreateSubcategoryParams{Name: subcategoryName1, CategoryID: category.ID})
+				_, _ = repo.Create(ctx, entity.SubcategoryInfo{Name: subcategoryName1, CategoryID: category.ID})
 			},
 			expectedCode: pgerrcode.RaiseException,
 		},
@@ -87,7 +87,7 @@ func TestCreateSubcategory(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 
-			subcategory, err := repo.CreateSubcategory(ctx, repository.CreateSubcategoryParams{Name: tt.subcategoryName1, CategoryID: category.ID})
+			subcategory, err := repo.Create(ctx, entity.SubcategoryInfo{Name: tt.subcategoryName1, CategoryID: category.ID})
 
 			if tt.expectedCode == "" {
 				assert.NoError(t, err)
@@ -141,7 +141,7 @@ func TestGetCategoryById(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			subcategoryInsert := tt.setup()
 
-			subcategory, err := repo.GetSubcategoryById(ctx, subcategoryInsert.ID)
+			subcategory, err := repo.Get(ctx, subcategoryInsert.ID)
 
 			if tt.expectedError == nil {
 				assert.NoError(t, err)
@@ -187,7 +187,7 @@ func TestGetCategorise(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 
-			subcategories, err := repo.GetSubategories(ctx, 5, 0)
+			subcategories, err := repo.List(ctx, 5, 0)
 
 			assert.NoError(t, err)
 			assert.Len(t, subcategories, tt.len)
@@ -237,7 +237,7 @@ func TestGetCategoriseByCategoryId(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 
-			subcategories, err := repo.GetSubategoriesByCategoryId(ctx, tt.categoryId, 5, 0)
+			subcategories, err := repo.ListByCategoryId(ctx, tt.categoryId, 5, 0)
 
 			assert.NoError(t, err)
 			assert.Len(t, subcategories, tt.len)
@@ -287,7 +287,7 @@ func TestGetCategoriseByTypeId(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 
-			subcategories, err := repo.GetSubategoriesByTypeId(ctx, tt.typeId, 5, 0)
+			subcategories, err := repo.ListByTypeId(ctx, tt.typeId, 5, 0)
 
 			assert.NoError(t, err)
 			assert.Len(t, subcategories, tt.len)
@@ -346,7 +346,7 @@ func TestUpdateCategoryById(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			sc := tt.setup()
 
-			subcategory, err := repo.UpdateSubcategoryById(ctx, repository.UpdateSubcategoryByIdParams{Name: tt.subcategoryName, CategoryID: sc.CategoryID, ID: sc.ID})
+			subcategory, err := repo.Update(ctx, sc.ID, entity.SubcategoryInfo{Name: tt.subcategoryName, CategoryID: sc.CategoryID})
 
 			if tt.expectedErrorCode != "" {
 				var pgErr *pgconn.PgError
@@ -400,7 +400,7 @@ func TestDeleteCategoryById(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			subcategoryId := tt.setup()
 
-			err := repo.DeleteSubcategoryById(ctx, subcategoryId)
+			err := repo.Delete(ctx, subcategoryId)
 
 			if tt.expectedError == nil {
 				assert.NoError(t, err)

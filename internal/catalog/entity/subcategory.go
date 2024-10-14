@@ -1,7 +1,13 @@
 package entity
 
-type Subcategory struct {
-	ID         int32  `json:"id"`
-	CategoryID int32  `json:"category_id"`
-	Name       string `json:"name"`
-}
+type (
+	Subcategory struct {
+		ID   int32
+		SubcategoryInfo
+	}
+
+	SubcategoryInfo struct {
+		CategoryID int32
+		Name       string
+	}
+)
