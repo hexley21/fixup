@@ -122,7 +122,7 @@ func (r *postgresSubcategoryRepository) ListByTypeId(ctx context.Context, typeID
 
 
 const createSubcategory = `-- name: CreateSubcategory :one
-INSERT INTO subcategories (category_id, name) VALUES ($1, $2) RETURNING id, category_id, name
+INSERT INTO subcategories (category_id, name) VALUES ($1, $2) RETURNING id
 `
 
 func (r *postgresSubcategoryRepository) Create(ctx context.Context, info entity.SubcategoryInfo) (int32, error) {
@@ -134,7 +134,7 @@ func (r *postgresSubcategoryRepository) Create(ctx context.Context, info entity.
 
 
 const updateSubcategory = `-- name: UpdateSubcategory :one
-UPDATE subcategories SET name = $1, category_id = $2 WHERE id = $3 RETURNING id
+UPDATE subcategories SET name = $1, category_id = $2 WHERE id = $3 RETURNING *
 `
 
 

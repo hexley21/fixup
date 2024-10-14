@@ -170,7 +170,7 @@ func TestGetCategorise(t *testing.T) {
 			name: "Success",
 			setup: func() {
 				_, _ = insertSubcategory(pgPool, ctx, category.ID, subcategoryName1)
-				_, err := insertSubcategory(pgPool, ctx, category.ID, "AC Montage")
+				_, err := insertSubcategory(pgPool, ctx, category.ID, subcategoryName2)
 				if err != nil {
 					t.Fatalf("failed to insert subcategory: %v", err)
 				}
@@ -183,7 +183,7 @@ func TestGetCategorise(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 
-			subcategories, err := repo.List(ctx, 5, 0)
+			subcategories, err := repo.List(ctx, 0, 5)
 
 			assert.NoError(t, err)
 			assert.Len(t, subcategories, tt.len)
@@ -233,7 +233,7 @@ func TestGetCategoriseByCategoryId(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 
-			subcategories, err := repo.ListByCategoryId(ctx, tt.categoryId, 5, 0)
+			subcategories, err := repo.ListByCategoryId(ctx, tt.categoryId, 0, 5)
 
 			assert.NoError(t, err)
 			assert.Len(t, subcategories, tt.len)
@@ -283,7 +283,7 @@ func TestGetCategoriseByTypeId(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 
-			subcategories, err := repo.ListByTypeId(ctx, tt.typeId, 5, 0)
+			subcategories, err := repo.ListByTypeId(ctx, tt.typeId, 0, 5)
 
 			assert.NoError(t, err)
 			assert.Len(t, subcategories, tt.len)
