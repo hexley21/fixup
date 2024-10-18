@@ -12,7 +12,6 @@ import (
 	"github.com/hexley21/fixup/pkg/config"
 	"github.com/hexley21/fixup/pkg/encryption"
 	"github.com/hexley21/fixup/pkg/hasher"
-	"github.com/hexley21/fixup/pkg/infra/cdn"
 	"github.com/hexley21/fixup/pkg/infra/postgres"
 	"github.com/hexley21/fixup/pkg/mailer"
 	"github.com/jackc/pgerrcode"
@@ -55,7 +54,6 @@ type authServiceImpl struct {
 	hasher                 hasher.Hasher
 	encryptor              encryption.Encryptor
 	mailer                 mailer.Mailer
-	cdnUrlSigner           cdn.URLSigner
 	emailAddress           string
 	templates              *templates
 }
@@ -70,7 +68,6 @@ func NewAuthService(
 	encryptor encryption.Encryptor,
 	mailer mailer.Mailer,
 	emailAddress string,
-	cdnUrlSigner cdn.URLSigner,
 ) *authServiceImpl {
 	return &authServiceImpl{
 		userRepository:         userRepository,
@@ -82,7 +79,6 @@ func NewAuthService(
 		encryptor:              encryptor,
 		mailer:                 mailer,
 		emailAddress:           emailAddress,
-		cdnUrlSigner:           cdnUrlSigner,
 	}
 }
 

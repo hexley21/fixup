@@ -22,7 +22,6 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-
 // TODO: rewrite tests
 
 var (
@@ -35,7 +34,7 @@ var (
 		Picture:     pgtype.Text{String: "larrypage.jpg", Valid: true},
 		Hash:        "",
 		Role:        string(enum.UserRoleADMIN),
-		Verified:      pgtype.Bool{Bool: true, Valid: true},
+		Verified:    pgtype.Bool{Bool: true, Valid: true},
 		CreatedAt:   pgtype.Timestamp{Time: time.Now(), Valid: true},
 	}
 
@@ -47,7 +46,7 @@ var (
 		Email:       "larry@page.com",
 		Picture:     pgtype.Text{String: "", Valid: false},
 		Role:        string(enum.UserRoleADMIN),
-		Verified:      pgtype.Bool{Bool: true, Valid: true},
+		Verified:    pgtype.Bool{Bool: true, Valid: true},
 		CreatedAt:   pgtype.Timestamp{Time: time.Now(), Valid: true},
 	}
 
@@ -102,7 +101,7 @@ func TestFindUserById_Success(t *testing.T) {
 	assert.Equal(t, userModel.PhoneNumber, userEntity.PersonalInfo.PhoneNumber)
 	assert.Equal(t, userModel.Email, userEntity.PersonalInfo.Email)
 	assert.Equal(t, signedPicture, userEntity.Picture)
-	assert.Equal(t, string(userModel.Role), userEntity.AccountInfo.Role)
+	assert.Equal(t, userModel.Role, userEntity.AccountInfo.Role)
 	assert.Equal(t, userModel.Verified.Bool, userEntity.AccountInfo.Verified)
 	assert.Equal(t, userModel.CreatedAt.Time, userEntity.CreatedAt)
 }

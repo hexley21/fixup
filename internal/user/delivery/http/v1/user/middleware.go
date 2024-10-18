@@ -16,10 +16,9 @@ import (
 
 type ctxKey string
 
-var (
-	paramIdKey       ctxKey              = "param_id"
-	ErrParamIdNotSet *rest.ErrorResponse = rest.NewInternalServerError(errors.New("param id is not set"))
-)
+const paramIdKey ctxKey = "param_id"
+
+var ErrParamIdNotSet = rest.NewInternalServerError(errors.New("param id is not set"))
 
 type UserMiddleware struct {
 	writer writer.HTTPErrorWriter

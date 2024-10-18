@@ -208,7 +208,7 @@ func (h *Handler) ListByTypeId(w http.ResponseWriter, r *http.Request) {
 		subcategoriesDTO[i] = mapper.MapSubcategoryToDTO(s)
 	}
 
-	h.Logger.Infof("Fetch subcategories by type id: %s - %d", typeId, subcategoriesLen)
+	h.Logger.Infof("Fetch subcategories by type id: %d - %d", typeId, subcategoriesLen)
 	h.Writer.WriteData(w, http.StatusOK, subcategoriesDTO)
 }
 
@@ -257,7 +257,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Create subcategory: %s, Category-ID: %d ID: %d", infoDTO.Name, infoDTO.CategoryID, subcategoryId)
+	h.Logger.Infof("Create subcategory: %s, Category-ID: %s ID: %d", infoDTO.Name, infoDTO.CategoryID, subcategoryId)
 	h.Writer.WriteData(w, http.StatusCreated, dto.Subcategory{
 		ID:   strconv.Itoa(int(subcategoryId)),
 		SubcategoryInfo: infoDTO,

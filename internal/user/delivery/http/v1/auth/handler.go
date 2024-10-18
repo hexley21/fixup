@@ -9,7 +9,6 @@ import (
 
 	"github.com/hexley21/fixup/internal/common/auth_jwt"
 	"github.com/hexley21/fixup/internal/common/enum"
-	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/domain"
 	"github.com/hexley21/fixup/internal/user/jwt/refresh_jwt"
 	"github.com/hexley21/fixup/internal/user/jwt/verify_jwt"
@@ -65,7 +64,7 @@ func eraseCookie(w http.ResponseWriter, cookieName string) {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param user body dto.RegisterUser true "User registration details"
+// @Param user body RegisterUser true "User registration details"
 // @Success 201
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
@@ -73,7 +72,7 @@ func eraseCookie(w http.ResponseWriter, cookieName string) {
 // @Router /auth/register/customer [post]
 func (h *Handler) RegisterCustomer(generator verify_jwt.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var registerDTO dto.RegisterUser
+		var registerDTO RegisterUser
 		if err := h.Binder.BindJSON(r, &registerDTO); err != nil {
 			h.Writer.WriteError(w, err)
 			return
@@ -121,7 +120,7 @@ func (h *Handler) RegisterCustomer(generator verify_jwt.Generator) http.HandlerF
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param user body dto.RegisterProvider true "User registration details"
+// @Param user body RegisterProvider true "User registration details"
 // @Success 201
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
@@ -129,7 +128,7 @@ func (h *Handler) RegisterCustomer(generator verify_jwt.Generator) http.HandlerF
 // @Router /auth/register/provider [post]
 func (h *Handler) RegisterProvider(generator verify_jwt.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var registerDTO dto.RegisterProvider
+		var registerDTO RegisterProvider
 		if err := h.Binder.BindJSON(r, &registerDTO); err != nil {
 			h.Writer.WriteError(w, err)
 			return
@@ -178,7 +177,7 @@ func (h *Handler) RegisterProvider(generator verify_jwt.Generator) http.HandlerF
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param user body dto.Email true "User email"
+// @Param user body Email true "User email"
 // @Success 204
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 409 {object} rest.ErrorResponse "Conflict"
@@ -186,7 +185,7 @@ func (h *Handler) RegisterProvider(generator verify_jwt.Generator) http.HandlerF
 // @Router /auth/resend-verification [post]
 func (h *Handler) ResendVerificationLetter(generator verify_jwt.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var emailDTO dto.Email
+		var emailDTO Email
 		if err := h.Binder.BindJSON(r, &emailDTO); err != nil {
 			h.Writer.WriteError(w, err)
 			return
@@ -228,18 +227,15 @@ func (h *Handler) ResendVerificationLetter(generator verify_jwt.Generator) http.
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param user body dto.Login true "User login details"
+// @Param user body Login true "User login details"
 // @Success 200 {string} string "Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token; HttpOnly"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized - Incorrect email or password"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/login [post]
-func (h *Handler) Login(
-	generator auth_jwt.Generator,
-	refreshGenerator refresh_jwt.Generator,
-) http.HandlerFunc {
+func (h *Handler) Login(generator auth_jwt.Generator,refreshGenerator refresh_jwt.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var loginDTO dto.Login
+		var loginDTO Login
 		if err := h.Binder.BindJSON(r, &loginDTO); err != nil {
 			h.Writer.WriteError(w, err)
 			return

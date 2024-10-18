@@ -10,6 +10,7 @@ import (
 	"github.com/hexley21/fixup/internal/user/jwt/verify_jwt"
 	"github.com/hexley21/fixup/internal/user/service"
 	"github.com/hexley21/fixup/pkg/http/handler"
+	"github.com/hexley21/fixup/pkg/infra/cdn"
 )
 
 type RouterArgs struct {
@@ -20,6 +21,7 @@ type RouterArgs struct {
 	AccessJWTManager       auth_jwt.Manager
 	RefreshJWTManager      refresh_jwt.Manager
 	VerificationJWTManager verify_jwt.Manager
+	CdnUrlSigner           cdn.URLSigner
 }
 
 func MapV1Routes(args RouterArgs, router chi.Router) {
@@ -31,6 +33,7 @@ func MapV1Routes(args RouterArgs, router chi.Router) {
 	userHandler := user.NewHandler(
 		args.HandlerComponents,
 		args.UserService,
+		args.CdnUrlSigner,
 	)
 
 	accessJWTMiddleware := args.Middleware.NewJWT(args.AccessJWTManager)

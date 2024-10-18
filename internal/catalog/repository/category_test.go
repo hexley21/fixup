@@ -16,7 +16,7 @@ import (
 
 const (
 	categoryName = "Maintenance"
-	categoryId = int32(1)
+	categoryId   = int32(1)
 )
 
 func setupCategory() (

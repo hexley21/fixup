@@ -14,10 +14,9 @@ import (
 
 type ctxKey string
 
-var (
-	refreshJwtIdKet       ctxKey              = "refresh_jwt_id"
-	ErrRefreshTokenNotSet *rest.ErrorResponse = rest.NewInternalServerError(errors.New("refresh token is not set"))
-)
+const refreshJwtIdKet ctxKey = "refresh_jwt_id"
+
+var ErrRefreshTokenNotSet = rest.NewInternalServerError(errors.New("refresh token is not set"))
 
 type AuthMiddleware struct {
 	writer writer.HTTPErrorWriter

@@ -57,6 +57,7 @@ type server struct {
 	handlerComponents *handler.Components
 	jWTManagers       *jWTManagers
 	services          *services
+	cdnUrlSigner      cdn.URLSigner
 }
 
 func NewServer(
@@ -72,8 +73,6 @@ func NewServer(
 	encryptor encryption.Encryptor,
 	mailer mailer.Mailer,
 ) *server {
-	cdnURLSigner := cdn.NewCloudFrontURLSigner(cfg.AWS.CDN)
-
 	userRepository := repository.NewUserRepository(dbPool, snowflakeNode)
 	providerRepository := repository.NewProviderRepository(dbPool)
 	verificationRepository := repository.NewVerificationRepository(redisCluster)
@@ -88,7 +87,6 @@ func NewServer(
 		encryptor,
 		mailer,
 		cfg.Server.Email,
-		cdnURLSigner,
 	)
 	if err := authService.ParseTemplates(cfg.Templates); err != nil {
 		logger.Fatalf("error starting server %v", err)
@@ -149,6 +147,7 @@ func NewServer(
 		handlerComponents: handlerComponents,
 		jWTManagers:       jWTManagers,
 		services:          services,
+		cdnUrlSigner:      cdn.NewCloudFrontURLSigner(cfg.AWS.CDN),
 	}
 }
 
@@ -177,6 +176,7 @@ func (s *server) Run() error {
 		AccessJWTManager:       s.jWTManagers.accessJWTManager,
 		RefreshJWTManager:      s.jWTManagers.refreshJWTManager,
 		VerificationJWTManager: s.jWTManagers.verificationJWTManager,
+		CdnUrlSigner:           s.cdnUrlSigner,
 	}, s.router)
 
 	s.metricsRouter.Use(chiMiddleware.Recoverer)
