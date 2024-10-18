@@ -2,13 +2,17 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"strings"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/hexley21/fixup/pkg/infra/postgres"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+)
+
+var(
+	ErrInvalidUpdateParams = errors.New("invalid update params")
 )
 
 type UserRepository interface {
@@ -233,7 +237,7 @@ func (r *pgsqlUserRepository) Update(ctx context.Context, id int64, arg UpdateUs
 	}
 
 	if len(params) == 1 {
-		return i, pgx.ErrNoRows
+		return i, ErrInvalidUpdateParams
 	}
 
 	query += strings.Join(setClauses, ", ")

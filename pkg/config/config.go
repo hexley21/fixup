@@ -24,6 +24,7 @@ type (
 		Server       Server
 		HTTP         HTTP
 		Pagination   Pagination
+		Templates    Templates
 		Metrics      Metrics
 		Postgres     Postgres
 		Redis        Redis
@@ -56,6 +57,11 @@ type (
 		LargePages   int32 `yaml:"l_pages"`
 		XLargePages  int32 `yaml:"xl_pages"`
 		XXLargePages int32 `yaml:"2xl_pages"`
+	}
+
+	Templates struct {
+		VerificationPath        string `yaml:"verification"`
+		VerificationSuccessPath string `yaml:"verification_success"`
 	}
 
 	Metrics struct {

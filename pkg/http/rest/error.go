@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -8,18 +9,18 @@ import (
 
 const (
 	MsgInvalidArguments = "Invalid arguments"
-	MsgInvalidId = "Invalid ID"
+	MsgInvalidId        = "Invalid ID"
 
 	MsgFileReadError = "Failed read file"
 
 	MsgInternalServerError = "Something went wrong"
 
-	MsgUnsupportedMedia = "Unsupported media type"
-	MsgEmptyBody        = "Empty body"
-
-	MsgNoFile         = "No file provided"
 	MsgTooManyFiles   = "Too many files"
 	MsgNotEnoughFiles = "Not enough files"
+)
+
+var (
+	ErrNoFile = errors.New("no file provided")
 )
 
 type ErrorResponse struct {
@@ -52,24 +53,28 @@ func newError(cause error, status int, message string) *ErrorResponse {
 	}
 }
 
-func NewBadRequestError(cause error, message string) *ErrorResponse {
-	return newError(cause, http.StatusBadRequest, message)
+func NewBadRequestError(cause error) *ErrorResponse {
+	return newError(cause, http.StatusBadRequest, cause.Error())
 }
 
-func NewUnauthorizedError(cause error, message string) *ErrorResponse {
-	return newError(cause, http.StatusUnauthorized, message)
+func NewUnauthorizedError(cause error) *ErrorResponse {
+	return newError(cause, http.StatusUnauthorized, cause.Error())
 }
 
-func NewForbiddenError(cause error, message string) *ErrorResponse {
-	return newError(cause, http.StatusForbidden, message)
+func NewForbiddenError(cause error) *ErrorResponse {
+	return newError(cause, http.StatusForbidden, cause.Error())
 }
 
-func NewNotFoundError(cause error, message string) *ErrorResponse {
+func NewNotFoundError(cause error) *ErrorResponse {
+	return newError(cause, http.StatusNotFound, cause.Error())
+}
+
+func NewNotFoundMessageError(cause error, message string) *ErrorResponse {
 	return newError(cause, http.StatusNotFound, message)
 }
 
-func NewConflictError(cause error, message string) *ErrorResponse {
-	return newError(cause, http.StatusConflict, message)
+func NewConflictError(cause error) *ErrorResponse {
+	return newError(cause, http.StatusConflict, cause.Error())
 }
 
 func NewInternalServerError(cause error) *ErrorResponse {

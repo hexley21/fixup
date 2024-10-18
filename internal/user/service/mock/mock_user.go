@@ -14,7 +14,7 @@ import (
 	io "io"
 	reflect "reflect"
 
-	dto "github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
+	domain "github.com/hexley21/fixup/internal/user/domain"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -41,89 +41,74 @@ func (m *MockUserService) EXPECT() *MockUserServiceMockRecorder {
 	return m.recorder
 }
 
-// ChangePassword mocks base method.
-func (m *MockUserService) ChangePassword(ctx context.Context, id int64, updateDTO dto.UpdatePassword) error {
+// Delete mocks base method.
+func (m *MockUserService) Delete(ctx context.Context, userId int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ChangePassword", ctx, id, updateDTO)
+	ret := m.ctrl.Call(m, "Delete", ctx, userId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// ChangePassword indicates an expected call of ChangePassword.
-func (mr *MockUserServiceMockRecorder) ChangePassword(ctx, id, updateDTO any) *gomock.Call {
+// Delete indicates an expected call of Delete.
+func (mr *MockUserServiceMockRecorder) Delete(ctx, userId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockUserService)(nil).ChangePassword), ctx, id, updateDTO)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockUserService)(nil).Delete), ctx, userId)
 }
 
-// DeleteUserById mocks base method.
-func (m *MockUserService) DeleteUserById(ctx context.Context, userId int64) error {
+// Get mocks base method.
+func (m *MockUserService) Get(ctx context.Context, userId int64) (*domain.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteUserById", ctx, userId)
+	ret := m.ctrl.Call(m, "Get", ctx, userId)
+	ret0, _ := ret[0].(*domain.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockUserServiceMockRecorder) Get(ctx, userId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockUserService)(nil).Get), ctx, userId)
+}
+
+// UpdatePassword mocks base method.
+func (m *MockUserService) UpdatePassword(ctx context.Context, id int64, oldPassowrd, newPassword string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePassword", ctx, id, oldPassowrd, newPassword)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteUserById indicates an expected call of DeleteUserById.
-func (mr *MockUserServiceMockRecorder) DeleteUserById(ctx, userId any) *gomock.Call {
+// UpdatePassword indicates an expected call of UpdatePassword.
+func (mr *MockUserServiceMockRecorder) UpdatePassword(ctx, id, oldPassowrd, newPassword any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUserById", reflect.TypeOf((*MockUserService)(nil).DeleteUserById), ctx, userId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePassword", reflect.TypeOf((*MockUserService)(nil).UpdatePassword), ctx, id, oldPassowrd, newPassword)
 }
 
-// FindUserById mocks base method.
-func (m *MockUserService) FindUserById(ctx context.Context, userId int64) (dto.User, error) {
+// UpdatePersonalInfo mocks base method.
+func (m *MockUserService) UpdatePersonalInfo(ctx context.Context, id int64, personalInfo *domain.UserPersonalInfo) (*domain.UserPersonalInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindUserById", ctx, userId)
-	ret0, _ := ret[0].(dto.User)
+	ret := m.ctrl.Call(m, "UpdatePersonalInfo", ctx, id, personalInfo)
+	ret0, _ := ret[0].(*domain.UserPersonalInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindUserById indicates an expected call of FindUserById.
-func (mr *MockUserServiceMockRecorder) FindUserById(ctx, userId any) *gomock.Call {
+// UpdatePersonalInfo indicates an expected call of UpdatePersonalInfo.
+func (mr *MockUserServiceMockRecorder) UpdatePersonalInfo(ctx, id, personalInfo any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserById", reflect.TypeOf((*MockUserService)(nil).FindUserById), ctx, userId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePersonalInfo", reflect.TypeOf((*MockUserService)(nil).UpdatePersonalInfo), ctx, id, personalInfo)
 }
 
-// FindUserProfileById mocks base method.
-func (m *MockUserService) FindUserProfileById(ctx context.Context, userId int64) (dto.Profile, error) {
+// UpdateProfilePicture mocks base method.
+func (m *MockUserService) UpdateProfilePicture(ctx context.Context, userId int64, file io.Reader, fileName string, fileSize int64, fileType string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindUserProfileById", ctx, userId)
-	ret0, _ := ret[0].(dto.Profile)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindUserProfileById indicates an expected call of FindUserProfileById.
-func (mr *MockUserServiceMockRecorder) FindUserProfileById(ctx, userId any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserProfileById", reflect.TypeOf((*MockUserService)(nil).FindUserProfileById), ctx, userId)
-}
-
-// SetProfilePicture mocks base method.
-func (m *MockUserService) SetProfilePicture(ctx context.Context, userId int64, file io.Reader, fileName string, fileSize int64, fileType string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetProfilePicture", ctx, userId, file, fileName, fileSize, fileType)
+	ret := m.ctrl.Call(m, "UpdateProfilePicture", ctx, userId, file, fileName, fileSize, fileType)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SetProfilePicture indicates an expected call of SetProfilePicture.
-func (mr *MockUserServiceMockRecorder) SetProfilePicture(ctx, userId, file, fileName, fileSize, fileType any) *gomock.Call {
+// UpdateProfilePicture indicates an expected call of UpdateProfilePicture.
+func (mr *MockUserServiceMockRecorder) UpdateProfilePicture(ctx, userId, file, fileName, fileSize, fileType any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetProfilePicture", reflect.TypeOf((*MockUserService)(nil).SetProfilePicture), ctx, userId, file, fileName, fileSize, fileType)
-}
-
-// UpdateUserDataById mocks base method.
-func (m *MockUserService) UpdateUserDataById(ctx context.Context, id int64, updateDTO dto.UpdateUser) (dto.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUserDataById", ctx, id, updateDTO)
-	ret0, _ := ret[0].(dto.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateUserDataById indicates an expected call of UpdateUserDataById.
-func (mr *MockUserServiceMockRecorder) UpdateUserDataById(ctx, id, updateDTO any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserDataById", reflect.TypeOf((*MockUserService)(nil).UpdateUserDataById), ctx, id, updateDTO)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateProfilePicture", reflect.TypeOf((*MockUserService)(nil).UpdateProfilePicture), ctx, userId, file, fileName, fileSize, fileType)
 }

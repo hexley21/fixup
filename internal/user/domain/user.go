@@ -24,8 +24,12 @@ type (
 	}
 
 	UserAccountInfo struct {
-		Role   enum.UserRole
-		Active bool
+		Role     enum.UserRole
+		Verified bool
+	}
+	UserIdentity struct {
+		ID          int64
+		AccountInfo UserAccountInfo
 	}
 )
 
@@ -48,9 +52,16 @@ func NewUserPersonalInfo(email string, phoneNumber string, firstName string, las
 	}
 }
 
-func NewUserAccountInfo(role enum.UserRole, active bool) (UserAccountInfo) {
+func NewUserAccountInfo(role enum.UserRole, verified bool) UserAccountInfo {
 	return UserAccountInfo{
 		Role:   role,
-		Active: active,
+		Verified: verified,
+	}
+}
+
+func NewUserIdentity(ID int64, accountInfo UserAccountInfo) UserIdentity {
+	return UserIdentity{
+		ID:          ID,
+		AccountInfo: accountInfo,
 	}
 }

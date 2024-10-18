@@ -90,7 +90,7 @@ func NewServer(
 		cfg.Server.Email,
 		cdnURLSigner,
 	)
-	if err := authService.ParseTemplates(); err != nil {
+	if err := authService.ParseTemplates(cfg.Templates); err != nil {
 		logger.Fatalf("error starting server %v", err)
 	}
 
@@ -98,7 +98,6 @@ func NewServer(
 		userRepository,
 		s3Bucket,
 		cdnFileInvalidator,
-		cdnURLSigner,
 		hasher,
 	)
 

@@ -1,6 +1,7 @@
 package binder
 
 import (
+	"errors"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -8,9 +9,10 @@ import (
 	"github.com/hexley21/fixup/pkg/http/rest"
 )
 
+
 var (
-	ErrUnsupportedMediaType = rest.NewBadRequestError(nil, rest.MsgUnsupportedMedia)
-	ErrEmptyBody = rest.NewBadRequestError(nil, rest.MsgEmptyBody)
+	ErrUnsupportedMediaType = rest.NewBadRequestError(errors.New("unsupported media type"))
+	ErrEmptyBody = rest.NewBadRequestError(errors.New("Empty body"))
 )
 
 type FullBinder interface {
