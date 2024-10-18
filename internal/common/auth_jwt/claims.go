@@ -1,24 +1,43 @@
 package auth_jwt
 
 import (
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/hexley21/fixup/internal/common/enum"
+	"github.com/hexley21/fixup/pkg/http/rest"
 )
 
+type ctxKey string
+
+const (
+	AuthJWTKey ctxKey = "auth_jwt"
+)
+
+var (
+	ErrJWTNotSet = rest.NewInternalServerError(errors.New("auth jwt not set"))
+)
+
+
 type UserClaims struct {
-	ID       string        `json:"id"`
-	Role     enum.UserRole `json:"role"`
-	Verified bool          `json:"verified"`
+	Data UserData
 	jwt.RegisteredClaims
 }
 
-func NewClaims(id string, role string, Verified bool, expiry time.Duration) UserClaims {
+type UserData struct {
+	ID       string        `json:"id"`
+	Role     enum.UserRole `json:"role"`
+	Verified bool          `json:"verified"`
+}
+
+func NewClaims(id string, role enum.UserRole, Verified bool, expiry time.Duration) UserClaims {
 	return UserClaims{
-		ID:       id,
-		Role:     enum.UserRole(role),
-		Verified: Verified,
+		Data: UserData{
+			ID:       id,
+			Role:     role,
+			Verified: Verified,
+		},
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
 		},
@@ -32,9 +51,11 @@ func mapToClaim(mapClaims any) UserClaims {
 	}
 
 	return UserClaims{
-		ID:       claims["id"].(string),
-		Role:     enum.UserRole(claims["role"].(string)),
-		Verified: claims["verified"].(bool),
+		Data: UserData{
+			ID:       claims["id"].(string),
+			Role:     enum.UserRole(claims["role"].(string)),
+			Verified: claims["verified"].(bool),
+		},
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Unix(int64(claims["exp"].(float64)), 0)),
 		},

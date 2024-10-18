@@ -12,7 +12,7 @@ import (
 
 var (
 	ErrUnsupportedMediaType = rest.NewBadRequestError(errors.New("unsupported media type"))
-	ErrEmptyBody = rest.NewBadRequestError(errors.New("Empty body"))
+	ErrEmptyBody = rest.NewBadRequestError(errors.New("empty body"))
 )
 
 type FullBinder interface {

@@ -10,15 +10,15 @@ type User struct {
 	Email       string    `json:"email"`
 	PictureUrl  string    `json:"picture_url,omitempty"`
 	Role        string    `json:"role"`
-	Active      bool      `json:"active"`
+	Verified    bool      `json:"verified"`
 	CreatedAt   time.Time `json:"created_at"`
 } // @name User
 
 type UpdateUser struct {
-	Email       *string `json:"email,omitempty" validate:"omitempty,email,max=40"`
-	PhoneNumber *string `json:"phone_number,omitempty" validate:"omitempty,phone"`
-	FirstName   *string `json:"first_name,omitempty" validate:"omitempty,alphaunicode,min=2,max=30"`
-	LastName    *string `json:"last_name,omitempty" validate:"omitempty,alphaunicode,min=2,max=30"`
+	Email       string `json:"email,omitempty" validate:"omitempty,email,max=40"`
+	PhoneNumber string `json:"phone_number,omitempty" validate:"omitempty,phone"`
+	FirstName   string `json:"first_name,omitempty" validate:"omitempty,alphaunicode,min=2,max=30"`
+	LastName    string `json:"last_name,omitempty" validate:"omitempty,alphaunicode,min=2,max=30"`
 } // @name UpdateUserInput
 
 type UpdatePassword struct {

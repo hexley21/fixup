@@ -1,17 +1,16 @@
 package middleware
 
 import (
+	"errors"
+
 	"github.com/hexley21/fixup/pkg/http/binder"
+	"github.com/hexley21/fixup/pkg/http/rest"
 	"github.com/hexley21/fixup/pkg/http/writer"
 )
 
-const(
-	MsgInsufficientRights = "Insufficient rights"
-	MsgUserIsVerified     = "User has to be not-verified"
-	MsgUserIsNotVerified  = "User is not verified"
-
-	MsgMissingAuthorizationHeader = "Authorization header is missing"
-	MsgMissingBearerToken         = "Bearer token is missing"
+var (
+	ErrMissingAuthorizationHeader = rest.NewUnauthorizedError(errors.New("authorization header is missing"))
+	ErrMissingBearerToken         = rest.NewUnauthorizedError(errors.New("bearer token is missing"))
 )
 
 type Middleware struct {
@@ -19,7 +18,7 @@ type Middleware struct {
 	writer writer.HTTPErrorWriter
 }
 
-func NewMiddleware(binder binder.FullBinder, writer writer.HTTPErrorWriter) *Middleware{
+func NewMiddleware(binder binder.FullBinder, writer writer.HTTPErrorWriter) *Middleware {
 	return &Middleware{
 		binder, writer,
 	}

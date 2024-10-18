@@ -47,13 +47,13 @@ func TestMapUserEntityToDTO(t *testing.T) {
 		setupFunc     func()
 	}{
 		{
-			data:      customerEntity,
+			data: customerEntity,
 			setupFunc: func() {
 				mockUrlSigner.EXPECT().SignURL(customerEntity.Picture).Return(signedUrl, nil)
 			},
 		},
 		{
-			data:      customerEntity,
+			data:          customerEntity,
 			expectedError: errSigning,
 			setupFunc: func() {
 				mockUrlSigner.EXPECT().SignURL(customerEntity.Picture).Return("", errSigning)
@@ -61,7 +61,7 @@ func TestMapUserEntityToDTO(t *testing.T) {
 		},
 		{
 			expectedError: mapper.ErrNilEntity,
-			setupFunc: func() {},
+			setupFunc:     func() {},
 		},
 	}
 
@@ -69,7 +69,7 @@ func TestMapUserEntityToDTO(t *testing.T) {
 		tt.setupFunc()
 
 		userDTO, err := mapper.MapUserEntityToDTO(tt.data, mockUrlSigner)
-		
+
 		if tt.expectedError != nil {
 			assert.ErrorIs(t, err, tt.expectedError)
 			continue
@@ -81,7 +81,7 @@ func TestMapUserEntityToDTO(t *testing.T) {
 		assert.Equal(t, tt.data.PersonalInfo.Email, userDTO.Email)
 		assert.Equal(t, signedUrl, userDTO.PictureUrl)
 		assert.Equal(t, tt.data.AccountInfo.Role, userDTO.Role)
-		assert.Equal(t, tt.data.AccountInfo.Active, userDTO.Active)
+		assert.Equal(t, tt.data.AccountInfo.Verified, userDTO.Verified)
 		assert.Equal(t, tt.data.CreatedAt, userDTO.CreatedAt)
 	}
 }

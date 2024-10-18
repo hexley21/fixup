@@ -23,19 +23,19 @@ func MapRoutes(
 		r.Use(
 			jWTAccessMiddleware,
 			onlyVerifiedMiddleware,
-			mw.NewAllowSelfOrRole(enum.UserRoleADMIN, enum.UserRoleMODERATOR),
+			NewUserMiddleware(h.Writer).AllowSelfOrRole(enum.UserRoleADMIN, enum.UserRoleMODERATOR),
 		)
 
-		r.Get("/{id}", h.FindUserById)
-		r.Patch("/{id}", h.UpdateUserData)
-		r.Delete("/{id}", h.DeleteUser)
+		r.Get("/{id}", h.Get)
+		r.Patch("/{id}", h.UpdatePersonalInfo)
+		r.Delete("/{id}", h.Delete)
 
 		r.Group(func(r chi.Router) {
 			r.Use(
 				mw.NewAllowFilesAmount(maxFileSize, "image", 1),
 				mw.NewAllowContentType(maxFileSize, "image", "image/jpeg", "image/png"),
 			)
-			r.Patch("/{id}/pfp", h.UploadProfilePicture)
+			r.Put("/{id}/pfp", h.UploadProfilePicture)
 		})
 	})
 
@@ -44,5 +44,5 @@ func MapRoutes(
 		r.Patch("/me/change-password", h.ChangePassword)
 	})
 
-	router.Get("/profile/{id}", h.FindUserProfileById)
+	// router.Get("/profile/{id}", h.FindUserProfileById)
 }

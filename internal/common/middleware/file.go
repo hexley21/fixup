@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	ErrTooManyFiles   = rest.NewBadRequestError(nil, rest.MsgTooManyFiles)
-	ErrNotEnoughFiles = rest.NewBadRequestError(nil, rest.MsgNotEnoughFiles)
-	ErrNoFile         = rest.NewBadRequestError(nil, rest.MsgNoFile)
+	ErrTooManyFiles   = rest.ErrTooManyFiles
+	ErrNotEnoughFiles = rest.ErrNotEnoughFiles
+	ErrNoFile         = rest.ErrNoFile
 )
 
 func (f *Middleware) NewAllowFilesAmount(size int64, key string, amount int) func(http.Handler) http.Handler {
@@ -59,7 +59,7 @@ func (f *Middleware) NewAllowContentType(size int64, key string, types ...string
 				if slices.Contains(types, contentType) {
 					continue
 				}
-				f.writer.WriteError(w, rest.NewBadRequestError(nil, fmt.Sprintf("Invalid file type: %s, for file: %s", contentType, file.Filename)))
+				f.writer.WriteError(w, rest.NewBadRequestError(fmt.Errorf("invalid file type: %s, for file: %s", contentType, file.Filename)))
 				return
 			}
 

@@ -14,13 +14,14 @@ const (
 	MsgFileReadError = "Failed read file"
 
 	MsgInternalServerError = "Something went wrong"
-
-	MsgTooManyFiles   = "Too many files"
-	MsgNotEnoughFiles = "Not enough files"
 )
 
 var (
-	ErrNoFile = errors.New("no file provided")
+	ErrInsufficientRights = NewForbiddenError(errors.New("insufficient rights"))
+	
+	ErrNoFile         = NewBadRequestError(errors.New("no file provided"))
+	ErrNotEnoughFiles = NewBadRequestError(errors.New("not enough files"))
+	ErrTooManyFiles   = NewBadRequestError(errors.New("too many files"))
 )
 
 type ErrorResponse struct {

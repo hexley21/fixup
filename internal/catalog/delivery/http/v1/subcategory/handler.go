@@ -51,14 +51,14 @@ func NewHandler(
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "subcategory_id"))
 	if err != nil {
-		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
+		h.Writer.WriteError(w, rest.NewBadRequestError(err))
 		return
 	}
 
 	subcategory, err := h.service.Get(r.Context(), int32(id))
 	if err != nil {
 		if errors.Is(err, service.ErrSubcategoryNotFound) {
-			h.Writer.WriteError(w, rest.NewNotFoundError(err, err.Error()))
+			h.Writer.WriteError(w, rest.NewNotFoundError(err))
 			return
 		}
 
@@ -130,7 +130,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ListByCategoryId(w http.ResponseWriter, r *http.Request) {
 	categoryId, err := strconv.Atoi(chi.URLParam(r, "category_id"))
 	if err != nil {
-		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
+		h.Writer.WriteError(w, rest.NewBadRequestError(err))
 		return
 	}
 
@@ -180,7 +180,7 @@ func (h *Handler) ListByCategoryId(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ListByTypeId(w http.ResponseWriter, r *http.Request) {
 	typeId, err := strconv.Atoi(chi.URLParam(r, "type_id"))
 	if err != nil {
-		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
+		h.Writer.WriteError(w, rest.NewBadRequestError(err))
 		return
 	}
 
@@ -249,7 +249,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if errors.Is(err, service.ErrSubcateogryNameTaken) {
-			h.Writer.WriteError(w, rest.NewConflictError(err, err.Error()))
+			h.Writer.WriteError(w, rest.NewConflictError(err))
 			return
 		}
 
@@ -282,7 +282,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "subcategory_id"))
 	if err != nil {
-		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
+		h.Writer.WriteError(w, rest.NewBadRequestError(err))
 		return
 	}
 
@@ -309,12 +309,12 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if errors.Is(err, service.ErrSubcateogryNameTaken) {
-			h.Writer.WriteError(w, rest.NewConflictError(err, err.Error()))
+			h.Writer.WriteError(w, rest.NewConflictError(err))
 			return
 		}
 
 		if errors.Is(err, service.ErrSubcategoryNotFound) || errors.Is(err, service.ErrCategoryNotFound){
-			h.Writer.WriteError(w, rest.NewNotFoundError(err, err.Error()))
+			h.Writer.WriteError(w, rest.NewNotFoundError(err))
 			return
 		}
 
@@ -342,14 +342,14 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "subcategory_id"))
 	if err != nil {
-		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
+		h.Writer.WriteError(w, rest.NewBadRequestError(err))
 		return
 	}
 
 	err = h.service.Delete(r.Context(), int32(id))
 	if err != nil {
 		if errors.Is(err, service.ErrSubcategoryNotFound) {
-			h.Writer.WriteError(w, rest.NewNotFoundError(err, err.Error()))
+			h.Writer.WriteError(w, rest.NewNotFoundError(err))
 			return
 		}
 

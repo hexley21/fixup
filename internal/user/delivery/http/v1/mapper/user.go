@@ -34,8 +34,8 @@ func MapUserEntityToDTO(entity *domain.User, urlSigner cdn.URLSigner) (*dto.User
 		PhoneNumber: entity.PersonalInfo.PhoneNumber,
 		Email:       entity.PersonalInfo.Email,
 		PictureUrl:  url,
-		Role:        entity.AccountInfo.Role,
-		Active:      entity.AccountInfo.Active,
+		Role:        string(entity.AccountInfo.Role),
+		Verified:      entity.AccountInfo.Verified,
 		CreatedAt:   entity.CreatedAt,
 	}, nil
 }

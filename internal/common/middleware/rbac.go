@@ -1,33 +1,31 @@
 package middleware
 
 import (
+	"errors"
 	"net/http"
 	"slices"
-	"strconv"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/hexley21/fixup/internal/common/auth_jwt"
 	"github.com/hexley21/fixup/internal/common/enum"
-	"github.com/hexley21/fixup/internal/common/util/ctx_util"
 	"github.com/hexley21/fixup/pkg/http/rest"
 )
 
 var (
-	ErrInsufficientRights = rest.NewForbiddenError(nil, MsgInsufficientRights)
-	ErrUserVerified       = rest.NewForbiddenError(nil, MsgUserIsVerified)
-	ErrUserNotVerified    = rest.NewForbiddenError(nil, MsgUserIsNotVerified)
+	ErrUserVerified       = rest.NewForbiddenError(errors.New("user has to be not-verified"))
+	ErrUserNotVerified    = rest.NewForbiddenError(errors.New("user is not verified"))
 )
 
 func (f *Middleware) NewAllowRoles(roles ...enum.UserRole) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			role, err := ctx_util.GetJWTRole(r.Context())
-			if err != nil {
-				f.writer.WriteError(w, err)
+			claims, ok := r.Context().Value(auth_jwt.AuthJWTKey).(auth_jwt.UserData)
+			if !ok {
+				f.writer.WriteError(w, auth_jwt.ErrJWTNotSet)
 				return
 			}
 
-			if !slices.Contains(roles, role) {
-				f.writer.WriteError(w, ErrInsufficientRights)
+			if !slices.Contains(roles, claims.Role) {
+				f.writer.WriteError(w, rest.ErrInsufficientRights)
 				return
 			}
 
@@ -36,66 +34,21 @@ func (f *Middleware) NewAllowRoles(roles ...enum.UserRole) func(http.Handler) ht
 	}
 }
 
-func (f *Middleware) NewAllowSelfOrRole(roles ...enum.UserRole) func(http.Handler) http.Handler {
+func (f *Middleware) NewAllowVerified(verified bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			idParam := chi.URLParam(r, "id")
-
-			role, err := ctx_util.GetJWTRole(r.Context())
-			if err != nil {
-				f.writer.WriteError(w, err)
+			claims, ok := r.Context().Value(auth_jwt.AuthJWTKey).(auth_jwt.UserData)
+			if !ok {
+				f.writer.WriteError(w, auth_jwt.ErrJWTNotSet)
 				return
 			}
 
-			jwtId, err := ctx_util.GetJWTId(r.Context())
-			if err != nil {
-				f.writer.WriteError(w, err)
-				return
-			}
-
-			if idParam == "me" {
-				id, err := strconv.ParseInt(jwtId, 10, 64)
-				if err != nil {
-					f.writer.WriteError(w, rest.NewInternalServerError(err))
-					return
-				}
-
-				next.ServeHTTP(w, r.WithContext(ctx_util.SetParamId(r.Context(), id)))
-				return
-			}
-
-			if (idParam == jwtId) || slices.Contains(roles, role) {
-				id, err := strconv.ParseInt(idParam, 10, 64)
-				if err != nil {
-					f.writer.WriteError(w, rest.NewInternalServerError(err))
-					return
-				}
-
-				r = r.WithContext(ctx_util.SetParamId(r.Context(), id))
+			if claims.Verified == verified {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			f.writer.WriteError(w, ErrInsufficientRights)
-		})
-	}
-}
-
-func (f *Middleware) NewAllowVerified(status bool) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			verified, err := ctx_util.GetJWTUserStatus(r.Context())
-			if err != nil {
-				f.writer.WriteError(w, err)
-				return
-			}
-
-			if verified == status {
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			if status {
+			if verified {
 				f.writer.WriteError(w, ErrUserNotVerified)
 				return
 			}
