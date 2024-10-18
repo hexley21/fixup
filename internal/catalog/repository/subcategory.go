@@ -137,7 +137,7 @@ const updateSubcategory = `-- name: UpdateSubcategory :one
 UPDATE subcategories SET name = $1, category_id = $2 WHERE id = $3 RETURNING *
 `
 
-
+// TODO: include partial update ability
 func (r *postgresSubcategoryRepository) Update(ctx context.Context, id int32, info entity.SubcategoryInfo) (entity.Subcategory, error) {
 	row := r.db.QueryRow(ctx, updateSubcategory, info.Name, info.CategoryID, id)
 	var i entity.Subcategory

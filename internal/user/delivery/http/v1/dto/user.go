@@ -10,21 +10,9 @@ type User struct {
 	Email       string    `json:"email"`
 	PictureUrl  string    `json:"picture_url,omitempty"`
 	Role        string    `json:"role"`
-	UserStatus  bool      `json:"user_status"`
+	Active      bool      `json:"active"`
 	CreatedAt   time.Time `json:"created_at"`
 } // @name User
-
-type Profile struct {
-	ID          string    `json:"id"`
-	FirstName   string    `json:"first_name"`
-	LastName    string    `json:"last_name"`
-	PhoneNumber string    `json:"phone_number,omitempty"`
-	Email       string    `json:"email,omitempty"`
-	PictureUrl  string    `json:"picture_url,omitempty"`
-	Role        string    `json:"role"`
-	UserStatus  bool      `json:"user_status"`
-	CreatedAt   time.Time `json:"created_at"`
-} // @name Profile
 
 type UpdateUser struct {
 	Email       *string `json:"email,omitempty" validate:"omitempty,email,max=40"`

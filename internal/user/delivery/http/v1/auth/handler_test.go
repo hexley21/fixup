@@ -59,25 +59,25 @@ var (
 		Email:       "larry@page.com",
 		PictureUrl:  "larrypage.png",
 		Role:        string(enum.UserRoleADMIN),
-		UserStatus:  true,
+		Active:      true,
 		CreatedAt:   time.Now(),
 	}
 
 	userConfirmationDetailsDTO = service.UserConfirmationDetails{
-		ID:         "1",
-		UserStatus: false,
-		Firstname:  "Larry",
+		ID:        "1",
+		Active:    false,
+		Firstname: "Larry",
 	}
 
 	UserIdentity = service.UserIdentity{
-		ID:         "1",
-		Role:       string(enum.UserRoleADMIN),
-		UserStatus: true,
+		ID:     "1",
+		Role:   string(enum.UserRoleADMIN),
+		Active: true,
 	}
 
 	UserRoleAndStatus = service.UserRoleAndStatus{
-		Role:       string(enum.UserRoleADMIN),
-		UserStatus: true,
+		Role:   string(enum.UserRoleADMIN),
+		Active: true,
 	}
 
 	verifyClaims = verify_jwt.VerifyClaims{
@@ -199,7 +199,7 @@ func TestRegisterCustomer(t *testing.T) {
 
 			assert.Equal(t, tt.expectedCode, rec.Code)
 			if tt.expectedCode == http.StatusOK {
-				time.Sleep(time.Second/2)
+				time.Sleep(time.Second / 2)
 			}
 		})
 	}
@@ -281,7 +281,7 @@ func TestRegisterProvider(t *testing.T) {
 
 			assert.Equal(t, tt.expectedCode, rec.Code)
 			if tt.expectedCode == http.StatusOK {
-				time.Sleep(time.Second/2)
+				time.Sleep(time.Second / 2)
 			}
 		})
 	}
@@ -312,8 +312,8 @@ func TestResendConfirmationLetter(t *testing.T) {
 			expectedCode: http.StatusNoContent,
 		},
 		{
-			name: "Bind Error",
-			mockSetup: func() { },
+			name:          "Bind Error",
+			mockSetup:     func() {},
 			input:         `invalid-json`,
 			skipHeader:    true,
 			expectedCode:  http.StatusBadRequest,
@@ -331,7 +331,7 @@ func TestResendConfirmationLetter(t *testing.T) {
 		{
 			name: "User Already Activated",
 			mockSetup: func() {
-				authServiceMock.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(service.UserConfirmationDetails{UserStatus: true}, nil)
+				authServiceMock.EXPECT().GetUserConfirmationDetails(gomock.Any(), gomock.Any()).Return(service.UserConfirmationDetails{Active: true}, nil)
 				validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
 			},
 			input:         emailJSON,
@@ -392,7 +392,7 @@ func TestResendConfirmationLetter(t *testing.T) {
 
 			assert.Equal(t, tt.expectedCode, rec.Code)
 			if tt.expectedCode == http.StatusOK {
-				time.Sleep(time.Second/2)
+				time.Sleep(time.Second / 2)
 			}
 		})
 	}
@@ -407,7 +407,7 @@ func TestLogin(t *testing.T) {
 			mockSetup: func() {
 				authServiceMock.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(UserIdentity, nil)
 				validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
-				accessJWTGeneratorMock.EXPECT().Generate(userDTO.ID, userDTO.Role, userDTO.UserStatus).Return(token, nil)
+				accessJWTGeneratorMock.EXPECT().Generate(userDTO.ID, userDTO.Role, userDTO.Active).Return(token, nil)
 				refreshJWTGeneratorMock.EXPECT().Generate(userDTO.ID).Return(token, nil)
 			},
 			input:        loginJSON,
@@ -415,8 +415,8 @@ func TestLogin(t *testing.T) {
 			cookieCheck:  true,
 		},
 		{
-			name: "Bind Error",
-			mockSetup: func() { },
+			name:          "Bind Error",
+			mockSetup:     func() {},
 			input:         `invalid-json`,
 			skipHeader:    true,
 			expectedCode:  http.StatusBadRequest,
@@ -456,7 +456,7 @@ func TestLogin(t *testing.T) {
 			mockSetup: func() {
 				validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
 				authServiceMock.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(UserIdentity, nil)
-				accessJWTGeneratorMock.EXPECT().Generate(userDTO.ID, userDTO.Role, userDTO.UserStatus).Return("", rest.NewInternalServerError(errors.New("")))
+				accessJWTGeneratorMock.EXPECT().Generate(userDTO.ID, userDTO.Role, userDTO.Active).Return("", rest.NewInternalServerError(errors.New("")))
 			},
 			input:         loginJSON,
 			expectedCode:  http.StatusInternalServerError,
@@ -467,7 +467,7 @@ func TestLogin(t *testing.T) {
 			mockSetup: func() {
 				authServiceMock.EXPECT().AuthenticateUser(gomock.Any(), gomock.Any()).Return(UserIdentity, nil)
 				validatorMock.EXPECT().Validate(gomock.Any()).Return(nil)
-				accessJWTGeneratorMock.EXPECT().Generate(userDTO.ID, userDTO.Role, userDTO.UserStatus).Return(token, nil)
+				accessJWTGeneratorMock.EXPECT().Generate(userDTO.ID, userDTO.Role, userDTO.Active).Return(token, nil)
 				refreshJWTGeneratorMock.EXPECT().Generate(userDTO.ID).Return("", rest.NewInternalServerError(errors.New("")))
 			},
 			input:         loginJSON,
@@ -531,7 +531,7 @@ func TestRefresh(t *testing.T) {
 			name: "Success",
 			mockSetup: func() {
 				authServiceMock.EXPECT().GetUserRoleAndStatus(gomock.Any(), gomock.Any()).Return(UserRoleAndStatus, nil)
-				accessJWTGeneratorMock.EXPECT().Generate(userDTO.ID, userDTO.Role, userDTO.UserStatus).Return(token, nil)
+				accessJWTGeneratorMock.EXPECT().Generate(userDTO.ID, userDTO.Role, userDTO.Active).Return(token, nil)
 			},
 			expectedCode: http.StatusOK,
 			cookieCheck:  true,
@@ -553,8 +553,8 @@ func TestRefresh(t *testing.T) {
 			expectedError: rest.MsgInternalServerError,
 		},
 		{
-			name: "JwtId Not Set",
-			mockSetup: func() {},
+			name:          "JwtId Not Set",
+			mockSetup:     func() {},
 			expectedCode:  http.StatusInternalServerError,
 			expectedError: rest.MsgInternalServerError,
 		},
@@ -570,7 +570,7 @@ func TestRefresh(t *testing.T) {
 			if tt.name != "JwtId Not Set" {
 				ctx := ctx_util.SetJWTId(req.Context(), userDTO.ID)
 				ctx = ctx_util.SetJWTRole(ctx, enum.UserRole(userDTO.Role))
-				ctx = ctx_util.SetJWTUserStatus(ctx, userDTO.UserStatus)
+				ctx = ctx_util.SetJWTActive(ctx, userDTO.Active)
 				req = req.WithContext(ctx)
 			}
 
@@ -683,7 +683,7 @@ func TestVerifyEmail(t *testing.T) {
 			}
 
 			if tt.expectedCode == http.StatusOK {
-				time.Sleep(time.Second/2)
+				time.Sleep(time.Second / 2)
 			}
 		})
 	}

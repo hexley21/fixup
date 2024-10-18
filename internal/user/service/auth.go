@@ -26,19 +26,19 @@ var (
 
 type UserConfirmationDetails struct {
 	ID         string
-	UserStatus bool
+	Active bool
 	Firstname  string
 }
 
 type UserIdentity struct {
 	ID         string
 	Role       string
-	UserStatus bool
+	Active bool
 }
 
 type UserRoleAndStatus struct {
 	Role       string
-	UserStatus bool
+	Active bool
 }
 
 type templates struct {
@@ -224,7 +224,7 @@ func (s *authServiceImpl) AuthenticateUser(ctx context.Context, loginDTO dto.Log
 
 	identityDTO.ID = strconv.FormatInt(creds.ID, 10)
 	identityDTO.Role = string(creds.Role)
-	identityDTO.UserStatus = creds.UserStatus.Bool
+	identityDTO.Active = creds.Active.Bool
 
 	return identityDTO, nil
 }
@@ -235,9 +235,9 @@ func (s *authServiceImpl) VerifyUser(ctx context.Context, token string, ttl time
 		return err
 	}
 
-	return s.userRepository.UpdateStatus(ctx, repository.UpdateUserStatusParams{
+	return s.userRepository.UpdateStatus(ctx, repository.UpdateActiveParams{
 		ID:         id,
-		UserStatus: pgtype.Bool{Bool: true, Valid: true},
+		Active: pgtype.Bool{Bool: true, Valid: true},
 	})
 }
 
@@ -249,7 +249,7 @@ func (s *authServiceImpl) GetUserConfirmationDetails(ctx context.Context, email 
 	}
 
 	detailsDTO.ID = strconv.FormatInt(res.ID, 10)
-	detailsDTO.UserStatus = res.UserStatus.Bool
+	detailsDTO.Active = res.Active.Bool
 	detailsDTO.Firstname = res.FirstName
 
 	return detailsDTO, nil
@@ -264,7 +264,7 @@ func (s *authServiceImpl) GetUserRoleAndStatus(ctx context.Context, id int64) (U
 	}
 
 	roleAndStatus.Role = string(res.Role)
-	roleAndStatus.UserStatus = res.UserStatus.Bool
+	roleAndStatus.Active = res.Active.Bool
 
 	return roleAndStatus, err
 }

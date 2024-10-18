@@ -5,7 +5,6 @@ import (
 
 	"github.com/hexley21/fixup/internal/catalog/entity"
 	"github.com/hexley21/fixup/pkg/infra/postgres"
-	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 )
 
 type CategoryRepository interface {

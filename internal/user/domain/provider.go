@@ -1,4 +1,4 @@
-package entity
+package domain
 
 type Provider struct {
 	PersonalIDNumber  []byte `json:"personal_id_number"`

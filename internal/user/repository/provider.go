@@ -3,27 +3,26 @@ package repository
 import (
 	"context"
 
-	"github.com/hexley21/fixup/internal/user/entity"
 	"github.com/hexley21/fixup/pkg/infra/postgres"
 )
 
 type ProviderRepository interface {
 	postgres.Repository[ProviderRepository]
-	Create(ctx context.Context, arg CreateProviderParams) error
-	GetByUserId(ctx context.Context, userID int64) (entity.Provider, error)
+	Create(ctx context.Context, arg CreateProviderParams) (bool, error)
+	Get(ctx context.Context, userID int64) (Provider, error)
 }
 
-type providerRepositoryImpl struct {
+type pgsqlProviderRepository struct {
 	db postgres.PGXQuerier
 }
 
-func NewProviderRepository(dbtx postgres.PGXQuerier) *providerRepositoryImpl {
-	return &providerRepositoryImpl{
+func NewProviderRepository(dbtx postgres.PGXQuerier) *pgsqlProviderRepository {
+	return &pgsqlProviderRepository{
 		dbtx,
 	}
 }
 
-func (r *providerRepositoryImpl) WithTx(tx postgres.PGXQuerier) ProviderRepository {
+func (r *pgsqlProviderRepository) WithTx(tx postgres.PGXQuerier) ProviderRepository {
 	return NewProviderRepository(tx)
 }
 
@@ -36,14 +35,14 @@ INSERT INTO providers (
 `
 
 type CreateProviderParams struct {
-	PersonalIDNumber  []byte
-	PersonalIDPreview string
-	UserID            int64
+	PersonalIDNumber  []byte `json:"personal_id_number"`
+	PersonalIDPreview string `json:"personal_id_preview"`
+	UserID            int64  `json:"user_id"`
 }
 
-func (r *providerRepositoryImpl) Create(ctx context.Context, arg CreateProviderParams) error {
-	_, err := r.db.Exec(ctx, createProvider, arg.PersonalIDNumber, arg.PersonalIDPreview, arg.UserID)
-	return err
+func (r *pgsqlProviderRepository) Create(ctx context.Context, arg CreateProviderParams) (bool, error) {
+	result, err := r.db.Exec(ctx, createProvider, arg.PersonalIDNumber, arg.PersonalIDPreview, arg.UserID)
+	return result.RowsAffected() > 0, err
 }
 
 const getByUserId = `-- name: GetByUserId :one
@@ -57,9 +56,9 @@ WHERE
   user_id = $1
 `
 
-func (r *providerRepositoryImpl) GetByUserId(ctx context.Context, userID int64) (entity.Provider, error) {
+func (r *pgsqlProviderRepository) Get(ctx context.Context, userID int64) (Provider, error) {
 	row := r.db.QueryRow(ctx, getByUserId, userID)
-	var i entity.Provider
+	var i Provider
 	err := row.Scan(&i.PersonalIDNumber, &i.PersonalIDPreview, &i.UserID)
 	return i, err
 }

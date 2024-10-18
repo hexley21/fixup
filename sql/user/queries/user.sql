@@ -1,17 +1,20 @@
--- name: GetById :one
+-- name: GetUser :one
 SELECT * FROM users WHERE id = $1;
 
--- name: GetCredentialsByEmail :one
-SELECT id, role, hash FROM users WHERE email = $1;
+-- name: GetUserAuthInfoByEmail :one
+SELECT id, role, verified, hash FROM users WHERE email = $1;
 
 -- name: GetHashById :one
 SELECT hash FROM users WHERE id = $1;
 
--- name: GetUserConfirmationDetails :one
-SELECT id, user_status, first_name FROM users WHERE email = $1;
+-- name: GetUserVerificationInfo :one
+SELECT id, verified, first_name FROM users WHERE email = $1;
 
--- name: GetUserRoleAndStatus :one
-SELECT role, user_status FROM users WHERE id = $1;
+-- name: GetUserAccountInfo :one
+SELECT role, verified FROM users WHERE id = $1;
+
+-- name: GetUserPicture :one
+SELECT picture FROM users WHERE id = $1;
 
 -- name: CreateUser :one
 INSERT INTO users (
@@ -22,25 +25,17 @@ INSERT INTO users (
 RETURNING *;
 
 -- name: UpdateUser :one
-UPDATE users
-SET 
-    first_name = $2,
-    last_name = $3,
-    phone_number = $4,
-    email = $5
-WHERE 
-    id = $1
-Returning *;
+UPDATE users SET first_name = $2, last_name = $3, phone_number = $4, email = $5 WHERE id = $1 Returning first_name, last_name, phone_number, email;
 
--- name: UpdateStatus :exec
-UPDATE users SET user_status = $2 WHERE id = $1;
+-- name: UpdateUserVerification :exec
+UPDATE users SET verified = $2 WHERE id = $1;
 
--- name: UpdatePicture :exec
-UPDATE users SET picture_name = $2 WHERE id = $1;
+-- name: UpdateUserPicture :exec
+UPDATE users SET picture = $2 WHERE id = $1;
 
--- name: UpdatePassword :exec
+-- name: UpdateUserHash :exec
 UPDATE users SET hash = $2 where id = $1;
 
--- name: DeleteById :exec
+-- name: DeleteUser :exec
 DELETE FROM users
 WHERE id = $1;

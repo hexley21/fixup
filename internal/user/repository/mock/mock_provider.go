@@ -13,7 +13,6 @@ import (
 	context "context"
 	reflect "reflect"
 
-	entity "github.com/hexley21/fixup/internal/user/entity"
 	repository "github.com/hexley21/fixup/internal/user/repository"
 	postgres "github.com/hexley21/fixup/pkg/infra/postgres"
 	gomock "go.uber.org/mock/gomock"
@@ -43,11 +42,12 @@ func (m *MockProviderRepository) EXPECT() *MockProviderRepositoryMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockProviderRepository) Create(ctx context.Context, arg repository.CreateProviderParams) error {
+func (m *MockProviderRepository) Create(ctx context.Context, arg repository.CreateProviderParams) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, arg)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Create indicates an expected call of Create.
@@ -56,19 +56,19 @@ func (mr *MockProviderRepositoryMockRecorder) Create(ctx, arg any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockProviderRepository)(nil).Create), ctx, arg)
 }
 
-// GetByUserId mocks base method.
-func (m *MockProviderRepository) GetByUserId(ctx context.Context, userID int64) (entity.Provider, error) {
+// Get mocks base method.
+func (m *MockProviderRepository) Get(ctx context.Context, userID int64) (repository.Provider, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByUserId", ctx, userID)
-	ret0, _ := ret[0].(entity.Provider)
+	ret := m.ctrl.Call(m, "Get", ctx, userID)
+	ret0, _ := ret[0].(repository.Provider)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetByUserId indicates an expected call of GetByUserId.
-func (mr *MockProviderRepositoryMockRecorder) GetByUserId(ctx, userID any) *gomock.Call {
+// Get indicates an expected call of Get.
+func (mr *MockProviderRepositoryMockRecorder) Get(ctx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByUserId", reflect.TypeOf((*MockProviderRepository)(nil).GetByUserId), ctx, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockProviderRepository)(nil).Get), ctx, userID)
 }
 
 // WithTx mocks base method.

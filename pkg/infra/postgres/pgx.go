@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -24,3 +25,10 @@ type (
 		WithTx(q PGXQuerier) R
 	}
 )
+
+func Rollback(tx pgx.Tx, ctx context.Context, originalErr error) error {
+    if err := tx.Rollback(ctx); err != nil {
+        return fmt.Errorf("rollback failed: %w, original error: %w", err, originalErr)
+    }
+    return originalErr
+}

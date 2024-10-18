@@ -6,10 +6,10 @@ CREATE TABLE users (
     last_name VARCHAR(30) NOT NULL,
     phone_number VARCHAR(15) NOT NULL,
     email VARCHAR(40) NOT NULL,
-    picture_name TEXT,
+    picture TEXT,
     hash VARCHAR(128) NOT NULL CHECK(LENGTH(hash) = 128),
     role USER_ROLE NOT NULL,
-    user_status BOOLEAN DEFAULT FALSE,
+    verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(email)
 );
