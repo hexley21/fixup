@@ -15,6 +15,7 @@ import (
 )
 
 // TODO: manage who can access certain endpoint & add profile endpoints
+// TODO: wrap errors from services
 
 var (
 	maxPfpSize int64 = 1 << 20

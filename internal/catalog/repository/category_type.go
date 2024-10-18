@@ -12,7 +12,7 @@ type CategoryTypeRepository interface {
 	Delete(ctx context.Context, id int32) (bool, error)
 	Get(ctx context.Context, id int32) (CategoryTypeModel, error)
 	Update(ctx context.Context, id int32, name string) (bool, error)
-	List(ctx context.Context, offset int32, limit int32) ([]CategoryTypeModel, error)
+	List(ctx context.Context, limit int64, offset int64) ([]CategoryTypeModel, error)
 }
 
 type categoryTypeRepositoryImpl struct {
@@ -70,11 +70,11 @@ func (r *categoryTypeRepositoryImpl) Update(ctx context.Context, id int32, name 
 }
 
 const getCategoryTypes = `-- name: GetCategoryTypes :many
-SELECT id, name FROM category_types ORDER BY id DESC OFFSET $1 LIMIT $2
+SELECT id, name FROM category_types ORDER BY id DESC LIMIT $1 OFFSET $2
 `
 
-func (r *categoryTypeRepositoryImpl) List(ctx context.Context, offset int32, limit int32) ([]CategoryTypeModel, error) {
-	rows, err := r.db.Query(ctx, getCategoryTypes, offset, limit)
+func (r *categoryTypeRepositoryImpl) List(ctx context.Context, limit int64, offset int64) ([]CategoryTypeModel, error) {
+	rows, err := r.db.Query(ctx, getCategoryTypes, limit, offset)
 	if err != nil {
 		return nil, err
 	}

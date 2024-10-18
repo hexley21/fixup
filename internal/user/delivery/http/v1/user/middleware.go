@@ -20,17 +20,17 @@ const paramIdKey ctxKey = "param_id"
 
 var ErrParamIdNotSet = rest.NewInternalServerError(errors.New("param id is not set"))
 
-type UserMiddleware struct {
+type Middleware struct {
 	writer writer.HTTPErrorWriter
 }
 
-func NewUserMiddleware(writer writer.HTTPErrorWriter) *UserMiddleware {
-	return &UserMiddleware{
+func NewUserMiddleware(writer writer.HTTPErrorWriter) *Middleware {
+	return &Middleware{
 		writer: writer,
 	}
 }
 
-func (m *UserMiddleware) AllowSelfOrRole(roles ...enum.UserRole) func(http.Handler) http.Handler {
+func (m *Middleware) AllowSelfOrRole(roles ...enum.UserRole) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			idParam := chi.URLParam(r, "id")

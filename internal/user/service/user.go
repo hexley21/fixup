@@ -14,6 +14,9 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// TODO: Add additional log messages to errors
+// TODO: Remove reduntant names from structs
+
 var directory = "pfp/"
 
 type UserService interface {
@@ -109,7 +112,7 @@ func (s *userServiceImpl) UpdateProfilePicture(ctx context.Context, userId int64
 	}
 
 	// if old picture fetched before invalid, skip the deletion from s3 and cache invalidation
-	if picture.String != "" {
+	if picture.String == "" {
 		return nil
 	}
 	err = s.s3Bucket.DeleteObject(ctx, picture.String)
@@ -156,10 +159,13 @@ func (s *userServiceImpl) UpdatePassword(ctx context.Context, id int64, oldPasso
 func (s *userServiceImpl) Delete(ctx context.Context, userId int64) error {
 	picture, err := s.userRepository.GetPicture(ctx, userId)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrUserNotFound
+		}
 		return err
 	}
 
-	if picture.Valid {
+	if picture.String != "" {
 		if err := s.s3Bucket.DeleteObject(ctx, picture.String); err != nil {
 			return err
 		}
@@ -167,6 +173,7 @@ func (s *userServiceImpl) Delete(ctx context.Context, userId int64) error {
 			return err
 		}
 	}
+
 	ok, err := s.userRepository.Delete(ctx, userId)
 	if err != nil {
 		return err

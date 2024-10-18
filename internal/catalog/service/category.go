@@ -2,105 +2,101 @@ package service
 
 import (
 	"context"
-	"strconv"
+	"errors"
 
-	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto"
-	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto/mapper"
+	"github.com/hexley21/fixup/internal/catalog/domain"
 	"github.com/hexley21/fixup/internal/catalog/repository"
+	"github.com/jackc/pgx/v5"
 )
 
-type CategoryService interface {
-	CreateCategory(ctx context.Context, createDTO dto.CreateCategoryDTO) (dto.CategoryDTO, error)
-	DeleteCategoryById(ctx context.Context, id int32) error
-	GetCategoryById(ctx context.Context, id int32) (dto.CategoryDTO, error)
-	GetCategories(ctx context.Context, page int32, perPage int32) ([]dto.CategoryDTO, error)
-	GetCategoriesByTypeId(ctx context.Context, id int32, page int32, perPage int32) ([]dto.CategoryDTO, error)
-	UpdateCategoryById(ctx context.Context, id int32, patchDTO dto.PatchCategoryDTO) (dto.CategoryDTO, error)
+type Category interface {
+	Create(ctx context.Context, info domain.CategoryInfo) (domain.Category, error)
+	Delete(ctx context.Context, id int32) error
+	Get(ctx context.Context, id int32) (domain.Category, error)
+	List(ctx context.Context, limit int64, offset int64) ([]domain.Category, error)
+	ListByTypeId(ctx context.Context, id int32, limit int64, offset int64) ([]domain.Category, error)
+	Update(ctx context.Context, id int32, info domain.CategoryInfo) (domain.Category, error)
 }
 
-type categoryServiceImpl struct {
+type categoryImpl struct {
 	categoryRepository repository.CategoryRepository
-	defaultPerPage     int32
-	maxPerPage         int32
 }
 
-func NewCategoryService(categoryRepository repository.CategoryRepository, defaultPerPage int32, maxPerPage int32) *categoryServiceImpl {
-	return &categoryServiceImpl{
+func NewCategoryService(categoryRepository repository.CategoryRepository) *categoryImpl {
+	return &categoryImpl{
 		categoryRepository: categoryRepository,
-		defaultPerPage:     defaultPerPage,
-		maxPerPage:         maxPerPage,
 	}
 }
 
-func (s *categoryServiceImpl) CreateCategory(ctx context.Context, createDTO dto.CreateCategoryDTO) (dto.CategoryDTO, error) {
-	intTypeId, err := strconv.Atoi(createDTO.TypeID)
+func (s *categoryImpl) Create(ctx context.Context, info domain.CategoryInfo) (domain.Category, error) {
+	model, err := s.categoryRepository.Create(ctx, info)
 	if err != nil {
-		return dto.CategoryDTO{}, err
+		return domain.Category{}, err
 	}
 
-	entity, err := s.categoryRepository.CreateCategory(ctx, repository.CreateCategoryParams{TypeID: int32(intTypeId), Name: createDTO.Name})
-	if err != nil {
-		return dto.CategoryDTO{}, err
-	}
-
-	return mapper.MapCategoryToDTO(entity), nil
+	return domain.NewCategory(model.ID, model.TypeID, model.Name), nil
 }
 
-func (s *categoryServiceImpl) DeleteCategoryById(ctx context.Context, id int32) error {
-	return s.categoryRepository.DeleteCategoryById(ctx, id)
+func (s *categoryImpl) Delete(ctx context.Context, id int32) error {
+	ok, err := s.categoryRepository.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return ErrCategoryNotFound
+	}
+
+	return nil
 }
 
-func (s *categoryServiceImpl) GetCategoryById(ctx context.Context, id int32) (dto.CategoryDTO, error) {
-	entity, err := s.categoryRepository.GetCategoryById(ctx, id)
+func (s *categoryImpl) Get(ctx context.Context, id int32) (domain.Category, error) {
+	model, err := s.categoryRepository.Get(ctx, id)
 	if err != nil {
-		return dto.CategoryDTO{}, err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Category{}, ErrCategoryNotFound
+		}
+		return domain.Category{}, err
 	}
 
-	return mapper.MapCategoryToDTO(entity), nil
+	return domain.NewCategory(model.ID, model.TypeID, model.Name), nil
 }
 
-func (s *categoryServiceImpl) GetCategories(ctx context.Context, page int32, perPage int32) ([]dto.CategoryDTO, error) {
-	if perPage == 0 || perPage > s.maxPerPage {
-		perPage = s.defaultPerPage
-	}
-
-	entities, err := s.categoryRepository.GetCategories(ctx, perPage*(page-1), perPage)
+func (s *categoryImpl) List(ctx context.Context, limit int64, offset int64) ([]domain.Category, error) {
+	list, err := s.categoryRepository.List(ctx, limit, offset)
 	if err != nil {
-		return []dto.CategoryDTO{}, err
+		return nil, err
 	}
 
-	categories := make([]dto.CategoryDTO, len(entities))
-	for i, e := range entities {
-		categories[i] = mapper.MapCategoryToDTO(e)
+	categories := make([]domain.Category, len(list))
+	for i, c := range list {
+		categories[i] = domain.NewCategory(c.ID, c.TypeID, c.Name)
 	}
 
 	return categories, nil
 }
 
-func (s *categoryServiceImpl) GetCategoriesByTypeId(ctx context.Context, id int32, page int32, perPage int32) ([]dto.CategoryDTO, error) {
-	if perPage == 0 || perPage > s.maxPerPage {
-		perPage = s.defaultPerPage
-	}
-
-	entities, err := s.categoryRepository.GetCategoriesByTypeId(ctx, id, perPage*(page-1), perPage)
+func (s *categoryImpl) ListByTypeId(ctx context.Context, id int32, limit int64, offset int64) ([]domain.Category, error) {
+	list, err := s.categoryRepository.ListByTypeId(ctx, id, limit, offset)
 	if err != nil {
-		return []dto.CategoryDTO{}, err
+		return nil, err
 	}
 
-	categories := make([]dto.CategoryDTO, len(entities))
-	for i, e := range entities {
-		categories[i] = mapper.MapCategoryToDTO(e)
+	categories := make([]domain.Category, len(list))
+	for i, c := range list {
+		categories[i] = domain.NewCategory(c.ID, c.TypeID, c.Name)
 	}
 
 	return categories, nil
 }
 
-func (s *categoryServiceImpl) UpdateCategoryById(ctx context.Context, id int32, patchDTO dto.PatchCategoryDTO) (dto.CategoryDTO, error) {
-	entity, err := s.categoryRepository.UpdateCategoryById(ctx, repository.UpdateCategoryByIdParams{ID: id, Name: patchDTO.Name})
-
+func (s *categoryImpl) Update(ctx context.Context, id int32, info domain.CategoryInfo) (domain.Category, error) {
+	model, err := s.categoryRepository.Update(ctx, id, info)
 	if err != nil {
-		return dto.CategoryDTO{}, err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Category{}, ErrCategoryNotFound
+		}
+		return domain.Category{}, err
 	}
 
-	return mapper.MapCategoryToDTO(entity), nil
+	return domain.NewCategory(model.ID, model.TypeID, model.Name), nil
 }

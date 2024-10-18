@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/hexley21/fixup/internal/catalog/domain"
 	"github.com/hexley21/fixup/internal/catalog/repository"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
@@ -39,7 +40,7 @@ func TestCreateCategory_Success(t *testing.T) {
 		t.Fatalf("failed to insert category type: %v", err)
 	}
 
-	category, err := repo.Create(ctx, repository.CreateCategoryParams{TypeID: categoryType.ID, Name: categoryName})
+	category, err := repo.Create(ctx, domain.CategoryInfo{TypeID: categoryType.ID, Name: categoryName})
 	assert.NoError(t, err)
 	assert.NotEmpty(t, category.ID)
 	assert.Equal(t, categoryName, category.Name)
@@ -54,7 +55,7 @@ func TestCreateCategory_InvalidArgs(t *testing.T) {
 		t.Fatalf("failed to insert category type: %v", err)
 	}
 
-	category, err := repo.Create(ctx, repository.CreateCategoryParams{TypeID: categoryType.ID, Name: ""})
+	category, err := repo.Create(ctx, domain.CategoryInfo{TypeID: categoryType.ID, Name: ""})
 
 	var pgErr *pgconn.PgError
 	if assert.ErrorAs(t, err, &pgErr) {
@@ -68,7 +69,7 @@ func TestCreateCategory_NonexistentType(t *testing.T) {
 	ctx, pgPool, repo := setupCategory()
 	defer cleanupPostgres(ctx, pgPool)
 
-	category, err := repo.Create(ctx, repository.CreateCategoryParams{TypeID: 0, Name: categoryName})
+	category, err := repo.Create(ctx, domain.CategoryInfo{TypeID: 0, Name: categoryName})
 
 	var pgErr *pgconn.PgError
 	if assert.ErrorAs(t, err, &pgErr) {
@@ -87,12 +88,12 @@ func TestCreateCategory_Conflict(t *testing.T) {
 		t.Fatalf("failed to insert category type: %v", err)
 	}
 
-	category, err := repo.Create(ctx, repository.CreateCategoryParams{TypeID: categoryType.ID, Name: categoryName})
+	category, err := repo.Create(ctx, domain.CategoryInfo{TypeID: categoryType.ID, Name: categoryName})
 	assert.NoError(t, err)
 	assert.NotEmpty(t, category.ID)
 	assert.Equal(t, categoryName, category.Name)
 
-	category, err = repo.Create(ctx, repository.CreateCategoryParams{TypeID: categoryType.ID, Name: categoryName})
+	category, err = repo.Create(ctx, domain.CategoryInfo{TypeID: categoryType.ID, Name: categoryName})
 	var pgErr *pgconn.PgError
 	if assert.ErrorAs(t, err, &pgErr) {
 		assert.Equal(t, pgerrcode.RaiseException, pgErr.Code)
@@ -175,7 +176,7 @@ func TestListCategories_Success(t *testing.T) {
 		t.Fatalf("failed to insert category: %v", err)
 	}
 
-	entities, err := repo.List(ctx, 0, 1)
+	entities, err := repo.List(ctx, 1, 0)
 
 	assert.Equal(t, 1, len(entities))
 	assert.Equal(t, categoryName, entities[0].Name)
@@ -186,7 +187,7 @@ func TestListCategories_NotFound(t *testing.T) {
 	ctx, pgPool, repo := setupCategory()
 	defer cleanupPostgres(ctx, pgPool)
 
-	entities, err := repo.List(ctx, 0, 1)
+	entities, err := repo.List(ctx, 1, 0)
 
 	assert.Equal(t, 0, len(entities))
 	assert.NoError(t, err)
@@ -206,7 +207,7 @@ func TestUpdateCategory_Success(t *testing.T) {
 		t.Fatalf("failed to insert category: %v", err)
 	}
 
-	update, err := repo.Update(ctx, insert.ID, repository.UpdateCategoryParams{TypeID: insert.TypeID, Name: insert.Name})
+	update, err := repo.Update(ctx, insert.ID, domain.CategoryInfo{TypeID: insert.TypeID, Name: insert.Name})
 
 	assert.NoError(t, err)
 	assert.Equal(t, insert.ID, update.ID)
@@ -218,7 +219,7 @@ func TestUpdateCategory_NotFound(t *testing.T) {
 	ctx, pgPool, repo := setupCategory()
 	defer cleanupPostgres(ctx, pgPool)
 
-	update, err := repo.Update(ctx, categoryId, repository.UpdateCategoryParams{Name: categoryTypeName})
+	update, err := repo.Update(ctx, categoryId, domain.CategoryInfo{Name: categoryTypeName})
 	assert.ErrorIs(t, err, pgx.ErrNoRows)
 	assert.Empty(t, update)
 }
@@ -244,7 +245,7 @@ func TestUpdateCategory_Conflict(t *testing.T) {
 
 
 
-	category, err := repo.Update(ctx, insert.ID, repository.UpdateCategoryParams{TypeID: insert.TypeID, Name: "Fix"})
+	category, err := repo.Update(ctx, insert.ID, domain.CategoryInfo{TypeID: insert.TypeID, Name: "Fix"})
 
 	var pgErr *pgconn.PgError
 	if assert.ErrorAs(t, err, &pgErr) {

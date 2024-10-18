@@ -113,7 +113,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteData(w, http.StatusOK, subcategoriesDTO)
 }
 
-// List
+// ListByCategoryId
 // @Summary Retrieve subcategory
 // @Description Retrieves a subcategory range
 // @Tags Subcategory
@@ -161,7 +161,6 @@ func (h *Handler) ListByCategoryId(w http.ResponseWriter, r *http.Request) {
 	h.Logger.Infof("Fetch subcategories by category id: %d - %d", categoryId, subcategoriesLen)
 	h.Writer.WriteData(w, http.StatusOK, subcategoriesDTO)
 }
-
 
 // List
 // @Summary Retrieve subcategory
@@ -259,7 +258,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	h.Logger.Infof("Create subcategory: %s, Category-ID: %s ID: %d", infoDTO.Name, infoDTO.CategoryID, subcategoryId)
 	h.Writer.WriteData(w, http.StatusCreated, dto.Subcategory{
-		ID:   strconv.Itoa(int(subcategoryId)),
+		ID:              strconv.Itoa(int(subcategoryId)),
 		SubcategoryInfo: infoDTO,
 	})
 }
@@ -313,7 +312,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if errors.Is(err, service.ErrSubcategoryNotFound) || errors.Is(err, service.ErrCategoryNotFound){
+		if errors.Is(err, service.ErrSubcategoryNotFound) || errors.Is(err, service.ErrCategoryNotFound) {
 			h.Writer.WriteError(w, rest.NewNotFoundError(err))
 			return
 		}

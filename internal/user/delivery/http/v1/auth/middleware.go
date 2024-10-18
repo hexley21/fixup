@@ -18,17 +18,17 @@ const refreshJwtIdKet ctxKey = "refresh_jwt_id"
 
 var ErrRefreshTokenNotSet = rest.NewInternalServerError(errors.New("refresh token is not set"))
 
-type AuthMiddleware struct {
+type Middleware struct {
 	writer writer.HTTPErrorWriter
 }
 
-func NewAuthMiddleware(writer writer.HTTPErrorWriter) *AuthMiddleware {
-	return &AuthMiddleware{
+func NewAuthMiddleware(writer writer.HTTPErrorWriter) *Middleware {
+	return &Middleware{
 		writer: writer,
 	}
 }
 
-func (m *AuthMiddleware) RefreshJWT(jwtVerifier refresh_jwt.Verifier) func(http.Handler) http.Handler {
+func (m *Middleware) RefreshJWT(jwtVerifier refresh_jwt.Verifier) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")

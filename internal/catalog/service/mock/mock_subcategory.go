@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	entity "github.com/hexley21/fixup/internal/catalog/entity"
+	domain "github.com/hexley21/fixup/internal/catalog/domain"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -41,7 +41,7 @@ func (m *MockSubcategory) EXPECT() *MockSubcategoryMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockSubcategory) Create(ctx context.Context, info entity.SubcategoryInfo) (int32, error) {
+func (m *MockSubcategory) Create(ctx context.Context, info domain.SubcategoryInfo) (int32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, info)
 	ret0, _ := ret[0].(int32)
@@ -70,10 +70,10 @@ func (mr *MockSubcategoryMockRecorder) Delete(ctx, id any) *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MockSubcategory) Get(ctx context.Context, id int32) (entity.Subcategory, error) {
+func (m *MockSubcategory) Get(ctx context.Context, id int32) (domain.Subcategory, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, id)
-	ret0, _ := ret[0].(entity.Subcategory)
+	ret0, _ := ret[0].(domain.Subcategory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -85,10 +85,10 @@ func (mr *MockSubcategoryMockRecorder) Get(ctx, id any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockSubcategory) List(ctx context.Context, offset, limit int32) ([]entity.Subcategory, error) {
+func (m *MockSubcategory) List(ctx context.Context, offset, limit int64) ([]domain.Subcategory, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx, offset, limit)
-	ret0, _ := ret[0].([]entity.Subcategory)
+	ret0, _ := ret[0].([]domain.Subcategory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -100,10 +100,10 @@ func (mr *MockSubcategoryMockRecorder) List(ctx, offset, limit any) *gomock.Call
 }
 
 // ListByCategoryId mocks base method.
-func (m *MockSubcategory) ListByCategoryId(ctx context.Context, categoryID, offset, limit int32) ([]entity.Subcategory, error) {
+func (m *MockSubcategory) ListByCategoryId(ctx context.Context, categoryID int32, offset, limit int64) ([]domain.Subcategory, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListByCategoryId", ctx, categoryID, offset, limit)
-	ret0, _ := ret[0].([]entity.Subcategory)
+	ret0, _ := ret[0].([]domain.Subcategory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -115,10 +115,10 @@ func (mr *MockSubcategoryMockRecorder) ListByCategoryId(ctx, categoryID, offset,
 }
 
 // ListByTypeId mocks base method.
-func (m *MockSubcategory) ListByTypeId(ctx context.Context, typeID, offset, limit int32) ([]entity.Subcategory, error) {
+func (m *MockSubcategory) ListByTypeId(ctx context.Context, typeID int32, offset, limit int64) ([]domain.Subcategory, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListByTypeId", ctx, typeID, offset, limit)
-	ret0, _ := ret[0].([]entity.Subcategory)
+	ret0, _ := ret[0].([]domain.Subcategory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -130,10 +130,10 @@ func (mr *MockSubcategoryMockRecorder) ListByTypeId(ctx, typeID, offset, limit a
 }
 
 // Update mocks base method.
-func (m *MockSubcategory) Update(ctx context.Context, id int32, info entity.SubcategoryInfo) (entity.Subcategory, error) {
+func (m *MockSubcategory) Update(ctx context.Context, id int32, info domain.SubcategoryInfo) (domain.Subcategory, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, id, info)
-	ret0, _ := ret[0].(entity.Subcategory)
+	ret0, _ := ret[0].(domain.Subcategory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

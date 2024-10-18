@@ -3,17 +3,18 @@ package repository
 import (
 	"context"
 
+	"github.com/hexley21/fixup/internal/catalog/domain"
 	"github.com/hexley21/fixup/pkg/infra/postgres"
 )
 
 type CategoryRepository interface {
 	postgres.Repository[CategoryRepository]
-	Create(ctx context.Context, arg CreateCategoryParams) (CategoryModel, error)
+	Create(ctx context.Context, info domain.CategoryInfo) (CategoryModel, error)
 	Delete(ctx context.Context, id int32) (bool, error)
-	List(ctx context.Context, offset int32, limit int32) ([]CategoryModel, error)
 	Get(ctx context.Context, id int32) (CategoryModel, error)
-	ListByTypeId(ctx context.Context, id int32, offset int32, limit int32) ([]CategoryModel, error)
-	Update(ctx context.Context, id int32, arg UpdateCategoryParams) (CategoryModel, error)
+	List(ctx context.Context, limit int64, offset int64) ([]CategoryModel, error)
+	ListByTypeId(ctx context.Context, id int32, limit int64, offset int64) ([]CategoryModel, error)
+	Update(ctx context.Context, id int32, info domain.CategoryInfo) (CategoryModel, error)
 }
 
 type postgresCategoryRepository struct {
@@ -34,13 +35,8 @@ const createCategory = `-- name: CreateCategory :one
 INSERT INTO categories (type_id, name) VALUES ($1, $2) RETURNING id, type_id, name
 `
 
-type CreateCategoryParams struct {
-	TypeID int32
-	Name   string
-}
-
-func (r *postgresCategoryRepository) Create(ctx context.Context, arg CreateCategoryParams) (CategoryModel, error) {
-	row := r.db.QueryRow(ctx, createCategory, arg.TypeID, arg.Name)
+func (r *postgresCategoryRepository) Create(ctx context.Context, info domain.CategoryInfo) (CategoryModel, error) {
+	row := r.db.QueryRow(ctx, createCategory, info.TypeID, info.Name)
 	var i CategoryModel
 	err := row.Scan(&i.ID, &i.TypeID, &i.Name)
 	return i, err
@@ -55,12 +51,23 @@ func (r *postgresCategoryRepository) Delete(ctx context.Context, id int32) (bool
 	return result.RowsAffected() > 0, err
 }
 
-const listCategories = `-- name: ListCategories :many
-SELECT id, type_id, name FROM categories ORDER BY id DESC OFFSET $1 LIMIT $2
+const getCategory = `-- name: GetCategory :one
+SELECT id, type_id, name FROM categories WHERE id = $1
 `
 
-func (r *postgresCategoryRepository) List(ctx context.Context, offset int32, limit int32) ([]CategoryModel, error) {
-	rows, err := r.db.Query(ctx, listCategories, offset, limit)
+func (r *postgresCategoryRepository) Get(ctx context.Context, id int32) (CategoryModel, error) {
+	row := r.db.QueryRow(ctx, getCategory, id)
+	var i CategoryModel
+	err := row.Scan(&i.ID, &i.TypeID, &i.Name)
+	return i, err
+}
+
+const listCategories = `-- name: ListCategories :many
+SELECT id, type_id, name FROM categories ORDER BY id DESC LIMIT $1 OFFSET $2
+`
+
+func (r *postgresCategoryRepository) List(ctx context.Context, limit int64, offset int64) ([]CategoryModel, error) {
+	rows, err := r.db.Query(ctx, listCategories, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -79,23 +86,12 @@ func (r *postgresCategoryRepository) List(ctx context.Context, offset int32, lim
 	return items, nil
 }
 
-const getCategory = `-- name: GetCategory :one
-SELECT id, type_id, name FROM categories WHERE id = $1
-`
-
-func (r *postgresCategoryRepository) Get(ctx context.Context, id int32) (CategoryModel, error) {
-	row := r.db.QueryRow(ctx, getCategory, id)
-	var i CategoryModel
-	err := row.Scan(&i.ID, &i.TypeID, &i.Name)
-	return i, err
-}
-
 const listCategoriesByTypeId = `-- name: ListCategoriesByTypeId :many
-SELECT id, type_id, name FROM categories WHERE id = $1 ORDER BY id DESC OFFSET $2 LIMIT $3
+SELECT id, type_id, name FROM categories WHERE id = $1 ORDER BY id DESC LIMIT $2 OFFSET $3
 `
 
-func (r *postgresCategoryRepository) ListByTypeId(ctx context.Context, id int32, offset int32, limit int32) ([]CategoryModel, error) {
-	rows, err := r.db.Query(ctx, listCategoriesByTypeId, id, offset, limit)
+func (r *postgresCategoryRepository) ListByTypeId(ctx context.Context, id int32, limit int64, offset int64) ([]CategoryModel, error) {
+	rows, err := r.db.Query(ctx, listCategoriesByTypeId, id, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -118,13 +114,8 @@ const updateCategoryById = `-- name: UpdateCategoryById :one
 UPDATE categories SET name = $2, type_id = $3 WHERE id = $1 Returning id, type_id, name
 `
 
-type UpdateCategoryParams struct {
-	Name   string
-	TypeID int32
-}
-
-func (r *postgresCategoryRepository) Update(ctx context.Context, id int32, arg UpdateCategoryParams) (CategoryModel, error) {
-	row := r.db.QueryRow(ctx, updateCategoryById, id, arg.Name, arg.TypeID)
+func (r *postgresCategoryRepository) Update(ctx context.Context, id int32, info domain.CategoryInfo) (CategoryModel, error) {
+	row := r.db.QueryRow(ctx, updateCategoryById, id, info.Name, info.TypeID)
 	var i CategoryModel
 	err := row.Scan(&i.ID, &i.TypeID, &i.Name)
 	return i, err

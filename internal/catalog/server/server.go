@@ -29,8 +29,8 @@ import (
 )
 
 type services struct {
-	categoryTypes service.CategoryTypeService
-	category      service.CategoryService
+	categoryTypes service.CategoryType
+	category      service.Category
 	subcategory   service.Subcategory
 }
 
@@ -62,8 +62,8 @@ func NewServer(
 	subcategoryRepository := repository.NewSubcategoryRepository(dbPool)
 
 	services := &services{
-		categoryTypes: service.NewCategoryTypeService(categoryTypeRepository, cfg.Pagination.LargePages, cfg.Pagination.XLargePages),
-		category:      service.NewCategoryService(categoryRepository, cfg.Pagination.LargePages, cfg.Pagination.XLargePages),
+		categoryTypes: service.NewCategoryTypeService(categoryTypeRepository),
+		category:      service.NewCategoryService(categoryRepository),
 		subcategory:   service.NewSubcategoryService(subcategoryRepository),
 	}
 

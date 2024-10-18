@@ -16,10 +16,9 @@ import (
 const (
 	subcategoryName1 = "Door fix"
 	subcategoryName2 = "AC Montage"
-	subcategoryId    = int32(1)
 )
 
-func setupSubategory() (
+func setupSubcategory() (
 	ctx context.Context,
 	pgPool *pgxpool.Pool,
 	repo repository.Subcategory,
@@ -33,7 +32,7 @@ func setupSubategory() (
 }
 
 func TestCreateSubcategory(t *testing.T) {
-	ctx, pgPool, repo := setupSubategory()
+	ctx, pgPool, repo := setupSubcategory()
 	defer cleanupPostgres(ctx, pgPool)
 
 	category := &repository.CategoryModel{}
@@ -103,7 +102,7 @@ func TestCreateSubcategory(t *testing.T) {
 }
 
 func TestGetCategoryById(t *testing.T) {
-	ctx, pgPool, repo := setupSubategory()
+	ctx, pgPool, repo := setupSubcategory()
 	defer cleanupPostgres(ctx, pgPool)
 
 	_, category := insertSubcategoryDependencies(t, pgPool, ctx)
@@ -150,7 +149,7 @@ func TestGetCategoryById(t *testing.T) {
 }
 
 func TestGetCategorise(t *testing.T) {
-	ctx, pgPool, repo := setupSubategory()
+	ctx, pgPool, repo := setupSubcategory()
 	defer cleanupPostgres(ctx, pgPool)
 
 	_, category := insertSubcategoryDependencies(t, pgPool, ctx)
@@ -182,7 +181,7 @@ func TestGetCategorise(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 
-			subcategories, err := repo.List(ctx, 0, 5)
+			subcategories, err := repo.List(ctx, 5, 0)
 
 			assert.NoError(t, err)
 			assert.Len(t, subcategories, tt.len)
@@ -191,7 +190,7 @@ func TestGetCategorise(t *testing.T) {
 }
 
 func TestGetCategoriseByCategoryId(t *testing.T) {
-	ctx, pgPool, repo := setupSubategory()
+	ctx, pgPool, repo := setupSubcategory()
 	defer cleanupPostgres(ctx, pgPool)
 
 	_, category := insertSubcategoryDependencies(t, pgPool, ctx)
@@ -232,7 +231,7 @@ func TestGetCategoriseByCategoryId(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 
-			subcategories, err := repo.ListByCategoryId(ctx, tt.categoryId, 0, 5)
+			subcategories, err := repo.ListByCategoryId(ctx, tt.categoryId, 5, 0)
 
 			assert.NoError(t, err)
 			assert.Len(t, subcategories, tt.len)
@@ -241,7 +240,7 @@ func TestGetCategoriseByCategoryId(t *testing.T) {
 }
 
 func TestGetCategoriseByTypeId(t *testing.T) {
-	ctx, pgPool, repo := setupSubategory()
+	ctx, pgPool, repo := setupSubcategory()
 	defer cleanupPostgres(ctx, pgPool)
 
 	categoryType, category := insertSubcategoryDependencies(t, pgPool, ctx)
@@ -282,7 +281,7 @@ func TestGetCategoriseByTypeId(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 
-			subcategories, err := repo.ListByTypeId(ctx, tt.typeId, 0, 5)
+			subcategories, err := repo.ListByTypeId(ctx, tt.typeId, 5, 0)
 
 			assert.NoError(t, err)
 			assert.Len(t, subcategories, tt.len)
@@ -291,7 +290,7 @@ func TestGetCategoriseByTypeId(t *testing.T) {
 }
 
 func TestUpdateCategoryById(t *testing.T) {
-	ctx, pgPool, repo := setupSubategory()
+	ctx, pgPool, repo := setupSubcategory()
 	defer cleanupPostgres(ctx, pgPool)
 
 	_, category := insertSubcategoryDependencies(t, pgPool, ctx)
@@ -361,7 +360,7 @@ func TestUpdateCategoryById(t *testing.T) {
 }
 
 func TestDeleteCategoryById(t *testing.T) {
-	ctx, pgPool, repo := setupSubategory()
+	ctx, pgPool, repo := setupSubcategory()
 	defer cleanupPostgres(ctx, pgPool)
 
 	_, category := insertSubcategoryDependencies(t, pgPool, ctx)

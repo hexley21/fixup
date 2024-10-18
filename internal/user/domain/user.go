@@ -54,7 +54,7 @@ func NewUserPersonalInfo(email string, phoneNumber string, firstName string, las
 
 func NewUserAccountInfo(role enum.UserRole, verified bool) UserAccountInfo {
 	return UserAccountInfo{
-		Role:   role,
+		Role:     role,
 		Verified: verified,
 	}
 }

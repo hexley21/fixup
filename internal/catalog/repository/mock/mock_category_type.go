@@ -87,18 +87,18 @@ func (mr *MockCategoryTypeRepositoryMockRecorder) Get(ctx, id any) *gomock.Call 
 }
 
 // List mocks base method.
-func (m *MockCategoryTypeRepository) List(ctx context.Context, offset, limit int32) ([]repository.CategoryTypeModel, error) {
+func (m *MockCategoryTypeRepository) List(ctx context.Context, limit, offset int64) ([]repository.CategoryTypeModel, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "List", ctx, offset, limit)
+	ret := m.ctrl.Call(m, "List", ctx, limit, offset)
 	ret0, _ := ret[0].([]repository.CategoryTypeModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // List indicates an expected call of List.
-func (mr *MockCategoryTypeRepositoryMockRecorder) List(ctx, offset, limit any) *gomock.Call {
+func (mr *MockCategoryTypeRepositoryMockRecorder) List(ctx, limit, offset any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockCategoryTypeRepository)(nil).List), ctx, offset, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockCategoryTypeRepository)(nil).List), ctx, limit, offset)
 }
 
 // Update mocks base method.

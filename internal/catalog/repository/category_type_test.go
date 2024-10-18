@@ -132,7 +132,7 @@ func TestListCategoryTypes_Success(t *testing.T) {
 		t.Fatalf("failed to insert category type: %v", err)
 	}
 
-	entities, err := repo.List(ctx, 0, 1)
+	entities, err := repo.List(ctx, 1, 0)
 
 	assert.Equal(t, 1, len(entities))
 	assert.Equal(t, categoryTypeName, entities[0].Name)
@@ -143,7 +143,7 @@ func TestListCategoryTypes_NotFound(t *testing.T) {
 	ctx, pgPool, repo := setupCategoryType()
 	defer cleanupPostgres(ctx, pgPool)
 
-	entities, err := repo.List(ctx, 0, 1)
+	entities, err := repo.List(ctx, 1, 0)
 
 	assert.Equal(t, 0, len(entities))
 	assert.NoError(t, err)

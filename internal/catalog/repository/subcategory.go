@@ -10,9 +10,9 @@ import (
 type Subcategory interface {
 	postgres.Repository[Subcategory]
 	Get(ctx context.Context, id int32) (SubcategoryModel, error)
-	List(ctx context.Context, offset int32, limit int32) ([]SubcategoryModel, error)
-	ListByCategoryId(ctx context.Context, categoryID int32, offset int32, limit int32) ([]SubcategoryModel, error)
-	ListByTypeId(ctx context.Context, typeID int32, offset int32, limit int32) ([]SubcategoryModel, error)
+	List(ctx context.Context, limit int64, offset int64) ([]SubcategoryModel, error)
+	ListByCategoryId(ctx context.Context, categoryID int32, limit int64, offset int64) ([]SubcategoryModel, error)
+	ListByTypeId(ctx context.Context, typeID int32, limit int64, offset int64) ([]SubcategoryModel, error)
 	Create(ctx context.Context, info domain.SubcategoryInfo) (int32, error)
 	Update(ctx context.Context, id int32, info domain.SubcategoryInfo) (SubcategoryModel, error)
 	Delete(ctx context.Context, id int32) (bool, error)
@@ -44,11 +44,11 @@ func (r *postgresSubcategoryRepository) Get(ctx context.Context, id int32) (Subc
 }
 
 const listSubategories = `-- name: ListSubategories :many
-SELECT id, category_id, name FROM subcategories ORDER BY id OFFSET $1 LIMIT $2
+SELECT id, category_id, name FROM subcategories ORDER BY id LIMIT $1 OFFSET $2
 `
 
-func (r *postgresSubcategoryRepository) List(ctx context.Context, offset int32, limit int32) ([]SubcategoryModel, error) {
-	rows, err := r.db.Query(ctx, listSubategories, offset, limit)
+func (r *postgresSubcategoryRepository) List(ctx context.Context, limit int64, offset int64) ([]SubcategoryModel, error) {
+	rows, err := r.db.Query(ctx, listSubategories, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -68,11 +68,11 @@ func (r *postgresSubcategoryRepository) List(ctx context.Context, offset int32, 
 }
 
 const listSubategoriesByCategoryId = `-- name: ListSubategoriesByCategoryId :many
-SELECT id, category_id, name FROM subcategories WHERE category_id = $1 ORDER BY id OFFSET $2 LIMIT $3
+SELECT id, category_id, name FROM subcategories WHERE category_id = $1 ORDER BY id LIMIT $2 OFFSET $3
 `
 
-func (r *postgresSubcategoryRepository) ListByCategoryId(ctx context.Context, categoryID int32, offset int32, limit int32) ([]SubcategoryModel, error) {
-	rows, err := r.db.Query(ctx, listSubategoriesByCategoryId, categoryID, offset, limit)
+func (r *postgresSubcategoryRepository) ListByCategoryId(ctx context.Context, categoryID int32, limit int64, offset int64) ([]SubcategoryModel, error) {
+	rows, err := r.db.Query(ctx, listSubategoriesByCategoryId, categoryID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -96,11 +96,11 @@ SELECT s.id, s.category_id, s.name
 FROM subcategories s
 JOIN categories c ON s.category_id = c.id
 WHERE c.type_id = $1
-ORDER BY s.id OFFSET $2 LIMIT $3
+ORDER BY s.id LIMIT $2 OFFSET $3
 `
 
-func (r *postgresSubcategoryRepository) ListByTypeId(ctx context.Context, typeID int32, offset int32, limit int32) ([]SubcategoryModel, error) {
-	rows, err := r.db.Query(ctx, listSubategoriesByTypeId, typeID, offset, limit)
+func (r *postgresSubcategoryRepository) ListByTypeId(ctx context.Context, typeID int32, limit int64, offset int64) ([]SubcategoryModel, error) {
+	rows, err := r.db.Query(ctx, listSubategoriesByTypeId, typeID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
