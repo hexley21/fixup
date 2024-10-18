@@ -4,9 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hexley21/fixup/internal/catalog/entity"
+	"github.com/hexley21/fixup/internal/catalog/domain"
 	"github.com/hexley21/fixup/internal/catalog/repository"
-	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -37,7 +36,7 @@ func TestCreateSubcategory(t *testing.T) {
 	ctx, pgPool, repo := setupSubategory()
 	defer cleanupPostgres(ctx, pgPool)
 
-	category := &entity.Category{}
+	category := &repository.CategoryModel{}
 
 	tests := []struct {
 		name             string
@@ -77,7 +76,7 @@ func TestCreateSubcategory(t *testing.T) {
 			name:             "Conflict",
 			subcategoryName1: subcategoryName1,
 			setup: func() {
-				_, _ = repo.Create(ctx, entity.SubcategoryInfo{Name: subcategoryName1, CategoryID: category.ID})
+				_, _ = repo.Create(ctx, domain.SubcategoryInfo{Name: subcategoryName1, CategoryID: category.ID})
 			},
 			expectedCode: pgerrcode.RaiseException,
 		},
@@ -87,7 +86,7 @@ func TestCreateSubcategory(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 
-			id, err := repo.Create(ctx, entity.SubcategoryInfo{Name: tt.subcategoryName1, CategoryID: category.ID})
+			id, err := repo.Create(ctx, domain.SubcategoryInfo{Name: tt.subcategoryName1, CategoryID: category.ID})
 
 			if tt.expectedCode == "" {
 				assert.NoError(t, err)
@@ -111,19 +110,19 @@ func TestGetCategoryById(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		setup         func() entity.Subcategory
+		setup         func() repository.SubcategoryModel
 		expectedError error
 	}{
 		{
 			name: "Not Found",
-			setup: func() entity.Subcategory {
-				return entity.Subcategory{ID: -1}
+			setup: func() repository.SubcategoryModel {
+				return repository.SubcategoryModel{ID: -1}
 			},
 			expectedError: pgx.ErrNoRows,
 		},
 		{
 			name: "Success",
-			setup: func() entity.Subcategory {
+			setup: func() repository.SubcategoryModel {
 				sc, err := insertSubcategory(pgPool, ctx, category.ID, subcategoryName1)
 				if err != nil {
 					t.Fatalf("failed to insert subcategory: %v", err)
@@ -299,21 +298,21 @@ func TestUpdateCategoryById(t *testing.T) {
 
 	tests := []struct {
 		name              string
-		setup             func() entity.Subcategory
+		setup             func() repository.SubcategoryModel
 		subcategoryName   string
 		expectedError     error
 		expectedErrorCode string
 	}{
 		{
 			name: "Not Found",
-			setup: func() entity.Subcategory {
-				return entity.Subcategory{ID: -1}
+			setup: func() repository.SubcategoryModel {
+				return repository.SubcategoryModel{ID: -1}
 			},
 			expectedError: pgx.ErrNoRows,
 		},
 		{
 			name: "Success",
-			setup: func() entity.Subcategory {
+			setup: func() repository.SubcategoryModel {
 				sc, err := insertSubcategory(pgPool, ctx, category.ID, subcategoryName1)
 				if err != nil {
 					t.Fatalf("failed to insert subcategory1: %v", err)
@@ -325,7 +324,7 @@ func TestUpdateCategoryById(t *testing.T) {
 		},
 		{
 			name: "Conflict",
-			setup: func() entity.Subcategory {
+			setup: func() repository.SubcategoryModel {
 				sc, err := insertSubcategory(pgPool, ctx, category.ID, subcategoryName1)
 				if err != nil {
 					t.Fatalf("failed to insert subcategory2: %v", err)
@@ -342,7 +341,7 @@ func TestUpdateCategoryById(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			sc := tt.setup()
 
-			subcategory, err := repo.Update(ctx, sc.ID, entity.SubcategoryInfo{Name: tt.subcategoryName, CategoryID: sc.CategoryID})
+			subcategory, err := repo.Update(ctx, sc.ID, domain.SubcategoryInfo{Name: tt.subcategoryName, CategoryID: sc.CategoryID})
 
 			if tt.expectedErrorCode != "" {
 				var pgErr *pgconn.PgError
@@ -368,16 +367,16 @@ func TestDeleteCategoryById(t *testing.T) {
 	_, category := insertSubcategoryDependencies(t, pgPool, ctx)
 
 	tests := []struct {
-		name          string
-		setup         func() int32
-		expectedError error
+		name       string
+		setup      func() int32
+		expectedOk bool
 	}{
 		{
 			name: "Not Found",
 			setup: func() int32 {
 				return -1
 			},
-			expectedError: pg_error.ErrNotFound,
+			expectedOk: false,
 		},
 		{
 			name: "Success",
@@ -389,6 +388,7 @@ func TestDeleteCategoryById(t *testing.T) {
 
 				return sc.ID
 			},
+			expectedOk: true,
 		},
 	}
 
@@ -396,18 +396,14 @@ func TestDeleteCategoryById(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			subcategoryId := tt.setup()
 
-			err := repo.Delete(ctx, subcategoryId)
-
-			if tt.expectedError == nil {
-				assert.NoError(t, err)
-			} else {
-				assert.ErrorIs(t, err, tt.expectedError)
-			}
+			ok, err := repo.Delete(ctx, subcategoryId)
+			assert.Equal(t, tt.expectedOk, ok)
+			assert.NoError(t, err)
 		})
 	}
 }
 
-func insertSubcategoryDependencies(t *testing.T, dbPool *pgxpool.Pool, ctx context.Context) (entity.CategoryType, entity.Category) {
+func insertSubcategoryDependencies(t *testing.T, dbPool *pgxpool.Pool, ctx context.Context) (repository.CategoryTypeModel, repository.CategoryModel) {
 	categoryType, err := insertCategoryType(dbPool, ctx, categoryTypeName)
 	if err != nil {
 		t.Fatalf("failed to insert category type: %v", err)
@@ -421,9 +417,9 @@ func insertSubcategoryDependencies(t *testing.T, dbPool *pgxpool.Pool, ctx conte
 	return categoryType, category
 }
 
-func insertSubcategory(dbPool *pgxpool.Pool, ctx context.Context, categoryID int32, name string) (entity.Subcategory, error) {
+func insertSubcategory(dbPool *pgxpool.Pool, ctx context.Context, categoryID int32, name string) (repository.SubcategoryModel, error) {
 	row := dbPool.QueryRow(ctx, "INSERT INTO subcategories (category_id, name) VALUES ($1, $2) RETURNING id, category_id, name", categoryID, name)
-	var i entity.Subcategory
+	var i repository.SubcategoryModel
 	err := row.Scan(&i.ID, &i.CategoryID, &i.Name)
 	return i, err
 }

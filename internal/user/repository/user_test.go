@@ -250,7 +250,7 @@ func TestUpdate_NoArguments(t *testing.T) {
 	}
 
 	update, err := repo.Update(ctx, 1, repository.UpdateUserRow{})
-	assert.ErrorIs(t, err, pgx.ErrNoRows)
+	assert.ErrorIs(t, err, repository.ErrInvalidUpdateParams)
 	assert.Empty(t, update)
 }
 
