@@ -238,7 +238,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	infoVO, err := mapper.MapSubcategoryInfoToEntity(infoDTO)
+	infoVO, err := mapper.MapSubcategoryInfoToVO(infoDTO)
 	if err != nil {
 		h.Writer.WriteError(w, rest.NewInvalidArgumentsError(err))
 		return
@@ -298,13 +298,13 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	infoEntity, err := mapper.MapSubcategoryInfoToEntity(infoDTO)
+	infoVO, err := mapper.MapSubcategoryInfoToVO(infoDTO)
 	if err != nil {
 		h.Writer.WriteError(w, rest.NewInvalidArgumentsError(err))
 		return
 	}
 
-	subcategory, err := h.service.Update(r.Context(), int32(id), infoEntity)
+	subcategory, err := h.service.Update(r.Context(), int32(id), infoVO)
 
 	if err != nil {
 		if errors.Is(err, service.ErrSubcateogryNameTaken) {

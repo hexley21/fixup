@@ -13,11 +13,11 @@ type CategoryInfo struct {
 func NewCategoryDTO(id string, name string, typeId string) Category {
 	return Category{
 		ID: id,
-		CategoryInfo: NewCategoryInfoVO(name, typeId),
+		CategoryInfo: NewCategoryInfoDTO(name, typeId),
 	}
 }
 
-func NewCategoryInfoVO(name string, typeId string) CategoryInfo {
+func NewCategoryInfoDTO(name string, typeId string) CategoryInfo {
 	return CategoryInfo{
 		Name: name,
 		TypeID: typeId,

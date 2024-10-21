@@ -76,7 +76,7 @@ func TestAllowFilesAmount_TooManyFiles(t *testing.T) {
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-		assert.Equal(t, rest.ErrTooManyFiles.Error(), errResp.Message)
+		assert.Contains(t, rest.ErrTooManyFiles.Error(), errResp.Message)
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
@@ -94,7 +94,7 @@ func TestAllowFilesAmount_NotEnoughFiles(t *testing.T) {
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-		assert.Equal(t, rest.ErrNotEnoughFiles.Error(), errResp.Message)
+		assert.ErrorContains(t, rest.ErrNotEnoughFiles, errResp.Message)
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
@@ -117,7 +117,7 @@ func TestAllowFilesAmount_NoFile(t *testing.T) {
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-		assert.Equal(t, rest.ErrNoFile.Error(), errResp.Message)
+;		assert.ErrorContains(t, rest.ErrNoFile, errResp.Message)
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }

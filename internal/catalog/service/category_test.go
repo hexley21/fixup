@@ -42,7 +42,7 @@ func TestCreateCategory_Success(t *testing.T) {
 	ctrl, ctx, svc, mockCategoryRepository := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepository.EXPECT().Create(ctx, gomock.Any()).Return(categoryModel, nil)
+	mockCategoryRepository.EXPECT().Create(ctx, gomock.Any()).Return(id, nil)
 
 	categoryId, err := svc.Create(ctx, categoryInfoVO)
 	assert.NoError(t, err)
@@ -53,7 +53,7 @@ func TestCreateCategory_RepositoryError(t *testing.T) {
 	ctrl, ctx, svc, mockCategoryRepository := setupCategory(t)
 	defer ctrl.Finish()
 
-	mockCategoryRepository.EXPECT().Create(ctx, gomock.Any()).Return(repository.CategoryModel{}, errors.New(""))
+	mockCategoryRepository.EXPECT().Create(ctx, gomock.Any()).Return(id, errors.New(""))
 
 	categoryId, err := svc.Create(ctx, categoryInfoVO)
 

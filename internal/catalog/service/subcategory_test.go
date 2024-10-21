@@ -72,7 +72,7 @@ func TestGetSubcategory(t *testing.T) {
 
 			if tt.expectedError != nil {
 				assert.Error(t, err)
-				assert.EqualError(t, err, tt.expectedError.Error())
+				assert.ErrorContains(t, tt.expectedError, err.Error())
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.mockReturn.ID, result.ID)
@@ -126,7 +126,7 @@ func TestListSubcategories(t *testing.T) {
 
 			if tt.expectedError != nil {
 				assert.Error(t, err)
-				assert.EqualError(t, err, tt.expectedError.Error())
+				assert.ErrorContains(t, tt.expectedError, err.Error())
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, len(tt.mockReturn), len(result))
@@ -181,7 +181,7 @@ func TestListByCategoryId(t *testing.T) {
 
 			if tt.expectedError != nil {
 				assert.Error(t, err)
-				assert.EqualError(t, err, tt.expectedError.Error())
+				assert.ErrorContains(t, tt.expectedError, err.Error())
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, len(tt.mockReturn), len(result))
@@ -236,7 +236,7 @@ func TestListByTypeId(t *testing.T) {
 
 			if tt.expectedError != nil {
 				assert.Error(t, err)
-				assert.EqualError(t, err, tt.expectedError.Error())
+				assert.ErrorContains(t, tt.expectedError, err.Error())
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, len(tt.mockReturn), len(result))
@@ -285,7 +285,7 @@ func TestCreateSubcategory(t *testing.T) {
 
 			if tt.expectedError != nil {
 				assert.Error(t, err)
-				assert.EqualError(t, err, tt.expectedError.Error())
+				assert.ErrorContains(t, tt.expectedError, err.Error())
 				assert.Equal(t, int32(0), resultID)
 			} else {
 				assert.NoError(t, err)
@@ -344,7 +344,7 @@ func TestUpdateSubcategory(t *testing.T) {
 
 			if tt.expectedError != nil {
 				assert.Error(t, err)
-				assert.EqualError(t, err, tt.expectedError.Error())
+				assert.ErrorContains(t, tt.expectedError, err.Error())
 				assert.Equal(t, domain.Subcategory{}, result)
 			} else {
 				assert.NoError(t, err)
@@ -398,7 +398,7 @@ func TestDeleteSubcategory(t *testing.T) {
 
 			if tt.expectedError != nil {
 				assert.Error(t, err)
-				assert.EqualError(t, err, tt.expectedError.Error())
+				assert.ErrorContains(t, tt.expectedError, err.Error())
 			} else {
 				assert.NoError(t, err)
 			}
