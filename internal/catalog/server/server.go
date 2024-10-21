@@ -29,9 +29,9 @@ import (
 )
 
 type services struct {
-	categoryTypes service.CategoryType
-	category      service.Category
-	subcategory   service.Subcategory
+	categoryTypes service.CategoryTypeService
+	category      service.CategoryService
+	subcategory   service.SubcategoryService
 }
 
 type jWTManagers struct {

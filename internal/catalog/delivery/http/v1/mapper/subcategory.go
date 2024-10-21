@@ -4,49 +4,49 @@ import (
 	"strconv"
 
 	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto"
-	"github.com/hexley21/fixup/internal/catalog/entity"
+	"github.com/hexley21/fixup/internal/catalog/domain"
 )
 
-func MapSubcategoryToDTO(entity entity.Subcategory) dto.Subcategory {
+func MapSubcategoryToDTO(entity domain.Subcategory) dto.Subcategory {
 	return dto.Subcategory{
 		ID:              strconv.Itoa(int(entity.ID)),
-		SubcategoryInfo: MapSubcategoryInfoToDTO(entity.SubcategoryInfo),
+		SubcategoryInfo: MapSubcategoryInfoToDTO(entity.Info),
 	}
 
 }
 
-func MapSubcategoryInfoToDTO(entity entity.SubcategoryInfo) dto.SubcategoryInfo {
+func MapSubcategoryInfoToDTO(entity domain.SubcategoryInfo) dto.SubcategoryInfo {
 	return dto.SubcategoryInfo{
 		CategoryID: strconv.Itoa(int(entity.CategoryID)),
 		Name:       entity.Name,
 	}
 }
 
-func MapSubcategoryToEntity(dto dto.Subcategory) (entity.Subcategory, error) {
+func MapSubcategoryToEntity(dto dto.Subcategory) (domain.Subcategory, error) {
 	intId, err := strconv.ParseInt(dto.ID, 10, 32)
 	if err != nil {
-		return entity.Subcategory{}, err
+		return domain.Subcategory{}, err
 	}
 
 	info, err := MapSubcategoryInfoToEntity(dto.SubcategoryInfo)
 	if err != nil {
-		return entity.Subcategory{}, err
+		return domain.Subcategory{}, err
 	}
 
-	return entity.Subcategory{
+	return domain.Subcategory{
 		ID:              int32(intId),
-		SubcategoryInfo: info,
+		Info: info,
 	}, nil
 
 }
 
-func MapSubcategoryInfoToEntity(dto dto.SubcategoryInfo) (entity.SubcategoryInfo, error) {
+func MapSubcategoryInfoToEntity(dto dto.SubcategoryInfo) (domain.SubcategoryInfo, error) {
 	intId, err := strconv.ParseInt(dto.CategoryID, 10, 32)
 	if err != nil {
-		return entity.SubcategoryInfo{}, err
+		return domain.SubcategoryInfo{}, err
 	}
 
-	return entity.SubcategoryInfo{
+	return domain.SubcategoryInfo{
 		CategoryID: int32(intId),
 		Name:       dto.Name,
 	}, nil

@@ -52,11 +52,11 @@ type (
 	}
 
 	Pagination struct {
-		SmallPages   int32 `yaml:"s_pages"`
-		MediumPages  int32 `yaml:"m_pages"`
-		LargePages   int32 `yaml:"l_pages"`
-		XLargePages  int32 `yaml:"xl_pages"`
-		XXLargePages int32 `yaml:"2xl_pages"`
+		SmallPages   int64 `yaml:"s_pages"`
+		MediumPages  int64 `yaml:"m_pages"`
+		LargePages   int64 `yaml:"l_pages"`
+		XLargePages  int64 `yaml:"xl_pages"`
+		XXLargePages int64 `yaml:"2xl_pages"`
 	}
 
 	Templates struct {

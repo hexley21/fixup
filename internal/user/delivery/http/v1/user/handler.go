@@ -93,7 +93,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} rest.ErrorResponse "Not Found"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security access_token
-// @Router /users/{id}/pfp [put]
+// @Router /users/{id}/pfp [patch]
 func (h *Handler) UploadProfilePicture(w http.ResponseWriter, r *http.Request) {
 	id, ok := r.Context().Value(paramIdKey).(int64)
 	if !ok {

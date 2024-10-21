@@ -4,6 +4,7 @@ import "errors"
 
 var (
 	ErrCategoryTypeNotFound = errors.New("category type not found")
+	ErrCateogryTypeNameTaken = errors.New("category type name is taken")
 
 	ErrCategoryNotFound = errors.New("category not found")
 

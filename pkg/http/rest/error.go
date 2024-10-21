@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"errors"
 	"net/http"
 	"strconv"
@@ -8,17 +9,17 @@ import (
 )
 
 const (
+	MsgInternalServerError = "Something went wrong"
+
 	MsgInvalidArguments = "Invalid arguments"
 	MsgInvalidId        = "Invalid ID"
 
 	MsgFileReadError = "Failed read file"
-
-	MsgInternalServerError = "Something went wrong"
 )
 
 var (
 	ErrInsufficientRights = NewForbiddenError(errors.New("insufficient rights"))
-	
+
 	ErrNoFile         = NewBadRequestError(errors.New("no file provided"))
 	ErrNotEnoughFiles = NewBadRequestError(errors.New("not enough files"))
 	ErrTooManyFiles   = NewBadRequestError(errors.New("too many files"))
@@ -32,7 +33,6 @@ type ErrorResponse struct {
 
 func (e *ErrorResponse) Error() string {
 	var sb strings.Builder
-
 	sb.WriteString("status: ")
 	sb.WriteString(strconv.Itoa(e.Status))
 	sb.WriteString(" - message: ")
@@ -82,8 +82,18 @@ func NewInternalServerError(cause error) *ErrorResponse {
 	return newError(cause, http.StatusInternalServerError, MsgInternalServerError)
 }
 
+func NewInternalServerErrorf(format string, args ...any) *ErrorResponse {
+	return newError(fmt.Errorf(format, args...), http.StatusInternalServerError, MsgInternalServerError)
+}
+
+// App oriented errors
+
 func NewInvalidArgumentsError(cause error) *ErrorResponse {
 	return newError(cause, http.StatusBadRequest, MsgInvalidArguments)
+}
+
+func NewInvalidIdError(cause error) *ErrorResponse {
+	return newError(cause, http.StatusBadRequest, MsgInvalidId)
 }
 
 func NewReadFileError(cause error) *ErrorResponse {

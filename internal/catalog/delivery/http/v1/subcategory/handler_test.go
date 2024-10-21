@@ -11,9 +11,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto"
-	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto/mapper"
+	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/mapper"
 	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/subcategory"
-	"github.com/hexley21/fixup/internal/catalog/entity"
+	"github.com/hexley21/fixup/internal/catalog/domain"
 	"github.com/hexley21/fixup/internal/catalog/service"
 	mock_service "github.com/hexley21/fixup/internal/catalog/service/mock"
 	"github.com/hexley21/fixup/pkg/http/binder/std_binder"
@@ -29,18 +29,18 @@ import (
 
 const (
 	id      int32 = 1
-	page    int32 = 0
-	perPage int32 = 10
+	page    int64 = 0
+	perPage int64 = 10
 )
 
 var (
-	subcategoryInfoEntity = entity.SubcategoryInfo{
+	subcategoryInfoEntity = domain.SubcategoryInfo{
 		Name:       "Leakage",
 		CategoryID: id,
 	}
-	subcategoryEntity = entity.Subcategory{
+	subcategoryEntity = domain.Subcategory{
 		ID:              id,
-		SubcategoryInfo: subcategoryInfoEntity,
+		Info: subcategoryInfoEntity,
 	}
 
 	subcategoryDTO = mapper.MapSubcategoryToDTO(subcategoryEntity)
@@ -48,12 +48,12 @@ var (
 
 func setup(t *testing.T) (
 	ctrl *gomock.Controller,
-	mockSubcategoryService *mock_service.MockSubcategory,
+	mockSubcategoryService *mock_service.MockSubcategoryService,
 	mockValidator *mock_validator.MockValidator,
 	h *subcategory.Handler,
 ) {
 	ctrl = gomock.NewController(t)
-	mockSubcategoryService = mock_service.NewMockSubcategory(ctrl)
+	mockSubcategoryService = mock_service.NewMockSubcategoryService(ctrl)
 	mockValidator = mock_validator.NewMockValidator(ctrl)
 
 	logger := std_logger.New()
@@ -89,7 +89,7 @@ func TestGet(t *testing.T) {
 		{
 			name: "Not Found",
 			mockSetup: func() {
-				serviceMock.EXPECT().Get(gomock.Any(), id).Return(entity.Subcategory{}, service.ErrSubcategoryNotFound)
+				serviceMock.EXPECT().Get(gomock.Any(), id).Return(domain.Subcategory{}, service.ErrSubcategoryNotFound)
 			},
 			expectedCode:  http.StatusNotFound,
 			expectedError: service.ErrSubcategoryNotFound.Error(),
@@ -97,7 +97,7 @@ func TestGet(t *testing.T) {
 		{
 			name: "Service Error",
 			mockSetup: func() {
-				serviceMock.EXPECT().Get(gomock.Any(), id).Return(entity.Subcategory{}, rest.NewInternalServerError(errors.New("")))
+				serviceMock.EXPECT().Get(gomock.Any(), id).Return(domain.Subcategory{}, rest.NewInternalServerError(errors.New("")))
 			},
 			expectedCode:  http.StatusInternalServerError,
 			expectedError: rest.MsgInternalServerError,
@@ -141,7 +141,7 @@ func TestList(t *testing.T) {
 		{
 			name: "Success",
 			mockSetup: func() {
-				serviceMock.EXPECT().List(gomock.Any(), page, perPage).Return([]entity.Subcategory{
+				serviceMock.EXPECT().List(gomock.Any(), perPage, page).Return([]domain.Subcategory{
 					subcategoryEntity,
 					subcategoryEntity,
 				}, nil)
@@ -155,7 +155,7 @@ func TestList(t *testing.T) {
 		{
 			name: "Service Error",
 			mockSetup: func() {
-				serviceMock.EXPECT().List(gomock.Any(), page, perPage).Return(nil, errors.New("internal error"))
+				serviceMock.EXPECT().List(gomock.Any(), perPage, page).Return(nil, errors.New("internal error"))
 			},
 			expectedCode:  http.StatusInternalServerError,
 			expectedError: rest.MsgInternalServerError,
@@ -163,7 +163,7 @@ func TestList(t *testing.T) {
 		{
 			name: "No Subcategories",
 			mockSetup: func() {
-				serviceMock.EXPECT().List(gomock.Any(), page, perPage).Return([]entity.Subcategory{}, nil)
+				serviceMock.EXPECT().List(gomock.Any(), perPage, page).Return([]domain.Subcategory{}, nil)
 			},
 			expectedCode: http.StatusOK,
 			expectedData: []dto.Subcategory{},
@@ -218,7 +218,7 @@ func TestListByCategoryId(t *testing.T) {
 		{
 			name: "Success",
 			mockSetup: func() {
-				serviceMock.EXPECT().ListByCategoryId(gomock.Any(), id, page, perPage).Return([]entity.Subcategory{
+				serviceMock.EXPECT().ListByCategoryId(gomock.Any(), id, perPage, page).Return([]domain.Subcategory{
 					subcategoryEntity,
 					subcategoryEntity,
 				}, nil)
@@ -238,7 +238,7 @@ func TestListByCategoryId(t *testing.T) {
 		{
 			name: "Service Error",
 			mockSetup: func() {
-				serviceMock.EXPECT().ListByCategoryId(gomock.Any(), id, page, perPage).Return(nil, errors.New("internal error"))
+				serviceMock.EXPECT().ListByCategoryId(gomock.Any(), id, perPage, page).Return(nil, errors.New("internal error"))
 			},
 			expectedCode:  http.StatusInternalServerError,
 			expectedError: rest.MsgInternalServerError,
@@ -246,7 +246,7 @@ func TestListByCategoryId(t *testing.T) {
 		{
 			name: "No Subcategories",
 			mockSetup: func() {
-				serviceMock.EXPECT().ListByCategoryId(gomock.Any(), id, page, perPage).Return([]entity.Subcategory{}, nil)
+				serviceMock.EXPECT().ListByCategoryId(gomock.Any(), id, perPage, page).Return([]domain.Subcategory{}, nil)
 			},
 			expectedCode: http.StatusOK,
 			expectedData: []dto.Subcategory{},
@@ -306,7 +306,7 @@ func TestListByTypeId(t *testing.T) {
 		{
 			name: "Success",
 			mockSetup: func() {
-				serviceMock.EXPECT().ListByTypeId(gomock.Any(), id, page, perPage).Return([]entity.Subcategory{
+				serviceMock.EXPECT().ListByTypeId(gomock.Any(), id, perPage, page).Return([]domain.Subcategory{
 					subcategoryEntity,
 					subcategoryEntity,
 				}, nil)
@@ -326,7 +326,7 @@ func TestListByTypeId(t *testing.T) {
 		{
 			name: "Service Error",
 			mockSetup: func() {
-				serviceMock.EXPECT().ListByTypeId(gomock.Any(), id, page, perPage).Return(nil, errors.New("internal error"))
+				serviceMock.EXPECT().ListByTypeId(gomock.Any(), id, perPage, page).Return(nil, errors.New("internal error"))
 			},
 			expectedCode:  http.StatusInternalServerError,
 			expectedError: rest.MsgInternalServerError,
@@ -334,7 +334,7 @@ func TestListByTypeId(t *testing.T) {
 		{
 			name: "No Subcategories",
 			mockSetup: func() {
-				serviceMock.EXPECT().ListByTypeId(gomock.Any(), id, page, perPage).Return([]entity.Subcategory{}, nil)
+				serviceMock.EXPECT().ListByTypeId(gomock.Any(), id, perPage, page).Return([]domain.Subcategory{}, nil)
 			},
 			expectedCode: http.StatusOK,
 			expectedData: []dto.Subcategory{},

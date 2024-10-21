@@ -6,10 +6,12 @@ import (
 
 	"github.com/hexley21/fixup/internal/catalog/domain"
 	"github.com/hexley21/fixup/internal/catalog/repository"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
-type CategoryType interface {
+type CategoryTypeService interface {
 	Create(ctx context.Context, name string) (domain.CategoryType, error)
 	Delete(ctx context.Context, id int32) error
 	Get(ctx context.Context, id int32) (domain.CategoryType, error)
@@ -30,6 +32,10 @@ func NewCategoryTypeService(categoryTypeRepository repository.CategoryTypeReposi
 func (s *categoryTypeImpl) Create(ctx context.Context, name string) (domain.CategoryType, error) {
 	model, err := s.categoryTypeRepository.Create(ctx, name)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			return domain.CategoryType{}, ErrCateogryTypeNameTaken
+		}
 		return domain.CategoryType{}, err
 	}
 
@@ -77,6 +83,10 @@ func (s *categoryTypeImpl) List(ctx context.Context, limit int64, offset int64) 
 func (s *categoryTypeImpl) Update(ctx context.Context, id int32, name string) error {
 	ok, err := s.categoryTypeRepository.Update(ctx, id, name)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			return ErrCateogryTypeNameTaken
+		}
 		return err
 	}
 	if !ok {

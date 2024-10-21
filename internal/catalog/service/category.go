@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type Category interface {
+type CategoryService interface {
 	Create(ctx context.Context, info domain.CategoryInfo) (domain.Category, error)
 	Delete(ctx context.Context, id int32) error
 	Get(ctx context.Context, id int32) (domain.Category, error)

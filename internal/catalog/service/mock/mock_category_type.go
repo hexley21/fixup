@@ -17,31 +17,31 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockCategoryType is a mock of CategoryType interface.
-type MockCategoryType struct {
+// MockCategoryTypeService is a mock of CategoryTypeService interface.
+type MockCategoryTypeService struct {
 	ctrl     *gomock.Controller
-	recorder *MockCategoryTypeMockRecorder
+	recorder *MockCategoryTypeServiceMockRecorder
 }
 
-// MockCategoryTypeMockRecorder is the mock recorder for MockCategoryType.
-type MockCategoryTypeMockRecorder struct {
-	mock *MockCategoryType
+// MockCategoryTypeServiceMockRecorder is the mock recorder for MockCategoryTypeService.
+type MockCategoryTypeServiceMockRecorder struct {
+	mock *MockCategoryTypeService
 }
 
-// NewMockCategoryType creates a new mock instance.
-func NewMockCategoryType(ctrl *gomock.Controller) *MockCategoryType {
-	mock := &MockCategoryType{ctrl: ctrl}
-	mock.recorder = &MockCategoryTypeMockRecorder{mock}
+// NewMockCategoryTypeService creates a new mock instance.
+func NewMockCategoryTypeService(ctrl *gomock.Controller) *MockCategoryTypeService {
+	mock := &MockCategoryTypeService{ctrl: ctrl}
+	mock.recorder = &MockCategoryTypeServiceMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockCategoryType) EXPECT() *MockCategoryTypeMockRecorder {
+func (m *MockCategoryTypeService) EXPECT() *MockCategoryTypeServiceMockRecorder {
 	return m.recorder
 }
 
 // Create mocks base method.
-func (m *MockCategoryType) Create(ctx context.Context, name string) (domain.CategoryType, error) {
+func (m *MockCategoryTypeService) Create(ctx context.Context, name string) (domain.CategoryType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, name)
 	ret0, _ := ret[0].(domain.CategoryType)
@@ -50,13 +50,13 @@ func (m *MockCategoryType) Create(ctx context.Context, name string) (domain.Cate
 }
 
 // Create indicates an expected call of Create.
-func (mr *MockCategoryTypeMockRecorder) Create(ctx, name any) *gomock.Call {
+func (mr *MockCategoryTypeServiceMockRecorder) Create(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockCategoryType)(nil).Create), ctx, name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockCategoryTypeService)(nil).Create), ctx, name)
 }
 
 // Delete mocks base method.
-func (m *MockCategoryType) Delete(ctx context.Context, id int32) error {
+func (m *MockCategoryTypeService) Delete(ctx context.Context, id int32) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", ctx, id)
 	ret0, _ := ret[0].(error)
@@ -64,13 +64,13 @@ func (m *MockCategoryType) Delete(ctx context.Context, id int32) error {
 }
 
 // Delete indicates an expected call of Delete.
-func (mr *MockCategoryTypeMockRecorder) Delete(ctx, id any) *gomock.Call {
+func (mr *MockCategoryTypeServiceMockRecorder) Delete(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockCategoryType)(nil).Delete), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockCategoryTypeService)(nil).Delete), ctx, id)
 }
 
 // Get mocks base method.
-func (m *MockCategoryType) Get(ctx context.Context, id int32) (domain.CategoryType, error) {
+func (m *MockCategoryTypeService) Get(ctx context.Context, id int32) (domain.CategoryType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, id)
 	ret0, _ := ret[0].(domain.CategoryType)
@@ -79,13 +79,13 @@ func (m *MockCategoryType) Get(ctx context.Context, id int32) (domain.CategoryTy
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockCategoryTypeMockRecorder) Get(ctx, id any) *gomock.Call {
+func (mr *MockCategoryTypeServiceMockRecorder) Get(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockCategoryType)(nil).Get), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockCategoryTypeService)(nil).Get), ctx, id)
 }
 
 // List mocks base method.
-func (m *MockCategoryType) List(ctx context.Context, limit, offset int64) ([]domain.CategoryType, error) {
+func (m *MockCategoryTypeService) List(ctx context.Context, limit, offset int64) ([]domain.CategoryType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx, limit, offset)
 	ret0, _ := ret[0].([]domain.CategoryType)
@@ -94,13 +94,13 @@ func (m *MockCategoryType) List(ctx context.Context, limit, offset int64) ([]dom
 }
 
 // List indicates an expected call of List.
-func (mr *MockCategoryTypeMockRecorder) List(ctx, limit, offset any) *gomock.Call {
+func (mr *MockCategoryTypeServiceMockRecorder) List(ctx, limit, offset any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockCategoryType)(nil).List), ctx, limit, offset)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockCategoryTypeService)(nil).List), ctx, limit, offset)
 }
 
 // Update mocks base method.
-func (m *MockCategoryType) Update(ctx context.Context, id int32, name string) error {
+func (m *MockCategoryTypeService) Update(ctx context.Context, id int32, name string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, id, name)
 	ret0, _ := ret[0].(error)
@@ -108,7 +108,7 @@ func (m *MockCategoryType) Update(ctx context.Context, id int32, name string) er
 }
 
 // Update indicates an expected call of Update.
-func (mr *MockCategoryTypeMockRecorder) Update(ctx, id, name any) *gomock.Call {
+func (mr *MockCategoryTypeServiceMockRecorder) Update(ctx, id, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockCategoryType)(nil).Update), ctx, id, name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockCategoryTypeService)(nil).Update), ctx, id, name)
 }

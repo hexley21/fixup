@@ -13,20 +13,20 @@ var (
 	ErrInvalidPerPage = rest.NewBadRequestError(errors.New("invalid per_page parameter"))
 )
 
-func ParseOffsetAndLimit(r *http.Request, maxPerPage int, defaultPerPage int) (int32, int32, *rest.ErrorResponse) {
+func ParseLimitAndOffset(r *http.Request, maxPerPage int64, defaultPerPage int64) (int64, int64, *rest.ErrorResponse) {
 	pageParam := r.URL.Query().Get("page")
 	perPageParam := r.URL.Query().Get("per_page")
 
-	var page int
-	var perPage int
+	var page int64
+	var perPage int64
 
-	page, err := strconv.Atoi(pageParam)
+	page, err := strconv.ParseInt(pageParam, 10, 64)
 	if err != nil {
 		return 0, 0, rest.NewBadRequestError(ErrInvalidPage)
 	}
 
 	if perPageParam != "" {
-		perPage, err = strconv.Atoi(perPageParam)
+		perPage, err = strconv.ParseInt(perPageParam, 10, 64)
 		if err != nil || perPage < 0 {
 			return 0, 0, rest.NewBadRequestError(ErrInvalidPerPage)
 		}
@@ -40,5 +40,5 @@ func ParseOffsetAndLimit(r *http.Request, maxPerPage int, defaultPerPage int) (i
 		return 0, 0, rest.NewBadRequestError(ErrInvalidPage)
 	}
 
-	return int32(perPage * (page - 1)), int32(perPage), nil
+	return perPage, perPage * (page - 1), nil
 }

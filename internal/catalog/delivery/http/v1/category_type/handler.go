@@ -7,15 +7,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto"
+	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/mapper"
 	"github.com/hexley21/fixup/internal/catalog/service"
-	"github.com/hexley21/fixup/internal/common/app_error"
 	"github.com/hexley21/fixup/internal/common/util/request_util"
 	"github.com/hexley21/fixup/pkg/http/handler"
 	"github.com/hexley21/fixup/pkg/http/rest"
-	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
-	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 const (
@@ -24,17 +20,26 @@ const (
 
 type Handler struct {
 	*handler.Components
-	service service.CategoryTypeService
+	service        service.CategoryTypeService
+	defaultPerPage int64
+	maxPerPage     int64
 }
 
-func NewHandler(handlerComponents *handler.Components, service service.CategoryTypeService) *Handler {
+func NewHandler(
+	handlerComponents *handler.Components,
+	service service.CategoryTypeService,
+	defaultPerPage int64,
+	maxPerPage int64,
+) *Handler {
 	return &Handler{
-		Components: handlerComponents,
-		service:    service,
+		Components:     handlerComponents,
+		service:        service,
+		defaultPerPage: defaultPerPage,
+		maxPerPage:     maxPerPage,
 	}
 }
 
-// CreateCategoryType
+// Create
 // @Summary Create a new category type
 // @Description Creates a new category type with the provided data.
 // @Tags CategoryType
@@ -47,29 +52,28 @@ func NewHandler(handlerComponents *handler.Components, service service.CategoryT
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error - An error occurred while creating the category type"
 // @Router /category-types [post]
 // @Security access_token
-func (h *Handler) CreateCategoryType(w http.ResponseWriter, r *http.Request) {
-	var createDTO dto.CreateCategoryTypeDTO
-	errResp := h.Binder.BindJSON(r, &createDTO)
+func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
+	var infoDTO dto.CategoryTypeInfo
+	errResp := h.Binder.BindJSON(r, &infoDTO)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	errResp = h.Validator.Validate(createDTO)
+	errResp = h.Validator.Validate(&infoDTO)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	categoryType, err := h.service.CreateCategoryType(r.Context(), createDTO)
+	categoryType, err := h.service.Create(r.Context(), infoDTO.Name)
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-			h.Writer.WriteError(w, rest.NewConflictError(err, app_error.MsgNameAlreadyTaken))
+		if errors.Is(err, service.ErrCateogryTypeNameTaken) {
+			h.Writer.WriteError(w, rest.NewConflictError(err))
 			return
 		}
 
-		h.Writer.WriteError(w, rest.NewInternalServerError(err))
+		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to create category type: %w", err))
 		return
 	}
 
@@ -77,7 +81,7 @@ func (h *Handler) CreateCategoryType(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteData(w, http.StatusCreated, categoryType)
 }
 
-// GetCategoryTypes
+// List
 // @Summary Retrieve a category types
 // @Description Retrieves a category type range
 // @Tags CategoryType
@@ -91,26 +95,28 @@ func (h *Handler) CreateCategoryType(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error - An error occurred while retrieving the category type"
 // @Router /category-types [get]
 // @Security access_token
-func (h *Handler) GetCategoryTypes(w http.ResponseWriter, r *http.Request) {
-	errResp, page, perPage := request_util.ParsePagination(r)
+func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	limit, offset, errResp := request_util.ParseLimitAndOffset(r, h.maxPerPage, h.defaultPerPage)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	categoryTypes, err := h.service.GetCategoryTypes(r.Context(), int32(page), int32(perPage))
+	typeEntities, err := h.service.List(r.Context(), limit, offset)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			h.Writer.WriteError(w, rest.NewNotFoundError(err, MsgCategoryTypeNotFound))
-			return
-		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerError(err))
+		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to fetch list of cateogry types: %w", err))
 		return
 	}
 
-	h.Logger.Infof("Fetch category types - elements: %d", len(categoryTypes))
-	h.Writer.WriteData(w, http.StatusOK, categoryTypes)
+	entitiesLen := len(typeEntities)
+
+	typeDTOs := make([]dto.CategoryType, entitiesLen)
+	for i, ct := range typeEntities {
+		typeDTOs[i] = mapper.MapCategoryTypeToDTO(ct)
+	}
+
+	h.Logger.Infof("Fetch category types - %d", entitiesLen)
+	h.Writer.WriteData(w, http.StatusOK, typeDTOs)
 }
 
 // GetCategoryTypeById
@@ -126,29 +132,29 @@ func (h *Handler) GetCategoryTypes(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error - An error occurred while retrieving the category type"
 // @Router /category-types/{id} [get]
 // @Security access_token
-func (h *Handler) GetCategoryTypeById(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "type_id"))
 	if err != nil {
-		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
+		h.Writer.WriteError(w, rest.NewInvalidIdError(err))
 		return
 	}
 
-	categoryTypeDTO, err := h.service.GetCategoryTypeById(r.Context(), int32(id))
+	typeEntity, err := h.service.Get(r.Context(), int32(id))
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			h.Writer.WriteError(w, rest.NewNotFoundError(err, MsgCategoryTypeNotFound))
+		if errors.Is(err, service.ErrCategoryTypeNotFound) {
+			h.Writer.WriteError(w, rest.NewNotFoundError(err))
 			return
 		}
 
-		h.Writer.WriteError(w, rest.NewInternalServerError(err))
+		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to fetch category type - id: %d, error: %w", id, err))
 		return
 	}
 
-	h.Logger.Infof("Fetch category type: %s, ID: %s", categoryTypeDTO.Name, categoryTypeDTO.ID)
-	h.Writer.WriteData(w, http.StatusOK, categoryTypeDTO)
+	h.Logger.Infof("Fetch category type: %s, ID: %d", typeEntity.Name, typeEntity.ID)
+	h.Writer.WriteData(w, http.StatusOK, mapper.MapCategoryTypeToDTO(typeEntity))
 }
 
-// PatchCategoryTypeById
+// Update
 // @Summary Update a category type by ID
 // @Description Updates a category type specified by the ID.
 // @Tags CategoryType
@@ -163,36 +169,35 @@ func (h *Handler) GetCategoryTypeById(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error - An error occurred while updating the category type"
 // @Router /category-types/{id} [patch]
 // @Security access_token
-func (h *Handler) PatchCategoryTypeById(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "type_id"))
 	if err != nil {
-		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
+		h.Writer.WriteError(w, rest.NewInvalidIdError(err))
 		return
 	}
 
-	var patchDTO dto.PatchCategoryTypeDTO
-	errResp := h.Binder.BindJSON(r, &patchDTO)
+	var infoDTO dto.CategoryTypeInfo
+	errResp := h.Binder.BindJSON(r, &infoDTO)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	errResp = h.Validator.Validate(patchDTO)
+	errResp = h.Validator.Validate(&infoDTO)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	err = h.service.UpdateCategoryTypeById(r.Context(), int32(id), patchDTO)
+	err = h.service.Update(r.Context(), int32(id), infoDTO.Name)
 	if err != nil {
-		if errors.Is(err, pg_error.ErrNotFound) {
-			h.Writer.WriteError(w, rest.NewNotFoundError(err, MsgCategoryTypeNotFound))
+		if errors.Is(err, service.ErrCategoryTypeNotFound) {
+			h.Writer.WriteError(w, rest.NewNotFoundError(err))
 			return
 		}
 
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-			h.Writer.WriteError(w, rest.NewConflictError(err, app_error.MsgNameAlreadyTaken))
+		if errors.Is(err, service.ErrCateogryTypeNameTaken) {
+			h.Writer.WriteError(w, rest.NewConflictError(err))
 			return
 		}
 
@@ -200,11 +205,11 @@ func (h *Handler) PatchCategoryTypeById(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	h.Logger.Infof("Patch category type: %s, ID: %d", patchDTO.Name, id)
-	h.Writer.WriteData(w, http.StatusOK, dto.CategoryTypeDTO{ID: strconv.Itoa(id), Name: patchDTO.Name})
+	h.Logger.Infof("Update category type: %s, ID: %d", infoDTO.Name, id)
+	h.Writer.WriteData(w, http.StatusOK, dto.NewCategoryType(strconv.Itoa(id), infoDTO.Name))
 }
 
-// DeleteCategoryTypeById
+// Delete
 // @Summary Delete a category type by ID
 // @Description Deletes a category type specified by the ID.
 // @Tags CategoryType
@@ -217,21 +222,21 @@ func (h *Handler) PatchCategoryTypeById(w http.ResponseWriter, r *http.Request) 
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error - An error occurred while deleting the category type"
 // @Router /category-types/{id} [delete]
 // @Security access_token
-func (h *Handler) DeleteCategoryTypeById(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "type_id"))
 	if err != nil {
-		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
+		h.Writer.WriteError(w, rest.NewInvalidIdError(err))
 		return
 	}
 
-	err = h.service.DeleteCategoryTypeById(r.Context(), int32(id))
+	err = h.service.Delete(r.Context(), int32(id))
 	if err != nil {
-		if errors.Is(err, pg_error.ErrNotFound) {
-			h.Writer.WriteError(w, rest.NewNotFoundError(err, MsgCategoryTypeNotFound))
+		if errors.Is(err, service.ErrCategoryTypeNotFound) {
+			h.Writer.WriteError(w, rest.NewNotFoundError(err))
 			return
 		}
 
-		h.Writer.WriteError(w, rest.NewInternalServerError(err))
+		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to delete category type - id: %d, error: %w", id, err))
 		return
 	}
 

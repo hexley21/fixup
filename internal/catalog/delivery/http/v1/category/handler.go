@@ -8,18 +8,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/catalog/service"
-	"github.com/hexley21/fixup/internal/common/app_error"
 	"github.com/hexley21/fixup/internal/common/util/request_util"
 	"github.com/hexley21/fixup/pkg/http/handler"
 	"github.com/hexley21/fixup/pkg/http/rest"
-	"github.com/hexley21/fixup/pkg/infra/postgres/pg_error"
-	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
-)
-
-const (
-	MsgCategoryNotFound = "Category not found"
 )
 
 type Handler struct {

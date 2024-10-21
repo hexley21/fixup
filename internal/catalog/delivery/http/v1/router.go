@@ -16,7 +16,7 @@ import (
 type RouterArgs struct {
 	CategoryTypeService service.CategoryTypeService
 	CategoryService     service.CategoryService
-	SubcategoryService  service.Subcategory
+	SubcategoryService  service.SubcategoryService
 	Middleware          *middleware.Middleware
 	HandlerComponents   *handler.Components
 	AccessJWTManager    auth_jwt.Manager
@@ -31,6 +31,8 @@ func MapV1Routes(args RouterArgs, router chi.Router) {
 	categoryTypesHandler := category_type.NewHandler(
 		args.HandlerComponents,
 		args.CategoryTypeService,
+		args.PaginationConfig.LargePages,
+		args.PaginationConfig.XLargePages,
 	)
 
 	categoryHandler := category.NewHandler(
@@ -41,8 +43,8 @@ func MapV1Routes(args RouterArgs, router chi.Router) {
 	subcategoryHandler := subcategory.NewHandler(
 		args.HandlerComponents,
 		args.SubcategoryService,
-		int(args.PaginationConfig.LargePages),
-		int(args.PaginationConfig.XLargePages),
+		args.PaginationConfig.LargePages,
+		args.PaginationConfig.XLargePages,
 	)
 
 	router.Route("/v1", func(r chi.Router) {

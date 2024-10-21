@@ -20,7 +20,7 @@ func setupSubcategory(t *testing.T) (
 	ctrl *gomock.Controller,
 	ctx context.Context,
 	mockSubcategoryRepo *mock_repository.MockSubcategory,
-	svc service.Subcategory,
+	svc service.SubcategoryService,
 
 ) {
 	ctrl = gomock.NewController(t)

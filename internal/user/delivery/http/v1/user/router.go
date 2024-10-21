@@ -35,7 +35,7 @@ func MapRoutes(
 				mw.NewAllowFilesAmount(maxFileSize, "image", 1),
 				mw.NewAllowContentType(maxFileSize, "image", "image/jpeg", "image/png"),
 			)
-			r.Put("/{id}/pfp", h.UploadProfilePicture)
+			r.Patch("/{id}/pfp", h.UploadProfilePicture)
 		})
 	})
 

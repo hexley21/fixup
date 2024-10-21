@@ -11,11 +11,11 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-type Subcategory interface {
+type SubcategoryService interface {
 	Get(ctx context.Context, id int32) (domain.Subcategory, error)
-	List(ctx context.Context, offset int64, limit int64) ([]domain.Subcategory, error)
-	ListByCategoryId(ctx context.Context, categoryID int32, offset int64, limit int64) ([]domain.Subcategory, error)
-	ListByTypeId(ctx context.Context, typeID int32, offset int64, limit int64) ([]domain.Subcategory, error)
+	List(ctx context.Context, limit int64, offset int64) ([]domain.Subcategory, error)
+	ListByCategoryId(ctx context.Context, categoryID int32, limit int64, offset int64) ([]domain.Subcategory, error)
+	ListByTypeId(ctx context.Context, typeID int32, limit int64, offset int64) ([]domain.Subcategory, error)
 	Create(ctx context.Context, info domain.SubcategoryInfo) (int32, error)
 	Update(ctx context.Context, id int32, info domain.SubcategoryInfo) (domain.Subcategory, error)
 	Delete(ctx context.Context, id int32) error

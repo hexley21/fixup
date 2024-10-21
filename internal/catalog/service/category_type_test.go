@@ -36,7 +36,7 @@ var (
 func setupCategoryType(t *testing.T) (
 	ctrl *gomock.Controller,
 	ctx context.Context,
-	svc service.CategoryType,
+	svc service.CategoryTypeService,
 	mockCategoryTypeRepo *mock_repository.MockCategoryTypeRepository,
 ) {
 	ctrl = gomock.NewController(t)
