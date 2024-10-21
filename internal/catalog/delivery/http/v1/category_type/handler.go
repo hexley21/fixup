@@ -14,10 +14,6 @@ import (
 	"github.com/hexley21/fixup/pkg/http/rest"
 )
 
-const (
-	MsgCategoryTypeNotFound = "Category type not found"
-)
-
 type Handler struct {
 	*handler.Components
 	service        service.CategoryTypeService
@@ -77,7 +73,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Create category type: %s, ID: %s", categoryType.Name, categoryType.ID)
+	h.Logger.Infof("Create category type: %s, ID: %d", categoryType.Name, categoryType.ID)
 	h.Writer.WriteData(w, http.StatusCreated, categoryType)
 }
 
@@ -118,7 +114,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteData(w, http.StatusOK, typeDTOs)
 }
 
-// GetCategoryTypeById
+// Get
 // @Summary Retrieve a category type by ID
 // @Description Retrieves a category type specified by the ID.
 // @Tags CategoryType

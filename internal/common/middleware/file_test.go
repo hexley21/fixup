@@ -117,7 +117,7 @@ func TestAllowFilesAmount_NoFile(t *testing.T) {
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-;		assert.ErrorContains(t, rest.ErrNoFile, errResp.Message)
+		assert.ErrorContains(t, rest.ErrNoFile, errResp.Message)
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }

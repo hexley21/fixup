@@ -16,7 +16,7 @@ import (
 
 type Handler struct {
 	*handler.Components
-	service service.CategoryService
+	service        service.CategoryService
 	defaultPerPage int64
 	maxPerPage     int64
 }
@@ -28,8 +28,8 @@ func NewHandler(
 	maxPerPage int64,
 ) *Handler {
 	return &Handler{
-		Components: handlerComponents,
-		service:    service,
+		Components:     handlerComponents,
+		service:        service,
 		defaultPerPage: defaultPerPage,
 		maxPerPage:     maxPerPage,
 	}
@@ -86,7 +86,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
-// GetCategories
+// List
 // @Summary Retrieve categories
 // @Description Retrieves a category range
 // @Tags Category
