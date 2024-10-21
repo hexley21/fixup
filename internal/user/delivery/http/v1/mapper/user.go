@@ -1,16 +1,17 @@
-package user
+package mapper
 
 import (
 	"errors"
 	"strconv"
 
+	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/domain"
 	"github.com/hexley21/fixup/pkg/infra/cdn"
 )
 
 var ErrNilEntity = errors.New("entity was nil")
 
-func MapUserToDTO(entity *domain.User, urlSigner cdn.URLSigner) (*User, error) {
+func MapUserToDTO(entity *domain.User, urlSigner cdn.URLSigner) (*dto.User, error) {
 	if entity == nil {
 		return nil, ErrNilEntity
 	}
@@ -24,7 +25,7 @@ func MapUserToDTO(entity *domain.User, urlSigner cdn.URLSigner) (*User, error) {
 		url = signedUrl
 	}
 
-	return &User{
+	return &dto.User{
 		ID:           strconv.FormatInt(entity.ID, 10),
 		UserPersonalInfo: MapPersonalInfoToDTO(entity.PersonalInfo),
 		PictureUrl:   url,
@@ -34,8 +35,8 @@ func MapUserToDTO(entity *domain.User, urlSigner cdn.URLSigner) (*User, error) {
 	}, nil
 }
 
-func MapPersonalInfoToDTO(vo *domain.UserPersonalInfo) *UserPersonalInfo {
-	return &UserPersonalInfo{
+func MapPersonalInfoToDTO(vo *domain.UserPersonalInfo) *dto.UserPersonalInfo {
+	return &dto.UserPersonalInfo{
 		FirstName:   vo.FirstName,
 		LastName:    vo.LastName,
 		Email:       vo.Email,

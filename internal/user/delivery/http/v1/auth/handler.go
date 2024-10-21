@@ -9,6 +9,7 @@ import (
 
 	"github.com/hexley21/fixup/internal/common/auth_jwt"
 	"github.com/hexley21/fixup/internal/common/enum"
+	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
 	"github.com/hexley21/fixup/internal/user/domain"
 	"github.com/hexley21/fixup/internal/user/jwt/refresh_jwt"
 	"github.com/hexley21/fixup/internal/user/jwt/verify_jwt"
@@ -64,7 +65,7 @@ func eraseCookie(w http.ResponseWriter, cookieName string) {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param user body RegisterUser true "User registration details"
+// @Param user body dto.RegisterUser true "User registration details"
 // @Success 201
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
@@ -72,7 +73,7 @@ func eraseCookie(w http.ResponseWriter, cookieName string) {
 // @Router /auth/register/customer [post]
 func (h *Handler) RegisterCustomer(generator verify_jwt.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var registerDTO RegisterUser
+		var registerDTO dto.RegisterUser
 		if err := h.Binder.BindJSON(r, &registerDTO); err != nil {
 			h.Writer.WriteError(w, err)
 			return
@@ -98,7 +99,7 @@ func (h *Handler) RegisterCustomer(generator verify_jwt.Generator) http.HandlerF
 				h.Writer.WriteError(w, rest.NewConflictError(err))
 			}
 
-			h.Writer.WriteError(w, rest.NewInternalServerError(err))
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to register customer: %w", err))
 			return
 		}
 
@@ -120,7 +121,7 @@ func (h *Handler) RegisterCustomer(generator verify_jwt.Generator) http.HandlerF
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param user body RegisterProvider true "User registration details"
+// @Param user body dto.RegisterProvider true "User registration details"
 // @Success 201
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 409 {object} rest.ErrorResponse "Conflict - User already exists"
@@ -128,7 +129,7 @@ func (h *Handler) RegisterCustomer(generator verify_jwt.Generator) http.HandlerF
 // @Router /auth/register/provider [post]
 func (h *Handler) RegisterProvider(generator verify_jwt.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var registerDTO RegisterProvider
+		var registerDTO dto.RegisterProvider
 		if err := h.Binder.BindJSON(r, &registerDTO); err != nil {
 			h.Writer.WriteError(w, err)
 			return
@@ -155,7 +156,7 @@ func (h *Handler) RegisterProvider(generator verify_jwt.Generator) http.HandlerF
 				h.Writer.WriteError(w, rest.NewConflictError(err))
 			}
 
-			h.Writer.WriteError(w, rest.NewInternalServerError(err))
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to register provider: %w", err))
 			return
 		}
 
@@ -177,7 +178,7 @@ func (h *Handler) RegisterProvider(generator verify_jwt.Generator) http.HandlerF
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param user body Email true "User email"
+// @Param user body dto.Email true "User email"
 // @Success 204
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 409 {object} rest.ErrorResponse "Conflict"
@@ -185,7 +186,7 @@ func (h *Handler) RegisterProvider(generator verify_jwt.Generator) http.HandlerF
 // @Router /auth/resend-verification [post]
 func (h *Handler) ResendVerificationLetter(generator verify_jwt.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var emailDTO Email
+		var emailDTO dto.Email
 		if err := h.Binder.BindJSON(r, &emailDTO); err != nil {
 			h.Writer.WriteError(w, err)
 			return
@@ -212,7 +213,7 @@ func (h *Handler) ResendVerificationLetter(generator verify_jwt.Generator) http.
 				return
 			}
 
-			h.Writer.WriteError(w, rest.NewInternalServerError(err))
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to resend verification letter: %w", err))
 			return
 		}
 
@@ -227,7 +228,7 @@ func (h *Handler) ResendVerificationLetter(generator verify_jwt.Generator) http.
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param user body Login true "User login details"
+// @Param user body dto.Login true "User login details"
 // @Success 200 {string} string "Set-Cookie: access_token; HttpOnly, Set-Cookie: refresh_token; HttpOnly"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized - Incorrect email or password"
@@ -235,7 +236,7 @@ func (h *Handler) ResendVerificationLetter(generator verify_jwt.Generator) http.
 // @Router /auth/login [post]
 func (h *Handler) Login(generator auth_jwt.Generator,refreshGenerator refresh_jwt.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var loginDTO Login
+		var loginDTO dto.Login
 		if err := h.Binder.BindJSON(r, &loginDTO); err != nil {
 			h.Writer.WriteError(w, err)
 			return
@@ -258,7 +259,7 @@ func (h *Handler) Login(generator auth_jwt.Generator,refreshGenerator refresh_jw
 				return
 			}
 
-			h.Writer.WriteError(w, rest.NewInternalServerError(err))
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to login - uid: %d, error: %w", userIdentity.ID, err))
 			return
 		}
 
@@ -338,7 +339,7 @@ func (h *Handler) Refresh(generator auth_jwt.Generator) http.HandlerFunc {
 				return
 			}
 
-			h.Writer.WriteError(w, rest.NewInternalServerError(err))
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to refresh access token: %w", err))
 		}
 
 		setCookies(w, accessToken, accessTokenCookie)
@@ -373,7 +374,7 @@ func (h *Handler) VerifyUser(verifier verify_jwt.Verifier) http.HandlerFunc {
 
 		id, err := strconv.ParseInt(claims.ID, 10, 64)
 		if err != nil {
-			h.Writer.WriteError(w, rest.NewInternalServerError(err))
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to verify user due to id parse - uid: %s, error: %w", claims.ID, err))
 			return
 		}
 
@@ -383,13 +384,13 @@ func (h *Handler) VerifyUser(verifier verify_jwt.Verifier) http.HandlerFunc {
 				return
 			}
 
-			h.Writer.WriteError(w, rest.NewInternalServerError(err))
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to verify user - uid: %d, error:%w", id, err))
 			return
 		}
 
 		go func() {
 			if err := h.service.SendVerificationSuccessLetter(claims.Email); err != nil {
-				h.Logger.Errorf("failed to send verification success letter - Email: %s, U-ID: %d - cause: %v", claims.Email, id, err)
+				h.Logger.Errorf("failed to send verification success letter - email: %s, uid: %d - error: %v", claims.Email, id, err)
 				return
 			}
 
@@ -409,7 +410,7 @@ func (h *Handler) sendVerificationLetter(ctx context.Context, generator verify_j
 	}
 
 	if err := h.service.SendVerificationLetter(ctx, jwt, email, name); err != nil {
-		errResp := rest.NewInternalServerError(err)
+		errResp := rest.NewInternalServerErrorf("failed to send verification letter - uid: %d, error: %w", id, err)
 		h.Logger.Error(errResp)
 		return errResp
 	}

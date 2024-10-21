@@ -26,16 +26,16 @@ func MapRoutes(
 			NewUserMiddleware(h.Writer).AllowSelfOrRole(enum.UserRoleADMIN, enum.UserRoleMODERATOR),
 		)
 
-		r.Get("/{id}", h.Get)
-		r.Patch("/{id}", h.UpdatePersonalInfo)
-		r.Delete("/{id}", h.Delete)
+		r.Get("/{user_id}", h.Get)
+		r.Patch("/{user_id}", h.UpdatePersonalInfo)
+		r.Delete("/{user_id}", h.Delete)
 
 		r.Group(func(r chi.Router) {
 			r.Use(
 				mw.NewAllowFilesAmount(maxFileSize, "image", 1),
 				mw.NewAllowContentType(maxFileSize, "image", "image/jpeg", "image/png"),
 			)
-			r.Patch("/{id}/pfp", h.UploadProfilePicture)
+			r.Patch("/{user_id}/pfp", h.UploadProfilePicture)
 		})
 	})
 

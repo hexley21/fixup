@@ -1,4 +1,4 @@
-package user
+package dto
 
 import "time"
 
@@ -17,6 +17,7 @@ type UserPersonalInfo struct {
 	FirstName   string `json:"first_name" validate:"omitempty,alphaunicode,min=2,max=30"`
 	LastName    string `json:"last_name" validate:"omitempty,alphaunicode,min=2,max=30"`
 } // @name UserPersonalInfo
+
 
 type UpdatePassword struct {
 	OldPassword string `json:"old_password" validate:"required,min=8"`

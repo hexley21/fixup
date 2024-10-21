@@ -7,6 +7,8 @@ import (
 	"strconv"
 
 	"github.com/hexley21/fixup/internal/common/auth_jwt"
+	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
+	"github.com/hexley21/fixup/internal/user/delivery/http/v1/mapper"
 	"github.com/hexley21/fixup/internal/user/domain"
 	"github.com/hexley21/fixup/internal/user/service"
 	"github.com/hexley21/fixup/pkg/http/handler"
@@ -16,6 +18,7 @@ import (
 
 // TODO: manage who can access certain endpoint & add profile endpoints
 // TODO: wrap errors from services
+// TODO: move pfp size decalration to config
 
 var (
 	maxPfpSize int64 = 1 << 20
@@ -42,7 +45,7 @@ func NewHandler(components *handler.Components, service service.UserService, url
 // @Accept json
 // @Produce json
 // @Param id path string true "User ID"
-// @Success 200 {object} rest.ApiResponse[User] "OK"
+// @Success 200 {object} rest.ApiResponse[dto.User] "OK"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"
 // @Failure 403 {object} rest.ErrorResponse "Forbidden"
@@ -64,13 +67,13 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		h.Writer.WriteError(w, rest.NewInternalServerError(err))
+		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to fetch user - id: %d, error: %w", id, err))
 		return
 	}
 
-	userDTO, err := MapUserToDTO(user, h.urlSigner)
+	userDTO, err := mapper.MapUserToDTO(user, h.urlSigner)
 	if err != nil {
-		h.Writer.WriteError(w, rest.NewInternalServerError(err))
+		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to fetch user due to mapping error - id: %d, error: %w", id, err))
 		return
 	}
 
@@ -141,7 +144,7 @@ func (h *Handler) UploadProfilePicture(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		h.Writer.WriteError(w, rest.NewInternalServerError(err))
+		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to upload profile picture: %w", err))
 		return
 	}
 
@@ -156,8 +159,8 @@ func (h *Handler) UploadProfilePicture(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "User ID"
-// @Param personalInfo body UserPersonalInfo true "User data"
-// @Success 200 {object} rest.ApiResponse[User] "OK"
+// @Param personalInfo body dto.UserPersonalInfo true "User data"
+// @Success 200 {object} rest.ApiResponse[dto.User] "OK"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"
 // @Failure 403 {object} rest.ErrorResponse "Forbidden"
@@ -171,7 +174,7 @@ func (h *Handler) UpdatePersonalInfo(w http.ResponseWriter, r *http.Request) {
 		h.Writer.WriteError(w, ErrParamIdNotSet)
 		return
 	}
-	var infoDTO UserPersonalInfo
+	var infoDTO dto.UserPersonalInfo
 	if errResp := h.Binder.BindJSON(r, &infoDTO); errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
@@ -198,12 +201,12 @@ func (h *Handler) UpdatePersonalInfo(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		h.Writer.WriteError(w, rest.NewInternalServerError(err))
+		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to update personal info - id: %d, error: %w", id, err))
 		return
 	}
 
 	h.Logger.Infof("Update user data - U-ID: %d", id)
-	h.Writer.WriteData(w, http.StatusOK, MapPersonalInfoToDTO(personalInfo))
+	h.Writer.WriteData(w, http.StatusOK, mapper.MapPersonalInfoToDTO(personalInfo))
 }
 
 // Delete
@@ -235,7 +238,7 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		h.Writer.WriteError(w, rest.NewInternalServerError(err))
+		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to delete user - id: %d, error: %w", id, err))
 		return
 	}
 
@@ -258,19 +261,19 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} rest.ErrorResponse "Internal server error"
 // @Router /user/me/change-password [patch]
 func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
-	jwt, ok := r.Context().Value(auth_jwt.AuthJWTKey).(auth_jwt.UserData)
+	claims, ok := r.Context().Value(auth_jwt.AuthJWTKey).(auth_jwt.UserData)
 	if !ok {
 		h.Writer.WriteError(w, auth_jwt.ErrJWTNotSet)
 		return
 	}
 
-	id, err := strconv.ParseInt(jwt.ID, 10, 64)
+	id, err := strconv.ParseInt(claims.ID, 10, 64)
 	if err != nil {
-		h.Writer.WriteError(w, rest.NewInternalServerError(err))
+		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to change password due to claims parse error: %w", err))
 		return
 	}
 
-	var passwordDTO UpdatePassword
+	var passwordDTO dto.UpdatePassword
 	errResp := h.Binder.BindJSON(r, &passwordDTO)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
@@ -294,7 +297,7 @@ func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		h.Writer.WriteError(w, rest.NewInternalServerError(err))
+		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to change password - id: %d, error: %w", id, err))
 		return
 	}
 

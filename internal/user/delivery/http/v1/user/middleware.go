@@ -33,7 +33,7 @@ func NewUserMiddleware(writer writer.HTTPErrorWriter) *Middleware {
 func (m *Middleware) AllowSelfOrRole(roles ...enum.UserRole) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			idParam := chi.URLParam(r, "id")
+			idParam := chi.URLParam(r, "user_id")
 
 			claims, ok := r.Context().Value(auth_jwt.AuthJWTKey).(auth_jwt.UserData)
 			if !ok {
@@ -44,7 +44,7 @@ func (m *Middleware) AllowSelfOrRole(roles ...enum.UserRole) func(http.Handler) 
 			if idParam == "me" {
 				id, err := strconv.ParseInt(claims.ID, 10, 64)
 				if err != nil {
-					m.writer.WriteError(w, rest.NewInternalServerError(err))
+					m.writer.WriteError(w, rest.NewInternalServerErrorf("failed to parse self claims id: %w", err))
 					return
 				}
 
@@ -55,7 +55,7 @@ func (m *Middleware) AllowSelfOrRole(roles ...enum.UserRole) func(http.Handler) 
 			if (idParam == claims.ID) || slices.Contains(roles, claims.Role) {
 				id, err := strconv.ParseInt(idParam, 10, 64)
 				if err != nil {
-					m.writer.WriteError(w, rest.NewInternalServerError(err))
+					m.writer.WriteError(w, rest.NewInternalServerErrorf("failed to parse self param id: %w", err))
 					return
 				}
 
