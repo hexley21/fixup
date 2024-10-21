@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	entity "github.com/hexley21/fixup/internal/catalog/entity"
+	domain "github.com/hexley21/fixup/internal/catalog/domain"
 	repository "github.com/hexley21/fixup/internal/catalog/repository"
 	postgres "github.com/hexley21/fixup/pkg/infra/postgres"
 	gomock "go.uber.org/mock/gomock"
@@ -42,93 +42,94 @@ func (m *MockCategoryRepository) EXPECT() *MockCategoryRepositoryMockRecorder {
 	return m.recorder
 }
 
-// CreateCategory mocks base method.
-func (m *MockCategoryRepository) CreateCategory(ctx context.Context, arg repository.CreateCategoryParams) (entity.Category, error) {
+// Create mocks base method.
+func (m *MockCategoryRepository) Create(ctx context.Context, info domain.CategoryInfo) (int32, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateCategory", ctx, arg)
-	ret0, _ := ret[0].(entity.Category)
+	ret := m.ctrl.Call(m, "Create", ctx, info)
+	ret0, _ := ret[0].(int32)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CreateCategory indicates an expected call of CreateCategory.
-func (mr *MockCategoryRepositoryMockRecorder) CreateCategory(ctx, arg any) *gomock.Call {
+// Create indicates an expected call of Create.
+func (mr *MockCategoryRepositoryMockRecorder) Create(ctx, info any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCategory", reflect.TypeOf((*MockCategoryRepository)(nil).CreateCategory), ctx, arg)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockCategoryRepository)(nil).Create), ctx, info)
 }
 
-// DeleteCategoryById mocks base method.
-func (m *MockCategoryRepository) DeleteCategoryById(ctx context.Context, id int32) error {
+// Delete mocks base method.
+func (m *MockCategoryRepository) Delete(ctx context.Context, id int32) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteCategoryById", ctx, id)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteCategoryById indicates an expected call of DeleteCategoryById.
-func (mr *MockCategoryRepositoryMockRecorder) DeleteCategoryById(ctx, id any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCategoryById", reflect.TypeOf((*MockCategoryRepository)(nil).DeleteCategoryById), ctx, id)
-}
-
-// GetCategories mocks base method.
-func (m *MockCategoryRepository) GetCategories(ctx context.Context, offset, limit int32) ([]entity.Category, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCategories", ctx, offset, limit)
-	ret0, _ := ret[0].([]entity.Category)
+	ret := m.ctrl.Call(m, "Delete", ctx, id)
+	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetCategories indicates an expected call of GetCategories.
-func (mr *MockCategoryRepositoryMockRecorder) GetCategories(ctx, offset, limit any) *gomock.Call {
+// Delete indicates an expected call of Delete.
+func (mr *MockCategoryRepositoryMockRecorder) Delete(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCategories", reflect.TypeOf((*MockCategoryRepository)(nil).GetCategories), ctx, offset, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockCategoryRepository)(nil).Delete), ctx, id)
 }
 
-// GetCategoriesByTypeId mocks base method.
-func (m *MockCategoryRepository) GetCategoriesByTypeId(ctx context.Context, id, offset, limit int32) ([]entity.Category, error) {
+// Get mocks base method.
+func (m *MockCategoryRepository) Get(ctx context.Context, id int32) (repository.CategoryModel, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCategoriesByTypeId", ctx, id, offset, limit)
-	ret0, _ := ret[0].([]entity.Category)
+	ret := m.ctrl.Call(m, "Get", ctx, id)
+	ret0, _ := ret[0].(repository.CategoryModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetCategoriesByTypeId indicates an expected call of GetCategoriesByTypeId.
-func (mr *MockCategoryRepositoryMockRecorder) GetCategoriesByTypeId(ctx, id, offset, limit any) *gomock.Call {
+// Get indicates an expected call of Get.
+func (mr *MockCategoryRepositoryMockRecorder) Get(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCategoriesByTypeId", reflect.TypeOf((*MockCategoryRepository)(nil).GetCategoriesByTypeId), ctx, id, offset, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockCategoryRepository)(nil).Get), ctx, id)
 }
 
-// GetCategoryById mocks base method.
-func (m *MockCategoryRepository) GetCategoryById(ctx context.Context, id int32) (entity.Category, error) {
+// List mocks base method.
+func (m *MockCategoryRepository) List(ctx context.Context, limit, offset int64) ([]repository.CategoryModel, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCategoryById", ctx, id)
-	ret0, _ := ret[0].(entity.Category)
+	ret := m.ctrl.Call(m, "List", ctx, limit, offset)
+	ret0, _ := ret[0].([]repository.CategoryModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetCategoryById indicates an expected call of GetCategoryById.
-func (mr *MockCategoryRepositoryMockRecorder) GetCategoryById(ctx, id any) *gomock.Call {
+// List indicates an expected call of List.
+func (mr *MockCategoryRepositoryMockRecorder) List(ctx, limit, offset any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCategoryById", reflect.TypeOf((*MockCategoryRepository)(nil).GetCategoryById), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockCategoryRepository)(nil).List), ctx, limit, offset)
 }
 
-// UpdateCategoryById mocks base method.
-func (m *MockCategoryRepository) UpdateCategoryById(ctx context.Context, arg repository.UpdateCategoryByIdParams) (entity.Category, error) {
+// ListByTypeId mocks base method.
+func (m *MockCategoryRepository) ListByTypeId(ctx context.Context, id int32, limit, offset int64) ([]repository.CategoryModel, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateCategoryById", ctx, arg)
-	ret0, _ := ret[0].(entity.Category)
+	ret := m.ctrl.Call(m, "ListByTypeId", ctx, id, limit, offset)
+	ret0, _ := ret[0].([]repository.CategoryModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// UpdateCategoryById indicates an expected call of UpdateCategoryById.
-func (mr *MockCategoryRepositoryMockRecorder) UpdateCategoryById(ctx, arg any) *gomock.Call {
+// ListByTypeId indicates an expected call of ListByTypeId.
+func (mr *MockCategoryRepositoryMockRecorder) ListByTypeId(ctx, id, limit, offset any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCategoryById", reflect.TypeOf((*MockCategoryRepository)(nil).UpdateCategoryById), ctx, arg)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByTypeId", reflect.TypeOf((*MockCategoryRepository)(nil).ListByTypeId), ctx, id, limit, offset)
+}
+
+// Update mocks base method.
+func (m *MockCategoryRepository) Update(ctx context.Context, id int32, info domain.CategoryInfo) (repository.CategoryModel, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", ctx, id, info)
+	ret0, _ := ret[0].(repository.CategoryModel)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockCategoryRepositoryMockRecorder) Update(ctx, id, info any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockCategoryRepository)(nil).Update), ctx, id, info)
 }
 
 // WithTx mocks base method.

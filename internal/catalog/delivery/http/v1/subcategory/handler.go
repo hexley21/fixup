@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto"
-	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto/mapper"
+	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/mapper"
 	"github.com/hexley21/fixup/internal/catalog/service"
 	"github.com/hexley21/fixup/internal/common/util/request_util"
 	"github.com/hexley21/fixup/pkg/http/handler"
@@ -16,16 +16,16 @@ import (
 
 type Handler struct {
 	*handler.Components
-	service        service.Subcategory
-	defaultPerPage int
-	maxPerPage     int
+	service        service.SubcategoryService
+	defaultPerPage int64
+	maxPerPage     int64
 }
 
 func NewHandler(
 	handlerComponents *handler.Components,
-	service service.Subcategory,
-	defaultPerPage int,
-	maxPerPage int,
+	service service.SubcategoryService,
+	defaultPerPage int64,
+	maxPerPage int64,
 ) *Handler {
 	return &Handler{
 		Components:     handlerComponents,
@@ -51,14 +51,14 @@ func NewHandler(
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "subcategory_id"))
 	if err != nil {
-		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
+		h.Writer.WriteError(w, rest.NewInvalidIdError(err))
 		return
 	}
 
 	subcategory, err := h.service.Get(r.Context(), int32(id))
 	if err != nil {
 		if errors.Is(err, service.ErrSubcategoryNotFound) {
-			h.Writer.WriteError(w, rest.NewNotFoundError(err, err.Error()))
+			h.Writer.WriteError(w, rest.NewNotFoundError(err))
 			return
 		}
 
@@ -66,7 +66,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Fetch subcategory: %s, ID: %d", subcategory.Name, subcategory.ID)
+	h.Logger.Infof("Fetch subcategory: %s, ID: %d", subcategory.Info.Name, subcategory.ID)
 	h.Writer.WriteData(w, http.StatusOK, mapper.MapSubcategoryToDTO(subcategory))
 }
 
@@ -85,13 +85,13 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 // @Router /subcategories [get]
 // @Security access_token
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
-	offset, limit, errResp := request_util.ParseOffsetAndLimit(r, h.maxPerPage, h.defaultPerPage)
+	limit, offset, errResp := request_util.ParseLimitAndOffset(r, h.maxPerPage, h.defaultPerPage)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	subcategories, err := h.service.List(r.Context(), offset, limit)
+	subcategories, err := h.service.List(r.Context(), limit, offset)
 	if err != nil {
 		h.Writer.WriteError(w, rest.NewInternalServerError(err))
 		return
@@ -113,7 +113,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteData(w, http.StatusOK, subcategoriesDTO)
 }
 
-// List
+// ListByCategoryId
 // @Summary Retrieve subcategory
 // @Description Retrieves a subcategory range
 // @Tags Subcategory
@@ -130,17 +130,17 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ListByCategoryId(w http.ResponseWriter, r *http.Request) {
 	categoryId, err := strconv.Atoi(chi.URLParam(r, "category_id"))
 	if err != nil {
-		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
+		h.Writer.WriteError(w, rest.NewInvalidIdError(err))
 		return
 	}
 
-	offset, limit, errResp := request_util.ParseOffsetAndLimit(r, h.maxPerPage, h.defaultPerPage)
+	limit, offset, errResp := request_util.ParseLimitAndOffset(r, h.maxPerPage, h.defaultPerPage)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	subcategories, err := h.service.ListByCategoryId(r.Context(), int32(categoryId), offset, limit)
+	subcategories, err := h.service.ListByCategoryId(r.Context(), int32(categoryId), limit, offset)
 	if err != nil {
 		h.Writer.WriteError(w, rest.NewInternalServerError(err))
 		return
@@ -162,8 +162,7 @@ func (h *Handler) ListByCategoryId(w http.ResponseWriter, r *http.Request) {
 	h.Writer.WriteData(w, http.StatusOK, subcategoriesDTO)
 }
 
-
-// List
+// ListByTypeId
 // @Summary Retrieve subcategory
 // @Description Retrieves a subcategory range
 // @Tags Subcategory
@@ -180,17 +179,17 @@ func (h *Handler) ListByCategoryId(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ListByTypeId(w http.ResponseWriter, r *http.Request) {
 	typeId, err := strconv.Atoi(chi.URLParam(r, "type_id"))
 	if err != nil {
-		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
+		h.Writer.WriteError(w, rest.NewInvalidIdError(err))
 		return
 	}
 
-	offset, limit, errResp := request_util.ParseOffsetAndLimit(r, h.maxPerPage, h.defaultPerPage)
+	limit, offset, errResp := request_util.ParseLimitAndOffset(r, h.maxPerPage, h.defaultPerPage)
 	if errResp != nil {
 		h.Writer.WriteError(w, errResp)
 		return
 	}
 
-	subcategories, err := h.service.ListByTypeId(r.Context(), int32(typeId), offset, limit)
+	subcategories, err := h.service.ListByTypeId(r.Context(), int32(typeId), limit, offset)
 	if err != nil {
 		h.Writer.WriteError(w, rest.NewInternalServerError(err))
 		return
@@ -208,7 +207,7 @@ func (h *Handler) ListByTypeId(w http.ResponseWriter, r *http.Request) {
 		subcategoriesDTO[i] = mapper.MapSubcategoryToDTO(s)
 	}
 
-	h.Logger.Infof("Fetch subcategories by type id: %s - %d", typeId, subcategoriesLen)
+	h.Logger.Infof("Fetch subcategories by type id: %d - %d", typeId, subcategoriesLen)
 	h.Writer.WriteData(w, http.StatusOK, subcategoriesDTO)
 }
 
@@ -239,17 +238,17 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	infoEntity, err := mapper.MapSubcategoryInfoToEntity(infoDTO)
+	infoVO, err := mapper.MapSubcategoryInfoToVO(infoDTO)
 	if err != nil {
 		h.Writer.WriteError(w, rest.NewInvalidArgumentsError(err))
 		return
 	}
 
-	subcategoryId, err := h.service.Create(r.Context(), infoEntity)
+	subcategoryId, err := h.service.Create(r.Context(), infoVO)
 
 	if err != nil {
 		if errors.Is(err, service.ErrSubcateogryNameTaken) {
-			h.Writer.WriteError(w, rest.NewConflictError(err, err.Error()))
+			h.Writer.WriteError(w, rest.NewConflictError(err))
 			return
 		}
 
@@ -257,16 +256,16 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Create subcategory: %s, Category-ID: %d ID: %d", infoDTO.Name, infoDTO.CategoryID, subcategoryId)
+	h.Logger.Infof("Create subcategory: %s, Category-ID: %s ID: %d", infoDTO.Name, infoDTO.CategoryID, subcategoryId)
 	h.Writer.WriteData(w, http.StatusCreated, dto.Subcategory{
-		ID:   strconv.Itoa(int(subcategoryId)),
+		ID:              strconv.Itoa(int(subcategoryId)),
 		SubcategoryInfo: infoDTO,
 	})
 }
 
-// Create
-// @Summary Create a new subcategory
-// @Description Creates a new subcategory with the provided data.
+// Update
+// @Summary Updates a new subcategory
+// @Description Updates a new subcategory with the provided data.
 // @Tags Subcategory
 // @Param subcategory_id path int true "The ID of the subcategory to update"
 // @Param dto body dto.SubcategoryInfo true "Subcategory info"
@@ -282,7 +281,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "subcategory_id"))
 	if err != nil {
-		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
+		h.Writer.WriteError(w, rest.NewInvalidIdError(err))
 		return
 	}
 
@@ -299,22 +298,22 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	infoEntity, err := mapper.MapSubcategoryInfoToEntity(infoDTO)
+	infoVO, err := mapper.MapSubcategoryInfoToVO(infoDTO)
 	if err != nil {
 		h.Writer.WriteError(w, rest.NewInvalidArgumentsError(err))
 		return
 	}
 
-	subcategory, err := h.service.Update(r.Context(), int32(id), infoEntity)
+	subcategory, err := h.service.Update(r.Context(), int32(id), infoVO)
 
 	if err != nil {
 		if errors.Is(err, service.ErrSubcateogryNameTaken) {
-			h.Writer.WriteError(w, rest.NewConflictError(err, err.Error()))
+			h.Writer.WriteError(w, rest.NewConflictError(err))
 			return
 		}
 
-		if errors.Is(err, service.ErrSubcategoryNotFound) || errors.Is(err, service.ErrCategoryNotFound){
-			h.Writer.WriteError(w, rest.NewNotFoundError(err, err.Error()))
+		if errors.Is(err, service.ErrSubcategoryNotFound) || errors.Is(err, service.ErrCategoryNotFound) {
+			h.Writer.WriteError(w, rest.NewNotFoundError(err))
 			return
 		}
 
@@ -322,12 +321,12 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Update subcategory: %s, Category-ID: %d ID: %d", subcategory.Name, subcategory.CategoryID, subcategory.ID)
+	h.Logger.Infof("Update subcategory: %s, Category-ID: %d ID: %d", subcategory.Info.Name, subcategory.Info.CategoryID, subcategory.ID)
 	h.Writer.WriteData(w, http.StatusOK, mapper.MapSubcategoryToDTO(subcategory))
 }
 
 // Delete
-// @Summary Delete a subcategory by ID
+// @Summary Deletes a subcategory by ID
 // @Description Deletes a subcategory specified by the ID.
 // @Tags Subcategory
 // @Param subcategory_id path int true "The ID of the subcategory to delete"
@@ -342,14 +341,14 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "subcategory_id"))
 	if err != nil {
-		h.Writer.WriteError(w, rest.NewBadRequestError(err, rest.MsgInvalidId))
+		h.Writer.WriteError(w, rest.NewInvalidIdError(err))
 		return
 	}
 
 	err = h.service.Delete(r.Context(), int32(id))
 	if err != nil {
 		if errors.Is(err, service.ErrSubcategoryNotFound) {
-			h.Writer.WriteError(w, rest.NewNotFoundError(err, err.Error()))
+			h.Writer.WriteError(w, rest.NewNotFoundError(err))
 			return
 		}
 

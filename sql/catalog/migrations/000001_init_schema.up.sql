@@ -33,7 +33,7 @@ CREATE TABLE provider_services (
     PRIMARY KEY(provider_id, service_id)
 );
 
-
+-- categories dublicate type_id & name combination
 CREATE OR REPLACE FUNCTION prevent_duplicate_type_name()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -55,6 +55,7 @@ BEFORE INSERT OR UPDATE ON categories
 FOR EACH ROW
 EXECUTE FUNCTION prevent_duplicate_type_name();
 
+-- subcategories dublicate category_id & name combination
 CREATE OR REPLACE FUNCTION prevent_duplicate_subcategory()
 RETURNS TRIGGER AS $$
 BEGIN

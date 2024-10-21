@@ -20,27 +20,6 @@ definitions:
     - email
     - password
     type: object
-  Profile:
-    properties:
-      created_at:
-        type: string
-      email:
-        type: string
-      first_name:
-        type: string
-      id:
-        type: string
-      last_name:
-        type: string
-      phone_number:
-        type: string
-      picture_url:
-        type: string
-      role:
-        type: string
-      user_status:
-        type: boolean
-    type: object
   RegisterProviderInput:
     properties:
       email:
@@ -106,7 +85,33 @@ definitions:
     - new_password
     - old_password
     type: object
-  UpdateUserInput:
+  User:
+    properties:
+      created_at:
+        type: string
+      email:
+        maxLength: 40
+        type: string
+      first_name:
+        maxLength: 30
+        minLength: 2
+        type: string
+      id:
+        type: string
+      last_name:
+        maxLength: 30
+        minLength: 2
+        type: string
+      phone_number:
+        type: string
+      picture_url:
+        type: string
+      role:
+        type: string
+      verified:
+        type: boolean
+    type: object
+  UserPersonalInfo:
     properties:
       email:
         maxLength: 40
@@ -121,32 +126,6 @@ definitions:
         type: string
       phone_number:
         type: string
-    type: object
-  User:
-    properties:
-      created_at:
-        type: string
-      email:
-        type: string
-      first_name:
-        type: string
-      id:
-        type: string
-      last_name:
-        type: string
-      phone_number:
-        type: string
-      picture_url:
-        type: string
-      role:
-        type: string
-      user_status:
-        type: boolean
-    type: object
-  rest.ApiResponse-Profile:
-    properties:
-      data:
-        $ref: '#/definitions/Profile'
     type: object
   rest.ApiResponse-User:
     properties:
@@ -300,11 +279,11 @@ paths:
       summary: Register a new provider
       tags:
       - auth
-  /auth/resend-confirmation:
+  /auth/resend-verification:
     post:
       consumes:
       - application/json
-      description: Resends a confirmation letter to email
+      description: Resends an verification letter to email
       parameters:
       - description: User email
         in: body
@@ -329,17 +308,16 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-      summary: Resent confirmation letter
+      summary: Resent verification letter
       tags:
       - auth
   /auth/verify:
     get:
       consumes:
       - application/json
-      description: Verifies the email of a user using a JWT token provided as a query
-        parameter.
+      description: Verifies user using a jwt provided as a query parameter.
       parameters:
-      - description: JWT token for email verification
+      - description: jwt for user verification
         in: query
         name: token
         required: true
@@ -365,52 +343,9 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-      summary: Verify email
+      summary: Verify user
       tags:
       - auth
-  /profile/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve profile details by user ID
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.ApiResponse-Profile'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-      security:
-      - access_token: []
-      summary: Find user profile by ID
-      tags:
-      - profile
   /user/me/change-password:
     patch:
       consumes:
@@ -419,7 +354,7 @@ paths:
       parameters:
       - description: User ID
         in: path
-        name: id
+        name: user_id
         required: true
         type: integer
       - description: Update Password DTO
@@ -452,7 +387,7 @@ paths:
       summary: Update user password
       tags:
       - users
-  /users/{id}:
+  /users/{user_id}:
     delete:
       consumes:
       - application/json
@@ -461,7 +396,7 @@ paths:
       parameters:
       - description: User ID or 'me'
         in: path
-        name: id
+        name: user_id
         required: true
         type: string
       produces:
@@ -501,7 +436,7 @@ paths:
       parameters:
       - description: User ID
         in: path
-        name: id
+        name: user_id
         required: true
         type: string
       produces:
@@ -543,15 +478,15 @@ paths:
       parameters:
       - description: User ID
         in: path
-        name: id
+        name: user_id
         required: true
         type: string
       - description: User data
         in: body
-        name: user
+        name: personalInfo
         required: true
         schema:
-          $ref: '#/definitions/UpdateUserInput'
+          $ref: '#/definitions/UserPersonalInfo'
       produces:
       - application/json
       responses:
@@ -584,7 +519,7 @@ paths:
       summary: Update user data
       tags:
       - users
-  /users/{id}/pfp:
+  /users/{user_id}/pfp:
     patch:
       consumes:
       - multipart/form-data
@@ -592,7 +527,7 @@ paths:
       parameters:
       - description: User ID
         in: path
-        name: id
+        name: user_id
         required: true
         type: string
       - description: Profile picture file

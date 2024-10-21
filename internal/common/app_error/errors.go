@@ -1,15 +1,13 @@
 package app_error
 
-const (
-	MsgInvalidToken = "Invalid token"
+// const (
+// 	MsgNameAlreadyTaken = "This name is already taken"
 
-	MsgNameAlreadyTaken = "This name is already taken"
+// 	MsgIncorrectPassword = "Password is incorrect"
 
-	MsgIncorrectPassword = "Password is incorrect"
+// 	MsgUserNotFound = "User not found"
+// 	MsgNoChanges    = "No changes"
 
-	MsgUserNotFound = "User not found"
-	MsgNoChanges    = "No changes"
-
-	MsgInvalidPage    = "Invalid page parameter"
-	MsgInvalidPerPage = "Invalid per_page parameter"
-)
+// 	MsgInvalidPage    = "Invalid page parameter"
+// 	MsgInvalidPerPage = "Invalid per_page parameter"
+// )

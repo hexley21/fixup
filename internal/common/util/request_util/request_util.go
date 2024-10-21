@@ -1,55 +1,34 @@
 package request_util
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
-	"github.com/hexley21/fixup/internal/common/app_error"
 	"github.com/hexley21/fixup/pkg/http/rest"
 )
 
-func ParsePagination(r *http.Request) (*rest.ErrorResponse, int, int) {
+var (
+	ErrInvalidPage = rest.NewBadRequestError(errors.New("invalid page parameter"))
+	ErrInvalidPerPage = rest.NewBadRequestError(errors.New("invalid per_page parameter"))
+)
+
+func ParseLimitAndOffset(r *http.Request, maxPerPage int64, defaultPerPage int64) (int64, int64, *rest.ErrorResponse) {
 	pageParam := r.URL.Query().Get("page")
 	perPageParam := r.URL.Query().Get("per_page")
 
-	var page int
-	var perPage int
+	var page int64
+	var perPage int64
 
-	page, err := strconv.Atoi(pageParam)
+	page, err := strconv.ParseInt(pageParam, 10, 64)
 	if err != nil {
-		return rest.NewBadRequestError(err, app_error.MsgInvalidPage), 0, 0
+		return 0, 0, rest.NewBadRequestError(ErrInvalidPage)
 	}
 
 	if perPageParam != "" {
-		perPage, err = strconv.Atoi(perPageParam)
-		if err != nil || perPage < 1{
-			return rest.NewBadRequestError(err, app_error.MsgInvalidPerPage), 0, 0
-		}
-	}
-
-	if page < 1 {
-		return rest.NewBadRequestError(nil, app_error.MsgInvalidPage), 0, 0
-	}
-
-	return nil, page, perPage
-}
-
-func ParseOffsetAndLimit(r *http.Request, maxPerPage int, defaultPerPage int) (int32, int32, *rest.ErrorResponse) {
-	pageParam := r.URL.Query().Get("page")
-	perPageParam := r.URL.Query().Get("per_page")
-
-	var page int
-	var perPage int
-
-	page, err := strconv.Atoi(pageParam)
-	if err != nil {
-		return 0, 0, rest.NewBadRequestError(err, app_error.MsgInvalidPage)
-	}
-
-	if perPageParam != "" {
-		perPage, err = strconv.Atoi(perPageParam)
+		perPage, err = strconv.ParseInt(perPageParam, 10, 64)
 		if err != nil || perPage < 0 {
-			return 0, 0, rest.NewBadRequestError(err, app_error.MsgInvalidPage)
+			return 0, 0, rest.NewBadRequestError(ErrInvalidPerPage)
 		}
 	}
 
@@ -58,8 +37,8 @@ func ParseOffsetAndLimit(r *http.Request, maxPerPage int, defaultPerPage int) (i
 	}
 
 	if page < 1 {
-		return 0, 0, rest.NewBadRequestError(err, app_error.MsgInvalidPage)
+		return 0, 0, rest.NewBadRequestError(ErrInvalidPage)
 	}
 
-	return int32(perPage * (page - 1)), int32(perPage), nil
+	return perPage, perPage * (page - 1), nil
 }

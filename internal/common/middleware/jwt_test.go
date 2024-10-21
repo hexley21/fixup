@@ -2,13 +2,12 @@ package middleware_test
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
-	"github.com/hexley21/fixup/internal/common/app_error"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/hexley21/fixup/internal/common/auth_jwt"
 	mockJwt "github.com/hexley21/fixup/internal/common/auth_jwt/mock"
 	"github.com/hexley21/fixup/internal/common/enum"
@@ -19,7 +18,7 @@ import (
 )
 
 var (
-	userClaims = auth_jwt.NewClaims("1", string(enum.UserRoleCUSTOMER), true, time.Hour)
+	userClaims = auth_jwt.NewClaims("1", enum.UserRoleCUSTOMER, true, time.Hour)
 )
 
 func setupJWT(t *testing.T) (*gomock.Controller, func(http.Handler) http.Handler, *mockJwt.MockVerifier) {
@@ -43,7 +42,7 @@ func TestJWT_MissingAuthorizationHeader(t *testing.T) {
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-		assert.Equal(t, middleware.MsgMissingAuthorizationHeader, errResp.Message)
+		assert.Equal(t, middleware.ErrMissingAuthorizationHeader.Message, errResp.Message)
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	}
 
@@ -64,7 +63,7 @@ func TestJWT_MissingBearerToken(t *testing.T) {
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-		assert.Equal(t, middleware.MsgMissingBearerToken, errResp.Message)
+		assert.Equal(t, middleware.ErrMissingBearerToken.Message, errResp.Message)
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	}
 }
@@ -73,7 +72,7 @@ func TestJWT_InvalidToken(t *testing.T) {
 	ctrl, JWTMiddleware, mockJWTVerifier := setupJWT(t)
 	defer ctrl.Finish()
 
-	mockJWTVerifier.EXPECT().Verify(gomock.Any()).Return(auth_jwt.UserClaims{}, rest.NewUnauthorizedError(errors.New(""), app_error.MsgInvalidToken))
+	mockJWTVerifier.EXPECT().Verify(gomock.Any()).Return(auth_jwt.UserClaims{}, rest.NewUnauthorizedError(jwt.ErrInvalidKey))
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set("Authorization", "Bearer invalidtoken")
@@ -85,7 +84,7 @@ func TestJWT_InvalidToken(t *testing.T) {
 
 	var errResp rest.ErrorResponse
 	if assert.NoError(t, json.NewDecoder(rec.Body).Decode(&errResp)) {
-		assert.Equal(t, app_error.MsgInvalidToken, errResp.Message)
+		assert.Equal(t, jwt.ErrInvalidKey.Error(), errResp.Message)
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	}
 }

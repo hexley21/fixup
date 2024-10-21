@@ -1,12 +1,12 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
-	"github.com/hexley21/fixup/internal/common/app_error"
 	"github.com/hexley21/fixup/internal/common/auth_jwt"
-	"github.com/hexley21/fixup/internal/common/util/ctx_util"
+	"github.com/hexley21/fixup/internal/common/enum"
 	"github.com/hexley21/fixup/pkg/http/rest"
 )
 
@@ -15,13 +15,13 @@ func (f *Middleware) NewJWT(jwtVerifier auth_jwt.Verifier) func(http.Handler) ht
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				f.writer.WriteError(w, rest.NewUnauthorizedError(nil, MsgMissingAuthorizationHeader))
+				f.writer.WriteError(w, ErrMissingAuthorizationHeader)
 				return
 			}
 
 			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 			if tokenString == authHeader {
-				f.writer.WriteError(w, rest.NewUnauthorizedError(nil, MsgMissingBearerToken))
+				f.writer.WriteError(w, ErrMissingBearerToken)
 				return
 			}
 
@@ -31,15 +31,12 @@ func (f *Middleware) NewJWT(jwtVerifier auth_jwt.Verifier) func(http.Handler) ht
 				return
 			}
 
-			if !claims.Role.Valid() {
-				f.writer.WriteError(w, rest.NewUnauthorizedError(nil, app_error.MsgInvalidToken))
+			if !claims.Data.Role.Valid() {
+				f.writer.WriteError(w, rest.NewUnauthorizedError(enum.ErrInvalidRole))
 				return
 			}
 
-			ctx := ctx_util.SetJWTId(r.Context(), claims.ID)
-			ctx = ctx_util.SetJWTRole(ctx, claims.Role)
-			ctx = ctx_util.SetJWTUserStatus(ctx, claims.Verified)
-
+			ctx := context.WithValue(r.Context(), auth_jwt.AuthJWTKey, claims.Data)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	entity "github.com/hexley21/fixup/internal/catalog/entity"
+	domain "github.com/hexley21/fixup/internal/catalog/domain"
 	repository "github.com/hexley21/fixup/internal/catalog/repository"
 	postgres "github.com/hexley21/fixup/pkg/infra/postgres"
 	gomock "go.uber.org/mock/gomock"
@@ -43,7 +43,7 @@ func (m *MockSubcategory) EXPECT() *MockSubcategoryMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockSubcategory) Create(ctx context.Context, info entity.SubcategoryInfo) (int32, error) {
+func (m *MockSubcategory) Create(ctx context.Context, info domain.SubcategoryInfo) (int32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, info)
 	ret0, _ := ret[0].(int32)
@@ -58,11 +58,12 @@ func (mr *MockSubcategoryMockRecorder) Create(ctx, info any) *gomock.Call {
 }
 
 // Delete mocks base method.
-func (m *MockSubcategory) Delete(ctx context.Context, id int32) error {
+func (m *MockSubcategory) Delete(ctx context.Context, id int32) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", ctx, id)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Delete indicates an expected call of Delete.
@@ -72,10 +73,10 @@ func (mr *MockSubcategoryMockRecorder) Delete(ctx, id any) *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MockSubcategory) Get(ctx context.Context, id int32) (entity.Subcategory, error) {
+func (m *MockSubcategory) Get(ctx context.Context, id int32) (repository.SubcategoryModel, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, id)
-	ret0, _ := ret[0].(entity.Subcategory)
+	ret0, _ := ret[0].(repository.SubcategoryModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -87,55 +88,55 @@ func (mr *MockSubcategoryMockRecorder) Get(ctx, id any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockSubcategory) List(ctx context.Context, offset, limit int32) ([]entity.Subcategory, error) {
+func (m *MockSubcategory) List(ctx context.Context, limit, offset int64) ([]repository.SubcategoryModel, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "List", ctx, offset, limit)
-	ret0, _ := ret[0].([]entity.Subcategory)
+	ret := m.ctrl.Call(m, "List", ctx, limit, offset)
+	ret0, _ := ret[0].([]repository.SubcategoryModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // List indicates an expected call of List.
-func (mr *MockSubcategoryMockRecorder) List(ctx, offset, limit any) *gomock.Call {
+func (mr *MockSubcategoryMockRecorder) List(ctx, limit, offset any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockSubcategory)(nil).List), ctx, offset, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockSubcategory)(nil).List), ctx, limit, offset)
 }
 
 // ListByCategoryId mocks base method.
-func (m *MockSubcategory) ListByCategoryId(ctx context.Context, categoryID, offset, limit int32) ([]entity.Subcategory, error) {
+func (m *MockSubcategory) ListByCategoryId(ctx context.Context, categoryID int32, limit, offset int64) ([]repository.SubcategoryModel, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListByCategoryId", ctx, categoryID, offset, limit)
-	ret0, _ := ret[0].([]entity.Subcategory)
+	ret := m.ctrl.Call(m, "ListByCategoryId", ctx, categoryID, limit, offset)
+	ret0, _ := ret[0].([]repository.SubcategoryModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListByCategoryId indicates an expected call of ListByCategoryId.
-func (mr *MockSubcategoryMockRecorder) ListByCategoryId(ctx, categoryID, offset, limit any) *gomock.Call {
+func (mr *MockSubcategoryMockRecorder) ListByCategoryId(ctx, categoryID, limit, offset any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByCategoryId", reflect.TypeOf((*MockSubcategory)(nil).ListByCategoryId), ctx, categoryID, offset, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByCategoryId", reflect.TypeOf((*MockSubcategory)(nil).ListByCategoryId), ctx, categoryID, limit, offset)
 }
 
 // ListByTypeId mocks base method.
-func (m *MockSubcategory) ListByTypeId(ctx context.Context, typeID, offset, limit int32) ([]entity.Subcategory, error) {
+func (m *MockSubcategory) ListByTypeId(ctx context.Context, typeID int32, limit, offset int64) ([]repository.SubcategoryModel, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListByTypeId", ctx, typeID, offset, limit)
-	ret0, _ := ret[0].([]entity.Subcategory)
+	ret := m.ctrl.Call(m, "ListByTypeId", ctx, typeID, limit, offset)
+	ret0, _ := ret[0].([]repository.SubcategoryModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListByTypeId indicates an expected call of ListByTypeId.
-func (mr *MockSubcategoryMockRecorder) ListByTypeId(ctx, typeID, offset, limit any) *gomock.Call {
+func (mr *MockSubcategoryMockRecorder) ListByTypeId(ctx, typeID, limit, offset any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByTypeId", reflect.TypeOf((*MockSubcategory)(nil).ListByTypeId), ctx, typeID, offset, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByTypeId", reflect.TypeOf((*MockSubcategory)(nil).ListByTypeId), ctx, typeID, limit, offset)
 }
 
 // Update mocks base method.
-func (m *MockSubcategory) Update(ctx context.Context, id int32, info entity.SubcategoryInfo) (entity.Subcategory, error) {
+func (m *MockSubcategory) Update(ctx context.Context, id int32, info domain.SubcategoryInfo) (repository.SubcategoryModel, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, id, info)
-	ret0, _ := ret[0].(entity.Subcategory)
+	ret0, _ := ret[0].(repository.SubcategoryModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

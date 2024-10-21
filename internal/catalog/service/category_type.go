@@ -2,74 +2,96 @@ package service
 
 import (
 	"context"
+	"errors"
 
-	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto"
-	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1/dto/mapper"
+	"github.com/hexley21/fixup/internal/catalog/domain"
 	"github.com/hexley21/fixup/internal/catalog/repository"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type CategoryTypeService interface {
-	CreateCategoryType(ctx context.Context, createDTO dto.CreateCategoryTypeDTO) (dto.CategoryTypeDTO, error)
-	DeleteCategoryTypeById(ctx context.Context, id int32) error
-	GetCategoryTypeById(ctx context.Context, id int32) (dto.CategoryTypeDTO, error)
-	GetCategoryTypes(ctx context.Context, page int32, perPage int32) ([]dto.CategoryTypeDTO, error)
-	UpdateCategoryTypeById(ctx context.Context, id int32, patchDTO dto.PatchCategoryTypeDTO) error
+	Create(ctx context.Context, name string) (domain.CategoryType, error)
+	Delete(ctx context.Context, id int32) error
+	Get(ctx context.Context, id int32) (domain.CategoryType, error)
+	List(ctx context.Context, limit int64, offset int64) ([]domain.CategoryType, error)
+	Update(ctx context.Context, id int32, name string) error
 }
 
-type categoryTypeServiceImpl struct {
+type categoryTypeImpl struct {
 	categoryTypeRepository repository.CategoryTypeRepository
-	defaultPerPage         int32
-	maxPerPage             int32
 }
 
-func NewCategoryTypeService(categoryTypeRepository repository.CategoryTypeRepository, defaultPerPage int32, maxPerPage int32) *categoryTypeServiceImpl {
-	return &categoryTypeServiceImpl{
+func NewCategoryTypeService(categoryTypeRepository repository.CategoryTypeRepository) *categoryTypeImpl {
+	return &categoryTypeImpl{
 		categoryTypeRepository: categoryTypeRepository,
-		defaultPerPage:         defaultPerPage,
-		maxPerPage:             maxPerPage,
 	}
 }
 
-func (s *categoryTypeServiceImpl) CreateCategoryType(ctx context.Context, createDTO dto.CreateCategoryTypeDTO) (dto.CategoryTypeDTO, error) {
-	entity, err := s.categoryTypeRepository.CreateCategoryType(ctx, createDTO.Name)
+func (s *categoryTypeImpl) Create(ctx context.Context, name string) (domain.CategoryType, error) {
+	model, err := s.categoryTypeRepository.Create(ctx, name)
 	if err != nil {
-		return dto.CategoryTypeDTO{}, err
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			return domain.CategoryType{}, ErrCateogryTypeNameTaken
+		}
+		return domain.CategoryType{}, err
 	}
 
-	return mapper.MapCategoryTypeToDTO(entity), nil
+	return domain.NewCategoryType(model.ID, model.Name), nil
 }
 
-func (s *categoryTypeServiceImpl) DeleteCategoryTypeById(ctx context.Context, id int32) error {
-	return s.categoryTypeRepository.DeleteCategoryTypeById(ctx, id)
-}
-
-func (s *categoryTypeServiceImpl) GetCategoryTypeById(ctx context.Context, id int32) (dto.CategoryTypeDTO, error) {
-	entity, err := s.categoryTypeRepository.GetCategoryTypeById(ctx, id)
+func (s *categoryTypeImpl) Delete(ctx context.Context, id int32) error {
+	ok, err := s.categoryTypeRepository.Delete(ctx, id)
 	if err != nil {
-		return dto.CategoryTypeDTO{}, err
+		return err
+	}
+	if !ok {
+		return ErrCategoryTypeNotFound
 	}
 
-	return mapper.MapCategoryTypeToDTO(entity), nil
+	return nil
 }
 
-func (s *categoryTypeServiceImpl) GetCategoryTypes(ctx context.Context, page int32, perPage int32) ([]dto.CategoryTypeDTO, error) {
-	if perPage == 0 || perPage > s.maxPerPage {
-		perPage = s.defaultPerPage
-	}
-
-	entities, err := s.categoryTypeRepository.GetCategoryTypes(ctx, perPage*(page-1), perPage)
+func (s *categoryTypeImpl) Get(ctx context.Context, id int32) (domain.CategoryType, error) {
+	model, err := s.categoryTypeRepository.Get(ctx, id)
 	if err != nil {
-		return []dto.CategoryTypeDTO{}, err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.CategoryType{}, ErrCategoryTypeNotFound
+		}
+		return domain.CategoryType{}, err
 	}
 
-	categoriesDTO := make([]dto.CategoryTypeDTO, len(entities))
-	for i, e := range entities {
-		categoriesDTO[i] = mapper.MapCategoryTypeToDTO(e)
-	}
-
-	return categoriesDTO, nil
+	return domain.NewCategoryType(model.ID, model.Name), nil
 }
 
-func (s *categoryTypeServiceImpl) UpdateCategoryTypeById(ctx context.Context, id int32, patchDTO dto.PatchCategoryTypeDTO) error {
-	return s.categoryTypeRepository.UpdateCategoryTypeById(ctx, repository.UpdateCategoryTypeByIdParams{ID: id, Name: patchDTO.Name})
+func (s *categoryTypeImpl) List(ctx context.Context, limit int64, offset int64) ([]domain.CategoryType, error) {
+	list, err := s.categoryTypeRepository.List(ctx, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	categoryTypes := make([]domain.CategoryType, len(list))
+	for i, ct := range list {
+		categoryTypes[i] = domain.NewCategoryType(ct.ID, ct.Name)
+	}
+
+	return categoryTypes, nil
+}
+
+func (s *categoryTypeImpl) Update(ctx context.Context, id int32, name string) error {
+	ok, err := s.categoryTypeRepository.Update(ctx, id, name)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			return ErrCateogryTypeNameTaken
+		}
+		return err
+	}
+	if !ok {
+		return ErrCategoryTypeNotFound
+	}
+
+	return nil
 }

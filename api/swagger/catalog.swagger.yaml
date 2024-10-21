@@ -5,9 +5,24 @@ definitions:
       id:
         type: string
       name:
+        maxLength: 30
+        minLength: 2
         type: string
       type_id:
         type: string
+    required:
+    - name
+    type: object
+  CategoryInfo:
+    properties:
+      name:
+        maxLength: 30
+        minLength: 2
+        type: string
+      type_id:
+        type: string
+    required:
+    - name
     type: object
   CategoryType:
     properties:
@@ -16,27 +31,7 @@ definitions:
       name:
         type: string
     type: object
-  CreateCategoryInput:
-    properties:
-      name:
-        maxLength: 30
-        minLength: 2
-        type: string
-      type_id:
-        type: string
-    required:
-    - name
-    type: object
-  CreateCategoryTypeInput:
-    properties:
-      name:
-        maxLength: 30
-        minLength: 2
-        type: string
-    required:
-    - name
-    type: object
-  UpdateCategoryTypeInput:
+  CategoryTypeInfo:
     properties:
       name:
         maxLength: 30
@@ -172,7 +167,7 @@ paths:
         name: dto
         required: true
         schema:
-          $ref: '#/definitions/CreateCategoryInput'
+          $ref: '#/definitions/CategoryInfo'
       responses:
         "201":
           description: Created - Successfully created the category
@@ -202,6 +197,134 @@ paths:
       security:
       - access_token: []
       summary: Create a new category
+      tags:
+      - Category
+  /categories/{category_id}:
+    delete:
+      description: Deletes a category specified by the ID.
+      parameters:
+      - description: The ID of the category to delete
+        in: path
+        name: category_id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content - Successfully deleted the category
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error - An error occurred while deleting the
+            category
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Delete a category by ID
+      tags:
+      - Category
+    get:
+      description: Retrieves a category specified by the ID.
+      parameters:
+      - description: The ID of the category to retrieve
+        in: path
+        name: category_id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK - Successfully retrieved the category
+          schema:
+            $ref: '#/definitions/rest.ApiResponse-Category'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error - An error occurred while retrieving
+            the category
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Retrieve a category by ID
+      tags:
+      - Category
+    patch:
+      description: Updates a category specified by the ID.
+      parameters:
+      - description: The ID of the category to update
+        in: path
+        name: category_id
+        required: true
+        type: integer
+      - description: Category data
+        in: body
+        name: dto
+        required: true
+        schema:
+          $ref: '#/definitions/CategoryInfo'
+      responses:
+        "200":
+          description: OK - Successfully updated the category
+          schema:
+            $ref: '#/definitions/rest.ApiResponse-Category'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal Server Error - An error occurred while updating the
+            category
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - access_token: []
+      summary: Update a category by ID
       tags:
       - Category
   /categories/{category_id}/subcategories:
@@ -248,134 +371,6 @@ paths:
       summary: Retrieve subcategory
       tags:
       - Subcategory
-  /categories/{id}:
-    delete:
-      description: Deletes a category specified by the ID.
-      parameters:
-      - description: The ID of the category to delete
-        in: path
-        name: id
-        required: true
-        type: integer
-      responses:
-        "204":
-          description: No Content - Successfully deleted the category
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "500":
-          description: Internal Server Error - An error occurred while deleting the
-            category
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-      security:
-      - access_token: []
-      summary: Delete a category by ID
-      tags:
-      - Category
-    get:
-      description: Retrieves a category specified by the ID.
-      parameters:
-      - description: The ID of the category to retrieve
-        in: path
-        name: id
-        required: true
-        type: integer
-      responses:
-        "200":
-          description: OK - Successfully retrieved the category
-          schema:
-            $ref: '#/definitions/rest.ApiResponse-Category'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "500":
-          description: Internal Server Error - An error occurred while retrieving
-            the category
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-      security:
-      - access_token: []
-      summary: Retrieve a category by ID
-      tags:
-      - Category
-    patch:
-      description: Updates a category specified by the ID.
-      parameters:
-      - description: The ID of the category to update
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Category data
-        in: body
-        name: dto
-        required: true
-        schema:
-          $ref: '#/definitions/CreateCategoryInput'
-      responses:
-        "200":
-          description: OK - Successfully updated the category
-          schema:
-            $ref: '#/definitions/rest.ApiResponse-Category'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "409":
-          description: Conflict
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-        "500":
-          description: Internal Server Error - An error occurred while updating the
-            category
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-      security:
-      - access_token: []
-      summary: Update a category by ID
-      tags:
-      - Category
   /category-types:
     get:
       description: Retrieves a category type range
@@ -428,7 +423,7 @@ paths:
         name: dto
         required: true
         schema:
-          $ref: '#/definitions/CreateCategoryTypeInput'
+          $ref: '#/definitions/CategoryTypeInfo'
       responses:
         "201":
           description: Created - Successfully created the category type
@@ -466,7 +461,7 @@ paths:
       parameters:
       - description: The ID of the category type to delete
         in: path
-        name: id
+        name: type_id
         required: true
         type: integer
       responses:
@@ -505,7 +500,7 @@ paths:
       parameters:
       - description: The ID of the category type to retrieve
         in: path
-        name: id
+        name: type_id
         required: true
         type: integer
       responses:
@@ -544,7 +539,7 @@ paths:
       parameters:
       - description: The ID of the category type to update
         in: path
-        name: id
+        name: type_id
         required: true
         type: integer
       - description: Category type data
@@ -552,7 +547,7 @@ paths:
         name: dto
         required: true
         schema:
-          $ref: '#/definitions/UpdateCategoryTypeInput'
+          $ref: '#/definitions/CategoryTypeInfo'
       responses:
         "200":
           description: OK - Successfully updated the category type
@@ -588,13 +583,13 @@ paths:
       summary: Update a category type by ID
       tags:
       - CategoryType
-  /category-types/{id}/categories:
+  /category-types/{type_id}/categories:
     get:
       description: Retrieves a category range
       parameters:
       - description: Category Type id
         in: path
-        name: id
+        name: type_id
         required: true
         type: integer
       - description: Page number
@@ -799,7 +794,7 @@ paths:
             $ref: '#/definitions/rest.ErrorResponse'
       security:
       - access_token: []
-      summary: Delete a subcategory by ID
+      summary: Deletes a subcategory by ID
       tags:
       - Subcategory
     get:
@@ -841,7 +836,7 @@ paths:
       tags:
       - Subcategory
     patch:
-      description: Creates a new subcategory with the provided data.
+      description: Updates a new subcategory with the provided data.
       parameters:
       - description: The ID of the subcategory to update
         in: path
@@ -885,7 +880,7 @@ paths:
             $ref: '#/definitions/rest.ErrorResponse'
       security:
       - access_token: []
-      summary: Create a new subcategory
+      summary: Updates a new subcategory
       tags:
       - Subcategory
 schemes:

@@ -1,9 +1,9 @@
 package verify_jwt
 
 import (
+	"strconv"
 	"time"
 
-	"github.com/hexley21/fixup/internal/common/app_error"
 	"github.com/hexley21/fixup/pkg/http/rest"
 	"github.com/hexley21/fixup/pkg/jwt"
 )
@@ -14,7 +14,7 @@ type Manager interface {
 }
 
 type Generator interface {
-	Generate(id string, email string) (string, *rest.ErrorResponse)
+	Generate(id int64, email string) (string, *rest.ErrorResponse)
 }
 
 type Verifier interface {
@@ -30,8 +30,8 @@ func NewManager(secretKey string, ttl time.Duration) *managerImpl {
 	return &managerImpl{secretKey, ttl}
 }
 
-func (j *managerImpl) Generate(id string, email string) (string, *rest.ErrorResponse) {
-	token, err := jwt.Generate(newClaims(id, email, j.ttl), j.secretKey)
+func (j *managerImpl) Generate(id int64, email string) (string, *rest.ErrorResponse) {
+	token, err := jwt.Generate(newClaims(strconv.FormatInt(id, 10), email, j.ttl), j.secretKey)
 	if err != nil {
 		return "", rest.NewInternalServerError(err)
 	}
@@ -42,7 +42,7 @@ func (j *managerImpl) Generate(id string, email string) (string, *rest.ErrorResp
 func (j *managerImpl) Verify(tokenString string) (VerifyClaims, *rest.ErrorResponse) {
 	mapClaims, err := jwt.Verify(tokenString, j.secretKey)
 	if err != nil {
-		return VerifyClaims{}, rest.NewUnauthorizedError(err, app_error.MsgInvalidToken)
+		return VerifyClaims{}, rest.NewUnauthorizedError(err)
 	}
 
 	return mapToClaim(mapClaims), nil

@@ -2,34 +2,35 @@ package service
 
 import (
 	"context"
+	"errors"
 	"io"
 	"strings"
 
-	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto"
-	"github.com/hexley21/fixup/internal/user/delivery/http/v1/dto/mapper"
+	"github.com/hexley21/fixup/internal/user/domain"
 	"github.com/hexley21/fixup/internal/user/repository"
 	"github.com/hexley21/fixup/pkg/hasher"
 	"github.com/hexley21/fixup/pkg/infra/cdn"
 	"github.com/hexley21/fixup/pkg/infra/s3"
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5"
 )
+
+// TODO: Add additional log messages to errors
+// TODO: Remove reduntant names from structs
 
 var directory = "pfp/"
 
 type UserService interface {
-	FindUserById(ctx context.Context, userId int64) (dto.User, error)
-	FindUserProfileById(ctx context.Context, userId int64) (dto.Profile, error)
-	UpdateUserDataById(ctx context.Context, id int64, updateDTO dto.UpdateUser) (dto.User, error)
-	SetProfilePicture(ctx context.Context, userId int64, file io.Reader, fileName string, fileSize int64, fileType string) error
-	ChangePassword(ctx context.Context, id int64, updateDTO dto.UpdatePassword) error
-	DeleteUserById(ctx context.Context, userId int64) error
+	Get(ctx context.Context, userId int64) (*domain.User, error)
+	UpdatePersonalInfo(ctx context.Context, id int64, personalInfo *domain.UserPersonalInfo) (*domain.UserPersonalInfo, error)
+	UpdateProfilePicture(ctx context.Context, userId int64, file io.Reader, fileName string, fileSize int64, fileType string) error
+	UpdatePassword(ctx context.Context, id int64, oldPassowrd string, newPassword string) error
+	Delete(ctx context.Context, userId int64) error
 }
 
 type userServiceImpl struct {
 	userRepository     repository.UserRepository
 	s3Bucket           s3.Bucket
 	cdnFileInvalidator cdn.FileInvalidator
-	cdnUrlSigner       cdn.URLSigner
 	hasher             hasher.Hasher
 }
 
@@ -37,70 +38,59 @@ func NewUserService(
 	userRepository repository.UserRepository,
 	s3Bucket s3.Bucket,
 	cdnFileInvalidator cdn.FileInvalidator,
-	cdnUrlSigner cdn.URLSigner,
 	hasher hasher.Hasher,
 ) *userServiceImpl {
 	return &userServiceImpl{
 		userRepository,
 		s3Bucket,
 		cdnFileInvalidator,
-		cdnUrlSigner,
 		hasher,
 	}
 }
 
-func (s *userServiceImpl) FindUserById(ctx context.Context, userId int64) (dto.User, error) {
-	var userDTO dto.User
-
-	entity, err := s.userRepository.GetById(ctx, userId)
+func (s *userServiceImpl) Get(ctx context.Context, userId int64) (*domain.User, error) {
+	userModel, err := s.userRepository.Get(ctx, userId)
 	if err != nil {
-		return userDTO, err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+
+		return nil, err
 	}
 
-	userDTO, err = mapper.MapUserToDTO(entity, s.cdnUrlSigner)
-	if err != nil {
-		return userDTO, err
-	}
-
-	return userDTO, nil
+	return MapUserModelToEntity(userModel)
 }
 
-func (s *userServiceImpl) FindUserProfileById(ctx context.Context, userId int64) (dto.Profile, error) {
-	var profile dto.Profile
-
-	entity, err := s.userRepository.GetById(ctx, userId)
-	if err != nil {
-		return profile, err
-	}
-
-	profile, err = mapper.MapUserToProfileDTO(entity, s.cdnUrlSigner)
-	if err != nil {
-		return profile, err
-	}
-
-	return profile, nil
-}
-
-func (s *userServiceImpl) UpdateUserDataById(ctx context.Context, id int64, updateDTO dto.UpdateUser) (dto.User, error) {
-	var userDTO dto.User
-
-	entity, err := s.userRepository.Update(ctx, repository.UpdateUserParams{
-		ID:          id,
-		FirstName:   updateDTO.FirstName,
-		LastName:    updateDTO.LastName,
-		Email:       updateDTO.Email,
-		PhoneNumber: updateDTO.PhoneNumber,
+func (s *userServiceImpl) UpdatePersonalInfo(ctx context.Context, id int64, personalInfo *domain.UserPersonalInfo) (*domain.UserPersonalInfo, error) {
+	user, err := s.userRepository.Update(ctx, id, repository.UpdateUserRow{
+		FirstName:   personalInfo.FirstName,
+		LastName:    personalInfo.LastName,
+		Email:       personalInfo.Email,
+		PhoneNumber: personalInfo.PhoneNumber,
 	})
 	if err != nil {
-		return userDTO, err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		if errors.Is(err, repository.ErrInvalidUpdateParams) {
+			return nil, ErrUserNotUpdated
+		}
+
+		return nil, err
 	}
 
-	return mapper.MapUserToDTO(entity, s.cdnUrlSigner)
+	return domain.NewUserPersonalInfo(user.Email, user.PhoneNumber, user.FirstName, user.LastName), nil
 }
 
-func (s *userServiceImpl) SetProfilePicture(ctx context.Context, userId int64, file io.Reader, fileName string, fileSize int64, fileType string) error {
-	entity, err := s.userRepository.GetById(ctx, userId)
+// UpdateProfilePicture uploads new picture to s3, updates record in db, deletes old one from s3 & invalidates cache
+func (s *userServiceImpl) UpdateProfilePicture(ctx context.Context, userId int64, file io.Reader, fileName string, fileSize int64, fileType string) error {
+	// fetch a picture in advance, also check if user exists
+	picture, err := s.userRepository.GetPicture(ctx, userId)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrUserNotFound
+		}
+
 		return err
 	}
 
@@ -113,67 +103,84 @@ func (s *userServiceImpl) SetProfilePicture(ctx context.Context, userId int64, f
 	newPathBuilder.WriteString(directory)
 	newPathBuilder.WriteString(fileName)
 
-	var pictureName pgtype.Text
-	if err := pictureName.Scan(newPathBuilder.String()); err != nil {
-		return err
-	}
-
-	err = s.userRepository.UpdatePicture(ctx, repository.UpdateUserPictureParams{
-		ID:          userId,
-		PictureName: pictureName,
-	})
+	ok, err := s.userRepository.UpdatePicture(ctx, userId, newPathBuilder.String())
 	if err != nil {
 		return err
 	}
+	if !ok {
+		return ErrUserNotUpdated
+	}
 
-	if entity.PictureName.String == "" {
+	// if old picture fetched before invalid, skip the deletion from s3 and cache invalidation
+	if picture.String == "" {
 		return nil
 	}
-
-	err = s.s3Bucket.DeleteObject(ctx, entity.PictureName.String)
+	err = s.s3Bucket.DeleteObject(ctx, picture.String)
 	if err != nil {
 		return err
 	}
 
-	return s.cdnFileInvalidator.InvalidateFile(ctx, entity.PictureName.String)
+	return s.cdnFileInvalidator.InvalidateFile(ctx, picture.String)
 }
 
-func (s *userServiceImpl) ChangePassword(ctx context.Context, id int64, updateDTO dto.UpdatePassword) error {
+func (s *userServiceImpl) UpdatePassword(ctx context.Context, id int64, oldPassowrd string, newPassword string) error {
 	oldHash, err := s.userRepository.GetHashById(ctx, id)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrUserNotFound
+		}
 		return err
 	}
 
-	err = s.hasher.VerifyPassword(updateDTO.OldPassword, oldHash)
+	err = s.hasher.VerifyPassword(oldPassowrd, oldHash)
 	if err != nil {
 		return err
 	}
 
-	hash, err := s.hasher.HashPassword(updateDTO.NewPassword)
+	hash, err := s.hasher.HashPassword(newPassword)
 	if err != nil {
+		if errors.Is(err, hasher.ErrPasswordMismatch) {
+			return ErrIncorrectPassword
+		}
 		return err
 	}
 
-	return s.userRepository.UpdateHash(ctx, repository.UpdateUserHashParams{
-		ID:   id,
-		Hash: hash,
-	})
+	ok, err := s.userRepository.UpdateHash(ctx, id, hash)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return ErrUserNotUpdated
+	}
+
+	return nil
 }
 
-func (s *userServiceImpl) DeleteUserById(ctx context.Context, userId int64) error {
-	entity, err := s.userRepository.GetById(ctx, userId)
+func (s *userServiceImpl) Delete(ctx context.Context, userId int64) error {
+	picture, err := s.userRepository.GetPicture(ctx, userId)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrUserNotFound
+		}
 		return err
 	}
 
-	if entity.PictureName.String != "" {
-		if err := s.s3Bucket.DeleteObject(ctx, entity.PictureName.String); err != nil {
+	if picture.String != "" {
+		if err := s.s3Bucket.DeleteObject(ctx, picture.String); err != nil {
 			return err
 		}
-		if err := s.cdnFileInvalidator.InvalidateFile(ctx, entity.PictureName.String); err != nil {
+		if err := s.cdnFileInvalidator.InvalidateFile(ctx, picture.String); err != nil {
 			return err
 		}
 	}
 
-	return s.userRepository.DeleteById(ctx, userId)
+	ok, err := s.userRepository.Delete(ctx, userId)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return ErrUserNotFound
+	}
+
+	return nil
 }
