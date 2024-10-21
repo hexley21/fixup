@@ -38,6 +38,8 @@ func MapV1Routes(args RouterArgs, router chi.Router) {
 	categoryHandler := category.NewHandler(
 		args.HandlerComponents,
 		args.CategoryService,
+		args.PaginationConfig.LargePages,
+		args.PaginationConfig.XLargePages,
 	)
 
 	subcategoryHandler := subcategory.NewHandler(

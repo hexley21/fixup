@@ -6,11 +6,13 @@ import (
 
 	"github.com/hexley21/fixup/internal/catalog/domain"
 	"github.com/hexley21/fixup/internal/catalog/repository"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type CategoryService interface {
-	Create(ctx context.Context, info domain.CategoryInfo) (domain.Category, error)
+	Create(ctx context.Context, info domain.CategoryInfo) (int32, error)
 	Delete(ctx context.Context, id int32) error
 	Get(ctx context.Context, id int32) (domain.Category, error)
 	List(ctx context.Context, limit int64, offset int64) ([]domain.Category, error)
@@ -28,13 +30,18 @@ func NewCategoryService(categoryRepository repository.CategoryRepository) *categ
 	}
 }
 
-func (s *categoryImpl) Create(ctx context.Context, info domain.CategoryInfo) (domain.Category, error) {
-	model, err := s.categoryRepository.Create(ctx, info)
+func (s *categoryImpl) Create(ctx context.Context, info domain.CategoryInfo) (int32, error) {
+	categoryId, err := s.categoryRepository.Create(ctx, info)
 	if err != nil {
-		return domain.Category{}, err
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.RaiseException {
+			return 0, ErrCategoryNameTaken
+		}
+
+		return 0, err
 	}
 
-	return domain.NewCategory(model.ID, model.TypeID, model.Name), nil
+	return categoryId, nil
 }
 
 func (s *categoryImpl) Delete(ctx context.Context, id int32) error {
@@ -95,6 +102,12 @@ func (s *categoryImpl) Update(ctx context.Context, id int32, info domain.Categor
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Category{}, ErrCategoryNotFound
 		}
+
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.RaiseException {
+			return domain.Category{}, ErrCategoryNameTaken
+		}
+
 		return domain.Category{}, err
 	}
 

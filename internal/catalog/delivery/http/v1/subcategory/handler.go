@@ -238,13 +238,13 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	infoEntity, err := mapper.MapSubcategoryInfoToEntity(infoDTO)
+	infoVO, err := mapper.MapSubcategoryInfoToEntity(infoDTO)
 	if err != nil {
 		h.Writer.WriteError(w, rest.NewInvalidArgumentsError(err))
 		return
 	}
 
-	subcategoryId, err := h.service.Create(r.Context(), infoEntity)
+	subcategoryId, err := h.service.Create(r.Context(), infoVO)
 
 	if err != nil {
 		if errors.Is(err, service.ErrSubcateogryNameTaken) {

@@ -1,5 +1,5 @@
 -- name: CreateCategory :one
-INSERT INTO categories (type_id, name) VALUES ($1, $2) RETURNING *;
+INSERT INTO categories (type_id, name) VALUES ($1, $2) RETURNING id;
 
 -- name: GetCategory :one
 SELECT * FROM categories WHERE id = $1;

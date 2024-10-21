@@ -44,7 +44,7 @@ func NewHandler(components *handler.Components, service service.UserService, url
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param id path string true "User ID"
+// @Param user_id path string true "User ID"
 // @Success 200 {object} rest.ApiResponse[dto.User] "OK"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"
@@ -52,7 +52,7 @@ func NewHandler(components *handler.Components, service service.UserService, url
 // @Failure 404 {object} rest.ErrorResponse "Not Found"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security access_token
-// @Router /users/{id} [get]
+// @Router /users/{user_id} [get]
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	id, ok := r.Context().Value(paramIdKey).(int64)
 	if !ok {
@@ -87,7 +87,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 // @Tags users
 // @Accept multipart/form-data
 // @Produce json
-// @Param id path string true "User ID"
+// @Param user_id path string true "User ID"
 // @Param image formData file true "Profile picture file"
 // @Success 204 "No Content"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
@@ -96,7 +96,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} rest.ErrorResponse "Not Found"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security access_token
-// @Router /users/{id}/pfp [patch]
+// @Router /users/{user_id}/pfp [patch]
 func (h *Handler) UploadProfilePicture(w http.ResponseWriter, r *http.Request) {
 	id, ok := r.Context().Value(paramIdKey).(int64)
 	if !ok {
@@ -158,7 +158,7 @@ func (h *Handler) UploadProfilePicture(w http.ResponseWriter, r *http.Request) {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param id path string true "User ID"
+// @Param user_id path string true "User ID"
 // @Param personalInfo body dto.UserPersonalInfo true "User data"
 // @Success 200 {object} rest.ApiResponse[dto.User] "OK"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
@@ -167,7 +167,7 @@ func (h *Handler) UploadProfilePicture(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} rest.ErrorResponse "Not Found"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security access_token
-// @Router /users/{id} [patch]
+// @Router /users/{user_id} [patch]
 func (h *Handler) UpdatePersonalInfo(w http.ResponseWriter, r *http.Request) {
 	id, ok := r.Context().Value(paramIdKey).(int64)
 	if !ok {
@@ -215,7 +215,7 @@ func (h *Handler) UpdatePersonalInfo(w http.ResponseWriter, r *http.Request) {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param id path string true "User ID or 'me'"
+// @Param user_id path string true "User ID or 'me'"
 // @Success 204 {object} nil "No Content"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"
@@ -223,7 +223,7 @@ func (h *Handler) UpdatePersonalInfo(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} rest.ErrorResponse "NotFound"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Security access_token
-// @Router /users/{id} [delete]
+// @Router /users/{user_id} [delete]
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	id, ok := r.Context().Value(paramIdKey).(int64)
 	if !ok {
@@ -252,8 +252,8 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param id path int true "User ID"
-// @Param password 	body UpdatePassword true "Update Password DTO"
+// @Param user_id path int true "User ID"
+// @Param password 	body dto.UpdatePassword true "Update Password DTO"
 // @Success 204 "No Content"
 // @Failure 400 {object} rest.ErrorResponse "Invalid arguments"
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized"

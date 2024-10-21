@@ -22,19 +22,19 @@ func MapSubcategoryInfoToDTO(entity domain.SubcategoryInfo) dto.SubcategoryInfo 
 	}
 }
 
-func MapSubcategoryToEntity(dto dto.Subcategory) (domain.Subcategory, error) {
-	intId, err := strconv.ParseInt(dto.ID, 10, 32)
+func MapSubcategoryToEntity(subcategoryDTO dto.Subcategory) (domain.Subcategory, error) {
+	intId, err := strconv.ParseInt(subcategoryDTO.ID, 10, 32)
 	if err != nil {
 		return domain.Subcategory{}, err
 	}
 
-	info, err := MapSubcategoryInfoToEntity(dto.SubcategoryInfo)
+	info, err := MapSubcategoryInfoToEntity(subcategoryDTO.SubcategoryInfo)
 	if err != nil {
 		return domain.Subcategory{}, err
 	}
 
 	return domain.Subcategory{
-		ID:              int32(intId),
+		ID:   int32(intId),
 		Info: info,
 	}, nil
 

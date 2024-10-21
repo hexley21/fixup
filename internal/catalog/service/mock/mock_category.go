@@ -41,10 +41,10 @@ func (m *MockCategoryService) EXPECT() *MockCategoryServiceMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockCategoryService) Create(ctx context.Context, info domain.CategoryInfo) (domain.Category, error) {
+func (m *MockCategoryService) Create(ctx context.Context, info domain.CategoryInfo) (int32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, info)
-	ret0, _ := ret[0].(domain.Category)
+	ret0, _ := ret[0].(int32)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

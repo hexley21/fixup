@@ -40,10 +40,9 @@ func TestCreateCategory_Success(t *testing.T) {
 		t.Fatalf("failed to insert category type: %v", err)
 	}
 
-	category, err := repo.Create(ctx, domain.CategoryInfo{TypeID: categoryType.ID, Name: categoryName})
+	categoryId, err := repo.Create(ctx, domain.CategoryInfo{TypeID: categoryType.ID, Name: categoryName})
 	assert.NoError(t, err)
-	assert.NotEmpty(t, category.ID)
-	assert.Equal(t, categoryName, category.Name)
+	assert.NotEmpty(t, categoryId)
 }
 
 func TestCreateCategory_InvalidArgs(t *testing.T) {
@@ -55,28 +54,26 @@ func TestCreateCategory_InvalidArgs(t *testing.T) {
 		t.Fatalf("failed to insert category type: %v", err)
 	}
 
-	category, err := repo.Create(ctx, domain.CategoryInfo{TypeID: categoryType.ID, Name: ""})
+	categoryId, err := repo.Create(ctx, domain.CategoryInfo{TypeID: categoryType.ID, Name: ""})
 
 	var pgErr *pgconn.PgError
 	if assert.ErrorAs(t, err, &pgErr) {
 		assert.Equal(t, pgerrcode.CheckViolation, pgErr.Code)
 	}
-	assert.Empty(t, category.ID)
-	assert.Empty(t, category.Name)
+	assert.Empty(t, categoryId)
 }
 
 func TestCreateCategory_NonexistentType(t *testing.T) {
 	ctx, pgPool, repo := setupCategory()
 	defer cleanupPostgres(ctx, pgPool)
 
-	category, err := repo.Create(ctx, domain.CategoryInfo{TypeID: 0, Name: categoryName})
+	categoryId, err := repo.Create(ctx, domain.CategoryInfo{TypeID: 0, Name: categoryName})
 
 	var pgErr *pgconn.PgError
 	if assert.ErrorAs(t, err, &pgErr) {
 		assert.Equal(t, pgerrcode.ForeignKeyViolation, pgErr.Code)
 	}
-	assert.Empty(t, category.ID)
-	assert.Empty(t, category.Name)
+	assert.Empty(t, categoryId)
 }
 
 func TestCreateCategory_Conflict(t *testing.T) {
@@ -88,18 +85,16 @@ func TestCreateCategory_Conflict(t *testing.T) {
 		t.Fatalf("failed to insert category type: %v", err)
 	}
 
-	category, err := repo.Create(ctx, domain.CategoryInfo{TypeID: categoryType.ID, Name: categoryName})
+	categoryId, err := repo.Create(ctx, domain.CategoryInfo{TypeID: categoryType.ID, Name: categoryName})
 	assert.NoError(t, err)
-	assert.NotEmpty(t, category.ID)
-	assert.Equal(t, categoryName, category.Name)
+	assert.NotEmpty(t, categoryId)
 
-	category, err = repo.Create(ctx, domain.CategoryInfo{TypeID: categoryType.ID, Name: categoryName})
+	categoryId, err = repo.Create(ctx, domain.CategoryInfo{TypeID: categoryType.ID, Name: categoryName})
 	var pgErr *pgconn.PgError
 	if assert.ErrorAs(t, err, &pgErr) {
 		assert.Equal(t, pgerrcode.RaiseException, pgErr.Code)
 	}
-	assert.Empty(t, category.ID)
-	assert.Empty(t, category.Name)
+	assert.Empty(t, categoryId)
 }
 
 func TestDeleteCategory_Success(t *testing.T) {

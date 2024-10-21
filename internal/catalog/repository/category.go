@@ -9,7 +9,7 @@ import (
 
 type CategoryRepository interface {
 	postgres.Repository[CategoryRepository]
-	Create(ctx context.Context, info domain.CategoryInfo) (CategoryModel, error)
+	Create(ctx context.Context, info domain.CategoryInfo) (int32, error)
 	Delete(ctx context.Context, id int32) (bool, error)
 	Get(ctx context.Context, id int32) (CategoryModel, error)
 	List(ctx context.Context, limit int64, offset int64) ([]CategoryModel, error)
@@ -32,14 +32,14 @@ func (r *postgresCategoryRepository) WithTx(tx postgres.PGXQuerier) CategoryRepo
 }
 
 const createCategory = `-- name: CreateCategory :one
-INSERT INTO categories (type_id, name) VALUES ($1, $2) RETURNING id, type_id, name
+INSERT INTO categories (type_id, name) VALUES ($1, $2) RETURNING id
 `
 
-func (r *postgresCategoryRepository) Create(ctx context.Context, info domain.CategoryInfo) (CategoryModel, error) {
+func (r *postgresCategoryRepository) Create(ctx context.Context, info domain.CategoryInfo) (int32, error) {
 	row := r.db.QueryRow(ctx, createCategory, info.TypeID, info.Name)
-	var i CategoryModel
-	err := row.Scan(&i.ID, &i.TypeID, &i.Name)
-	return i, err
+	var id int32
+	err := row.Scan(&id)
+	return id, err
 }
 
 const deleteCategory = `-- name: DeleteCategory :exec

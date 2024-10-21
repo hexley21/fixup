@@ -17,14 +17,14 @@ func MapRoutes(
 		r.Group(func(r chi.Router) {
 			r.Use(jWTAccessMiddleware, onlyVerifiedMiddleware, onlyAdminMiddleware)
 
-			r.Post("/", h.CreateCategory)
-			r.Patch("/{id}", h.PatchCategoryById)
-			r.Delete("/{id}", h.DeleteCategoryById)
+			r.Post("/", h.Create)
+			r.Patch("/{category_id}", h.Update)
+			r.Delete("/{category_id}", h.Delete)
 		})
 
-		r.Get("/", h.GetCategories)
-		r.Get("/{id}", h.GetCategoryById)
+		r.Get("/", h.List)
+		r.Get("/{category_id}", h.Get)
 	})
 
-	router.Get("/category-types/{id}/categories", h.GetCategoriesByTypeId)
+	router.Get("/category-types/{type_id}/categories", h.ListByTypeId)
 }

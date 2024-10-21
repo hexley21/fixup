@@ -354,7 +354,7 @@ paths:
       parameters:
       - description: User ID
         in: path
-        name: id
+        name: user_id
         required: true
         type: integer
       - description: Update Password DTO
@@ -387,7 +387,7 @@ paths:
       summary: Update user password
       tags:
       - users
-  /users/{id}:
+  /users/{user_id}:
     delete:
       consumes:
       - application/json
@@ -396,7 +396,7 @@ paths:
       parameters:
       - description: User ID or 'me'
         in: path
-        name: id
+        name: user_id
         required: true
         type: string
       produces:
@@ -436,7 +436,7 @@ paths:
       parameters:
       - description: User ID
         in: path
-        name: id
+        name: user_id
         required: true
         type: string
       produces:
@@ -478,7 +478,7 @@ paths:
       parameters:
       - description: User ID
         in: path
-        name: id
+        name: user_id
         required: true
         type: string
       - description: User data
@@ -519,15 +519,15 @@ paths:
       summary: Update user data
       tags:
       - users
-  /users/{id}/pfp:
-    put:
+  /users/{user_id}/pfp:
+    patch:
       consumes:
       - multipart/form-data
       description: Upload a profile picture for the user by ID
       parameters:
       - description: User ID
         in: path
-        name: id
+        name: user_id
         required: true
         type: string
       - description: Profile picture file

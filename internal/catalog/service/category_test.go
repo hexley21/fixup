@@ -9,7 +9,9 @@ import (
 	"github.com/hexley21/fixup/internal/catalog/repository"
 	mock_repository "github.com/hexley21/fixup/internal/catalog/repository/mock"
 	"github.com/hexley21/fixup/internal/catalog/service"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -42,11 +44,9 @@ func TestCreateCategory_Success(t *testing.T) {
 
 	mockCategoryRepository.EXPECT().Create(ctx, gomock.Any()).Return(categoryModel, nil)
 
-	categoryEntity, err := svc.Create(ctx, categoryInfoVO)
+	categoryId, err := svc.Create(ctx, categoryInfoVO)
 	assert.NoError(t, err)
-	assert.Equal(t, id, categoryEntity.ID)
-	assert.Equal(t, id, categoryEntity.Info.TypeID)
-	assert.Equal(t, categoryName, categoryEntity.Info.Name)
+	assert.Equal(t, id, categoryId)
 }
 
 func TestCreateCategory_RepositoryError(t *testing.T) {
@@ -55,10 +55,10 @@ func TestCreateCategory_RepositoryError(t *testing.T) {
 
 	mockCategoryRepository.EXPECT().Create(ctx, gomock.Any()).Return(repository.CategoryModel{}, errors.New(""))
 
-	categoryEntity, err := svc.Create(ctx, categoryInfoVO)
+	categoryId, err := svc.Create(ctx, categoryInfoVO)
 
 	assert.Error(t, err)
-	assert.Empty(t, categoryEntity)
+	assert.Empty(t, categoryId)
 }
 
 func TestDeleteCategoryById_Success(t *testing.T) {
@@ -202,5 +202,16 @@ func TestUpdateCategoryById_NotFound(t *testing.T) {
 
 	categoryEntity, err := svc.Update(ctx, id, categoryInfoVO)
 	assert.ErrorIs(t, err, service.ErrCategoryNotFound)
+	assert.Empty(t, categoryEntity)
+}
+
+func TestUpdateCategoryById_Conflict(t *testing.T) {
+	ctrl, ctx, svc, mockCategoryRepository := setupCategory(t)
+	defer ctrl.Finish()
+
+	mockCategoryRepository.EXPECT().Update(ctx, id, categoryInfoVO).Return(repository.CategoryModel{}, &pgconn.PgError{Code: pgerrcode.RaiseException})
+
+	categoryEntity, err := svc.Update(ctx, id, categoryInfoVO)
+	assert.ErrorIs(t, err, service.ErrCategoryNameTaken)
 	assert.Empty(t, categoryEntity)
 }
