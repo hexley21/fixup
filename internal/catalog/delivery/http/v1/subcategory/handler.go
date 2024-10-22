@@ -305,7 +305,6 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	subcategory, err := h.service.Update(r.Context(), int32(id), infoVO)
-
 	if err != nil {
 		if errors.Is(err, service.ErrSubcateogryNameTaken) {
 			h.Writer.WriteError(w, rest.NewConflictError(err))

@@ -4,7 +4,7 @@ type (
 	Provider struct {
 		UserID       int64
 		PersonalInfo ProviderPersonalInfo
-	} // Provider domain entity
+	} // Provider Domain Entity
 	ProviderPersonalInfo struct {
 		PersonalIDNumber  []byte
 		PersonalIDPreview string

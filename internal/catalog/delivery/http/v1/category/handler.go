@@ -243,24 +243,21 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	caetgoryEntity, err := h.service.Update(r.Context(), int32(id), infoVO)
+	categoryEntity, err := h.service.Update(r.Context(), int32(id), infoVO)
 	if err != nil {
-		if errors.Is(err, service.ErrCategoryNotFound) {
+		switch {
+		case errors.Is(err, service.ErrCategoryNotFound) || errors.Is(err, service.ErrCategoryTypeNotFound):
 			h.Writer.WriteError(w, rest.NewNotFoundError(err))
-			return
-		}
-
-		if errors.Is(err, service.ErrCategoryNameTaken) {
+		case errors.Is(err, service.ErrCategoryNameTaken):
 			h.Writer.WriteError(w, rest.NewConflictError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to update category - id: %d, error: %w", categoryEntity.ID, err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to update category - id: %d, error: %w", caetgoryEntity.ID, err))
 		return
 	}
 
-	h.Logger.Infof("Update category: %s, ID: %d", caetgoryEntity.Info.Name, id)
-	h.Writer.WriteData(w, http.StatusOK, mapper.MapCategoryToDTO(caetgoryEntity))
+	h.Logger.Infof("Update category: %s, ID: %d", categoryEntity.Info.Name, id)
+	h.Writer.WriteData(w, http.StatusOK, mapper.MapCategoryToDTO(categoryEntity))
 }
 
 // Delete

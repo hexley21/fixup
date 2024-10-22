@@ -186,6 +186,7 @@ func (s *server) Run() error {
 		CdnUrlSigner:           s.cdnUrlSigner,
 	}, s.router)
 
+	// Setup metrics endpoint
 	s.metricsRouter.Use(chi_middleware.Recoverer)
 	s.metricsRouter.Handle("/metrics", promhttp.Handler())
 
@@ -210,7 +211,7 @@ func (s *server) Run() error {
 
 // Close gracefully shuts down the server, including its HTTP mux, metrics mux, database pool, and Redis cluster.
 // Errors during shutdown are logged, but the function returns nil to ensure all components attempt to close.
-// Complies to io.Closer interface
+// Complies to io.Closer interface.
 func (s *server) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), s.cfg.Server.ShutdownTimeout)
 	defer cancel()

@@ -13,7 +13,7 @@ type (
 		PersonalInfo *UserPersonalInfo
 		AccountInfo  UserAccountInfo
 		CreatedAt    time.Time
-	} // User domain entity
+	} // User Domain Entity
 
 	UserPersonalInfo struct {
 		Email       string
