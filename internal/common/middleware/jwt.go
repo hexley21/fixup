@@ -10,6 +10,9 @@ import (
 	"github.com/hexley21/fixup/pkg/http/rest"
 )
 
+// NewJWT creates a middleware that verifies JWT from the Authorization header.
+// It uses the provided jwtVerifier to validate \the token and extract claims.
+// If the token is missing, invalid, or the role is not valid, it writes an error response.
 func (f *Middleware) NewJWT(jwtVerifier auth_jwt.Verifier) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

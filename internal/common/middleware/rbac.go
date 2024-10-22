@@ -15,6 +15,9 @@ var (
 	ErrUserNotVerified    = rest.NewForbiddenError(errors.New("user is not verified"))
 )
 
+// NewAllowRoles creates a middleware that restricts access to users with specific roles.
+// It checks the JWT claims from the request context to verify the user's role.
+// If the JWT is not set or the user's role is not allowed, it writes an error response.
 func (f *Middleware) NewAllowRoles(roles ...enum.UserRole) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -34,6 +37,9 @@ func (f *Middleware) NewAllowRoles(roles ...enum.UserRole) func(http.Handler) ht
 	}
 }
 
+// NewAllowVerified creates a middleware that checks if the user's verification status matches the specified value.
+// It retrieves the JWT claims from the request context and verifies the user's status.
+// If the JWT is not set or the user's verification status does not match, it writes an error response.
 func (f *Middleware) NewAllowVerified(verified bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
