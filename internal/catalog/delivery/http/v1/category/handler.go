@@ -70,12 +70,12 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	categoryId, err := h.service.Create(r.Context(), infoVO)
 	if err != nil {
-		if errors.Is(err, service.ErrCategoryNameTaken) {
+		switch {
+		case errors.Is(err, service.ErrCategoryNameTaken):
 			h.Writer.WriteError(w, rest.NewConflictError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to create category: %w", err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to create category: %w", err))
 		return
 	}
 
@@ -189,12 +189,12 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 
 	categoryEntity, err := h.service.Get(r.Context(), int32(id))
 	if err != nil {
-		if errors.Is(err, service.ErrCategoryNotFound) {
+		switch {
+		case errors.Is(err, service.ErrCategoryNotFound):
 			h.Writer.WriteError(w, rest.NewNotFoundError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to get category - id: %d, error: %w", id, err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to get category - id: %d, error: %w", id, err))
 		return
 	}
 
@@ -282,12 +282,12 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.Delete(r.Context(), int32(id))
 	if err != nil {
-		if errors.Is(err, service.ErrCategoryNotFound) {
+		switch {
+		case errors.Is(err, service.ErrCategoryNotFound):
 			h.Writer.WriteError(w, rest.NewNotFoundError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to delete category - id: %d, error: %w", id, err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to delete category - id: %d, error: %w", id, err))
 		return
 	}
 

@@ -59,12 +59,12 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.service.Get(r.Context(), id)
 	if err != nil {
-		if errors.Is(err, service.ErrUserNotFound) {
+		switch {
+		case errors.Is(err, service.ErrUserNotFound):
 			h.Writer.WriteError(w, rest.NewNotFoundError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to fetch user - id: %d, error: %w", id, err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to fetch user - id: %d, error: %w", id, err))
 		return
 	}
 
@@ -136,12 +136,12 @@ func (h *Handler) UploadProfilePicture(w http.ResponseWriter, r *http.Request) {
 		imageFile.Header.Get("Content-Type"),
 	)
 	if err != nil {
-		if errors.Is(err, service.ErrUserNotFound) {
+		switch {
+		case errors.Is(err, service.ErrUserNotFound):
 			h.Writer.WriteError(w, rest.NewNotFoundError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to upload profile picture: %w", err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to upload profile picture: %w", err))
 		return
 	}
 
@@ -188,17 +188,14 @@ func (h *Handler) UpdatePersonalInfo(w http.ResponseWriter, r *http.Request) {
 		domain.NewUserPersonalInfo(infoDTO.Email, infoDTO.PhoneNumber, infoDTO.FirstName, infoDTO.LastName),
 	)
 	if err != nil {
-		if errors.Is(err, service.ErrUserNotUpdated) {
+		switch {
+		case errors.Is(err, service.ErrUserNotUpdated):
 			h.Writer.WriteError(w, rest.NewBadRequestError(err))
-			return
-		}
-
-		if errors.Is(err, service.ErrUserNotFound) {
+		case errors.Is(err, service.ErrUserNotFound):
 			h.Writer.WriteError(w, rest.NewNotFoundError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to update personal info - id: %d, error: %w", id, err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to update personal info - id: %d, error: %w", id, err))
 		return
 	}
 
@@ -230,12 +227,12 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err := h.service.Delete(r.Context(), id)
 	if err != nil {
-		if errors.Is(err, service.ErrUserNotFound) {
+		switch {
+		case errors.Is(err, service.ErrUserNotFound):
 			h.Writer.WriteError(w, rest.NewNotFoundError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to delete user - id: %d, error: %w", id, err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to delete user - id: %d, error: %w", id, err))
 		return
 	}
 
@@ -285,16 +282,14 @@ func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.UpdatePassword(r.Context(), id, passwordDTO.OldPassword, passwordDTO.NewPassword)
 	if err != nil {
-		if errors.Is(err, service.ErrUserNotFound) {
+		switch {
+		case errors.Is(err, service.ErrUserNotFound):
 			h.Writer.WriteError(w, rest.NewNotFoundError(err))
-			return
-		}
-		if errors.Is(err, service.ErrIncorrectPassword) {
+		case errors.Is(err, service.ErrIncorrectPassword):
 			h.Writer.WriteError(w, rest.NewUnauthorizedError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to change password - id: %d, error: %w", id, err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to change password - id: %d, error: %w", id, err))
 		return
 	}
 

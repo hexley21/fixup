@@ -36,7 +36,7 @@ func (s *categoryTypeImpl) Create(ctx context.Context, name string) (domain.Cate
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-			return domain.CategoryType{}, ErrCateogryTypeNameTaken
+			return domain.CategoryType{}, ErrCategoryTypeNameTaken
 		}
 		return domain.CategoryType{}, err
 	}
@@ -95,7 +95,7 @@ func (s *categoryTypeImpl) Update(ctx context.Context, id int32, name string) er
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-			return ErrCateogryTypeNameTaken
+			return ErrCategoryTypeNameTaken
 		}
 		return err
 	}

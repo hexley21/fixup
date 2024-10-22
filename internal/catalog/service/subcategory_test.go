@@ -267,7 +267,7 @@ func TestCreateSubcategory(t *testing.T) {
 			name:          "NameTaken",
 			info:          domain.SubcategoryInfo{Name: "Duplicate Subcategory"},
 			mockError:     &pgconn.PgError{Code: pgerrcode.RaiseException},
-			expectedError: service.ErrSubcateogryNameTaken,
+			expectedError: service.ErrSubcategoryNameTaken,
 		},
 		{
 			name:          "OtherError",
@@ -325,7 +325,7 @@ func TestUpdateSubcategory(t *testing.T) {
 			id:            3,
 			info:          domain.SubcategoryInfo{Name: "Duplicate Subcategory"},
 			mockError:     &pgconn.PgError{Code: pgerrcode.RaiseException},
-			expectedError: service.ErrSubcateogryNameTaken,
+			expectedError: service.ErrSubcategoryNameTaken,
 		},
 		{
 			name:          "OtherError",

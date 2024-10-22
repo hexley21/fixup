@@ -57,12 +57,12 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 
 	subcategory, err := h.service.Get(r.Context(), int32(id))
 	if err != nil {
-		if errors.Is(err, service.ErrSubcategoryNotFound) {
+		switch {
+		case errors.Is(err, service.ErrSubcategoryNotFound):
 			h.Writer.WriteError(w, rest.NewNotFoundError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerError(err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerError(err))
 		return
 	}
 
@@ -245,14 +245,13 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	subcategoryId, err := h.service.Create(r.Context(), infoVO)
-
 	if err != nil {
-		if errors.Is(err, service.ErrSubcateogryNameTaken) {
+		switch {
+		case errors.Is(err, service.ErrSubcategoryNameTaken):
 			h.Writer.WriteError(w, rest.NewConflictError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerError(err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerError(err))
 		return
 	}
 
@@ -306,17 +305,14 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 
 	subcategory, err := h.service.Update(r.Context(), int32(id), infoVO)
 	if err != nil {
-		if errors.Is(err, service.ErrSubcateogryNameTaken) {
+		switch {
+		case errors.Is(err, service.ErrSubcategoryNameTaken):
 			h.Writer.WriteError(w, rest.NewConflictError(err))
-			return
-		}
-
-		if errors.Is(err, service.ErrSubcategoryNotFound) || errors.Is(err, service.ErrCategoryNotFound) {
+		case errors.Is(err, service.ErrSubcategoryNotFound), errors.Is(err, service.ErrCategoryNotFound):
 			h.Writer.WriteError(w, rest.NewNotFoundError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerError(err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerError(err))
 		return
 	}
 
@@ -346,12 +342,12 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.Delete(r.Context(), int32(id))
 	if err != nil {
-		if errors.Is(err, service.ErrSubcategoryNotFound) {
+		switch {
+		case errors.Is(err, service.ErrSubcategoryNotFound):
 			h.Writer.WriteError(w, rest.NewNotFoundError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerError(err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerError(err))
 		return
 	}
 

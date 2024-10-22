@@ -64,12 +64,12 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	categoryType, err := h.service.Create(r.Context(), infoDTO.Name)
 	if err != nil {
-		if errors.Is(err, service.ErrCateogryTypeNameTaken) {
+		switch {
+		case errors.Is(err, service.ErrCategoryTypeNameTaken):
 			h.Writer.WriteError(w, rest.NewConflictError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to create category type: %w", err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to create category type: %w", err))
 		return
 	}
 
@@ -136,12 +136,12 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 
 	typeEntity, err := h.service.Get(r.Context(), int32(id))
 	if err != nil {
-		if errors.Is(err, service.ErrCategoryTypeNotFound) {
+		switch {
+		case errors.Is(err, service.ErrCategoryTypeNotFound):
 			h.Writer.WriteError(w, rest.NewNotFoundError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to fetch category type - id: %d, error: %w", id, err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to fetch category type - id: %d, error: %w", id, err))
 		return
 	}
 
@@ -186,17 +186,14 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.Update(r.Context(), int32(id), infoDTO.Name)
 	if err != nil {
-		if errors.Is(err, service.ErrCategoryTypeNotFound) {
+		switch {
+		case errors.Is(err, service.ErrCategoryTypeNotFound):
 			h.Writer.WriteError(w, rest.NewNotFoundError(err))
-			return
-		}
-
-		if errors.Is(err, service.ErrCateogryTypeNameTaken) {
+		case errors.Is(err, service.ErrCategoryTypeNameTaken):
 			h.Writer.WriteError(w, rest.NewConflictError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerError(err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerError(err))
 		return
 	}
 
@@ -226,12 +223,12 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.Delete(r.Context(), int32(id))
 	if err != nil {
-		if errors.Is(err, service.ErrCategoryTypeNotFound) {
+		switch {
+		case errors.Is(err, service.ErrCategoryTypeNotFound):
 			h.Writer.WriteError(w, rest.NewNotFoundError(err))
-			return
+		default:
+			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to delete category type - id: %d, error: %w", id, err))
 		}
-
-		h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to delete category type - id: %d, error: %w", id, err))
 		return
 	}
 

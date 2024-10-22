@@ -208,12 +208,12 @@ func (h *Handler) ResendVerificationLetter(generator verify_jwt.Generator) http.
 
 		if err := h.service.ResendVerificationLetter(r.Context(), tokenFunc, emailDTO.Email); err != nil {
 			var errResp *rest.ErrorResponse
-			if errors.As(err, &errResp) {
+			switch {
+			case errors.As(err, &errResp):
 				h.Writer.WriteError(w, errResp)
-				return
+			default:
+				h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to resend verification letter: %w", err))
 			}
-
-			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to resend verification letter: %w", err))
 			return
 		}
 
@@ -234,7 +234,7 @@ func (h *Handler) ResendVerificationLetter(generator verify_jwt.Generator) http.
 // @Failure 401 {object} rest.ErrorResponse "Unauthorized - Incorrect email or password"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /auth/login [post]
-func (h *Handler) Login(generator auth_jwt.Generator,refreshGenerator refresh_jwt.Generator) http.HandlerFunc {
+func (h *Handler) Login(generator auth_jwt.Generator, refreshGenerator refresh_jwt.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var loginDTO dto.Login
 		if err := h.Binder.BindJSON(r, &loginDTO); err != nil {
@@ -249,17 +249,14 @@ func (h *Handler) Login(generator auth_jwt.Generator,refreshGenerator refresh_jw
 
 		userIdentity, err := h.service.AuthenticateUser(r.Context(), loginDTO.Email, loginDTO.Password)
 		if err != nil {
-			if errors.Is(err, service.ErrIncorrectEmailOrPassword) {
+			switch {
+			case errors.Is(err, service.ErrIncorrectEmailOrPassword):
 				h.Writer.WriteError(w, rest.NewUnauthorizedError(err))
-				return
-			}
-
-			if errors.Is(err, service.ErrUserNotFound) {
+			case errors.Is(err, service.ErrUserNotFound):
 				h.Writer.WriteError(w, rest.NewNotFoundMessageError(err, service.ErrIncorrectEmailOrPassword.Error()))
-				return
+			default:
+				h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to login - uid: %d, error: %w", userIdentity.ID, err))
 			}
-
-			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to login - uid: %d, error: %w", userIdentity.ID, err))
 			return
 		}
 
@@ -328,18 +325,16 @@ func (h *Handler) Refresh(generator auth_jwt.Generator) http.HandlerFunc {
 
 		accessToken, err := h.service.RefreshUserToken(r.Context(), intId, tokenFunc)
 		if err != nil {
-			if errors.Is(err, service.ErrUserNotFound) {
-				h.Writer.WriteError(w, rest.NewNotFoundError(err))
-				return
-			}
-
 			var errResp *rest.ErrorResponse
-			if errors.As(err, &errResp) {
+			switch {
+			case errors.Is(err, service.ErrUserNotFound):
+				h.Writer.WriteError(w, rest.NewNotFoundError(err))
+			case errors.As(err, &errResp):
 				h.Writer.WriteError(w, errResp)
-				return
+			default:
+				h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to refresh access token: %w", err))
 			}
-
-			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to refresh access token: %w", err))
+			return
 		}
 
 		setCookies(w, accessToken, accessTokenCookie)
@@ -379,12 +374,12 @@ func (h *Handler) VerifyUser(verifier verify_jwt.Verifier) http.HandlerFunc {
 		}
 
 		if err := h.service.VerifyUser(r.Context(), tokenParam, time.Until(claims.ExpiresAt.Time), id); err != nil {
-			if errors.Is(err, service.ErrVerificationTokenUsed) {
+			switch {
+			case errors.Is(err, service.ErrVerificationTokenUsed):
 				h.Writer.WriteError(w, rest.NewConflictError(err))
-				return
+			default:
+				h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to verify user - uid: %d, error: %w", id, err))
 			}
-
-			h.Writer.WriteError(w, rest.NewInternalServerErrorf("failed to verify user - uid: %d, error:%w", id, err))
 			return
 		}
 

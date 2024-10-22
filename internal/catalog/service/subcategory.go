@@ -93,7 +93,7 @@ func (s *subcategoryImpl) Create(ctx context.Context, info domain.SubcategoryInf
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.RaiseException {
-			return 0, ErrSubcateogryNameTaken
+			return 0, ErrSubcategoryNameTaken
 		}
 
 		return 0, err
@@ -118,7 +118,7 @@ func (s *subcategoryImpl) Update(ctx context.Context, id int32, info domain.Subc
 		if errors.As(err, &pgErr) {
 			switch pgErr.Code {
 			case pgerrcode.RaiseException:
-				return domain.Subcategory{}, ErrSubcateogryNameTaken
+				return domain.Subcategory{}, ErrSubcategoryNameTaken
 			case pgerrcode.ForeignKeyViolation:
 				return domain.Subcategory{}, ErrCategoryNotFound
 			}
