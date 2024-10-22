@@ -27,6 +27,8 @@ func NewClient(awsCfg config.AWSCfg, cdnCfg config.CDN) (*cloudfrontCdn, error) 
 	return cdn, nil
 }
 
+// InvalidateFile invalidates the specified file in the CloudFront distribution.
+// It creates an invalidation request for the given fileName and returns an error if the request fails.
 func (c *cloudfrontCdn) InvalidateFile(ctx context.Context, fileName string) error {
 
 	var x int32 = 1

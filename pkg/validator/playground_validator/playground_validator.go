@@ -31,6 +31,7 @@ func (v *playgroundValidator) Validate(i any) *rest.ErrorResponse {
 	return nil
 }
 
+// phoneNumberValidator validates a phone number using a regular expression.
 func phoneNumberValidator(fl validator.FieldLevel) bool {
 	phone := fl.Field().String()
 

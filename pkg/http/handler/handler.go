@@ -7,6 +7,8 @@ import (
 	"github.com/hexley21/fixup/pkg/validator"
 )
 
+
+// holds the basic components required for handling HTTP requests.
 type Components struct {
 	Logger    logger.Logger
 	Binder    binder.FullBinder

@@ -26,6 +26,8 @@ type (
 	}
 )
 
+// Rollback attempts to rollback the given transaction. If the rollback fails,
+// it wraps the rollback error with the original error. Otherwise, it returns the original error.
 func Rollback(tx pgx.Tx, ctx context.Context, originalErr error) error {
     if err := tx.Rollback(ctx); err != nil {
         return fmt.Errorf("rollback failed: %w, original error: %w", err, originalErr)
