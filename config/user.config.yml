@@ -11,8 +11,9 @@ http:
     write_timeout: 30s
 
 templates:
-    activation: ./templates/activation.html
-    activation_success: ./templates/activation_success.html
+    verification: ./templates/verification.html
+    verification_success: ./templates/verification_success.html
+
 metrics:
     port: 8081
 
