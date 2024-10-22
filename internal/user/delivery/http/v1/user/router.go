@@ -8,10 +8,10 @@ import (
 	"github.com/hexley21/fixup/internal/common/middleware"
 )
 
-var (
-	maxFileSize int64 = 10 << 20
-)
+// TODO: Move to config
+const maxFileSize int64 = 10 << 20
 
+// MapRoutes maps the user-related routes to the provided router. It also sets up middlewares for JWT access
 func MapRoutes(
 	mw *middleware.Middleware,
 	h *Handler,

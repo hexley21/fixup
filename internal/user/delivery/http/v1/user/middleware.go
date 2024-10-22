@@ -30,6 +30,11 @@ func NewUserMiddleware(writer writer.HTTPErrorWriter) *Middleware {
 	}
 }
 
+// AllowSelfOrRole is a middleware that allows access to a route if the user is either the owner
+// (identified by "me" or their user ID) or has one of the specified roles.
+// It retrieves the user ID from the URL parameters and the JWT claims from the request context.
+// If the user is authorized, it adds the user ID to the request context and calls the next handler.
+// Otherwise, it writes an error response.
 func (m *Middleware) AllowSelfOrRole(roles ...enum.UserRole) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

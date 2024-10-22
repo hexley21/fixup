@@ -28,6 +28,9 @@ func NewAuthMiddleware(writer writer.HTTPErrorWriter) *Middleware {
 	}
 }
 
+// RefreshJWT is a middleware that verifies the JWT token from the Authorization header.
+// It uses the provided jwtVerifier to validate the token.
+// If the token is missing or invalid, it writes an error response.
 func (m *Middleware) RefreshJWT(jwtVerifier refresh_jwt.Verifier) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

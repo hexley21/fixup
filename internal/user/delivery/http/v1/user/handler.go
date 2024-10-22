@@ -17,12 +17,9 @@ import (
 )
 
 // TODO: manage who can access certain endpoint & add profile endpoints
-// TODO: wrap errors from services
 // TODO: move pfp size decalration to config
 
-var (
-	maxPfpSize int64 = 1 << 20
-)
+const maxPfpSize int64 = 1 << 20
 
 type Handler struct {
 	*handler.Components
