@@ -31,29 +31,30 @@ type ErrorResponse struct {
 	Status  int    `json:"-"`
 }
 
+// Error returns a string representation of the ErrorResponse,
+// including the status, message, and cause (if any).
 func (e *ErrorResponse) Error() string {
-	var sb strings.Builder
-	sb.WriteString("status: ")
-	sb.WriteString(strconv.Itoa(e.Status))
-	sb.WriteString(" - message: ")
-	sb.WriteString(e.Message)
+    var sb strings.Builder
+    sb.WriteString("status: ")
+    sb.WriteString(strconv.Itoa(e.Status))
+    sb.WriteString(" - message: ")
+    sb.WriteString(e.Message)
 
-	if e.Cause != nil {
-		sb.WriteString(" - cause: ")
-		sb.WriteString(e.Cause.Error())
-	}
+    if e.Cause != nil {
+        sb.WriteString(" - cause: ")
+        sb.WriteString(e.Cause.Error())
+    }
 
-	return sb.String()
+    return sb.String()
 }
 
 func newError(cause error, status int, message string) *ErrorResponse {
-	return &ErrorResponse{
-		Cause:   cause,
-		Message: message,
-		Status:  status,
-	}
+    return &ErrorResponse{
+        Cause:   cause,
+        Message: message,
+        Status:  status,
+    }
 }
-
 func NewBadRequestError(cause error) *ErrorResponse {
 	return newError(cause, http.StatusBadRequest, cause.Error())
 }

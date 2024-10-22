@@ -215,3 +215,14 @@ func TestUpdateCategoryById_Conflict(t *testing.T) {
 	assert.ErrorIs(t, err, service.ErrCategoryNameTaken)
 	assert.Empty(t, categoryEntity)
 }
+
+func TestUpdateCategoryById_TypeNotFound(t *testing.T) {
+	ctrl, ctx, svc, mockCategoryRepository := setupCategory(t)
+	defer ctrl.Finish()
+
+	mockCategoryRepository.EXPECT().Update(ctx, id, categoryInfoVO).Return(repository.CategoryModel{}, &pgconn.PgError{Code: pgerrcode.ForeignKeyViolation})
+
+	categoryEntity, err := svc.Update(ctx, id, categoryInfoVO)
+	assert.ErrorIs(t, err, service.ErrCategoryTypeNotFound)
+	assert.Empty(t, categoryEntity)
+}

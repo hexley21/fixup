@@ -20,6 +20,7 @@ type Middleware struct {
 
 func NewMiddleware(binder binder.FullBinder, writer writer.HTTPErrorWriter) *Middleware {
 	return &Middleware{
-		binder, writer,
+		binder: binder,
+		writer: writer,
 	}
 }

@@ -20,10 +20,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-var (
-	ErrAlreadyVerified = errors.New("user is already verified")
-)
-
 type templates struct {
 	verification        *template.Template
 	verificationSuccess *template.Template
@@ -39,7 +35,6 @@ type AuthService interface {
 	AuthenticateUser(ctx context.Context, email string, password string) (domain.UserIdentity, error)
 	RefreshUserToken(ctx context.Context, id int64, tokenFunc func(role enum.UserRole, verified bool) (string, error)) (string, error)
 	VerifyUser(ctx context.Context, token string, ttl time.Duration, id int64) error
-	GetAccountInfo(ctx context.Context, id int64) (domain.UserAccountInfo, error)
 	ResendVerificationLetter(ctx context.Context, tokenFunc func(id int64) (string, error), email string) error
 	SendVerificationLetter(ctx context.Context, token string, email string, name string) error
 	SendVerificationSuccessLetter(email string) error
@@ -82,6 +77,10 @@ func NewAuthService(
 	}
 }
 
+// ParseTemplates parses the email templates from the provided configuration paths.
+// It is called once to ensure the templates are available for use at any time.
+// It returns an error if any template fails to parse.
+// This was done so test would not need to read files.
 func (s *authServiceImpl) ParseTemplates(cfg config.Templates) error {
 	verificationTemplate, err := template.ParseFiles(cfg.VerificationPath)
 	if err != nil {
@@ -100,6 +99,7 @@ func (s *authServiceImpl) SetTemplates(verificationTemplate *template.Template, 
 	s.templates = NewTemplates(verificationTemplate, verificationSuccessTemplate)
 }
 
+// RegisterProvider writes user record to a database, returns domain user result.
 func (s *authServiceImpl) RegisterCustomer(ctx context.Context, password string, personalInfo *domain.UserPersonalInfo) (*domain.User, error) {
 	hash, err := s.hasher.HashPassword(password)
 	if err != nil {
@@ -125,7 +125,7 @@ func (s *authServiceImpl) RegisterCustomer(ctx context.Context, password string,
 	return MapUserModelToEntity(userModel)
 }
 
-// RegisterProvider inserts records in user & provider tables
+// RegisterProvider writes user and provider records to a database, returns domain user result.
 func (s *authServiceImpl) RegisterProvider(ctx context.Context, password string, personalIdNumber string, personalInfo *domain.UserPersonalInfo) (*domain.User, error) {
 	// hash a password first
 	hash, err := s.hasher.HashPassword(password)
@@ -187,6 +187,8 @@ func (s *authServiceImpl) RegisterProvider(ctx context.Context, password string,
 	return MapUserModelToEntity(userModel)
 }
 
+// AuthenticateUser authenticates a user by verifying their email and password.
+// It returns error if password is incorrect
 func (s *authServiceImpl) AuthenticateUser(ctx context.Context, email string, password string) (domain.UserIdentity, error) {
 	authInfo, err := s.userRepository.GetAuthInfoByEmail(ctx, email)
 	if err != nil {
@@ -208,6 +210,8 @@ func (s *authServiceImpl) AuthenticateUser(ctx context.Context, email string, pa
 	return MapUserIdentity(authInfo.ID, authInfo.Role, authInfo.Verified)
 }
 
+// RefreshUserToken retrieves user's current accout information and returns a new access token.
+// It returns an error if the user is not found or if any other error occurs during the process.
 func (s *authServiceImpl) RefreshUserToken(ctx context.Context, id int64, tokenFunc func(role enum.UserRole, verified bool) (string, error)) (string, error) {
 	accountInfo, err := s.userRepository.GetAccountInfo(ctx, id)
 	if err != nil {
@@ -218,9 +222,12 @@ func (s *authServiceImpl) RefreshUserToken(ctx context.Context, id int64, tokenF
 		return "", err
 	}
 
+
 	return tokenFunc(enum.UserRole(accountInfo.Role), accountInfo.Verified.Bool)
 }
 
+// VerifyUser verifies a user by setting the token as used and updating the user's verification status.
+// It returns an error if the token has already been used, the user update fails, or any other error occurs.
 func (s *authServiceImpl) VerifyUser(ctx context.Context, token string, ttl time.Duration, id int64) error {
 	err := s.verificationRepository.SetTokenUsed(ctx, token, ttl)
 	if err != nil {
@@ -241,15 +248,9 @@ func (s *authServiceImpl) VerifyUser(ctx context.Context, token string, ttl time
 	return nil
 }
 
-func (s *authServiceImpl) GetAccountInfo(ctx context.Context, id int64) (domain.UserAccountInfo, error) {
-	accountInfo, err := s.userRepository.GetAccountInfo(ctx, id)
-	if err != nil {
-		return domain.UserAccountInfo{}, err
-	}
-
-	return MapUserAccountInfo(accountInfo.Role, accountInfo.Verified)
-}
-
+// ResendVerificationLetter resends a verification email to the specified address.
+// It retrieves the user's verification info from the repository and checks if the user is already verified.
+// If the user is not verified, it generates a new token and sends a verification email.
 func (s *authServiceImpl) ResendVerificationLetter(ctx context.Context, tokenFunc func(id int64) (string, error), email string) error {
 	verificationInfo, err := s.userRepository.GetVerificationInfo(ctx, email)
 	if err != nil {
@@ -271,13 +272,15 @@ func (s *authServiceImpl) ResendVerificationLetter(ctx context.Context, tokenFun
 	return s.SendVerificationLetter(ctx, token, email, verificationInfo.FirstName)
 }
 
+// SendVerificationLetter sends an account verification email to the specified address.
+// It checks if the token has already been used and returns an error if it has.
 func (s *authServiceImpl) SendVerificationLetter(ctx context.Context, token string, email string, name string) error {
 	isUsed, err := s.verificationRepository.IsTokenUsed(ctx, token)
 	if err != nil {
 		return err
 	}
 	if isUsed {
-		return ErrAlreadyVerified
+		return ErrUserVerified
 	}
 
 	return s.mailer.SendHTML(
@@ -295,6 +298,7 @@ func (s *authServiceImpl) SendVerificationLetter(ctx context.Context, token stri
 	)
 }
 
+// SendVerificationSuccessLetter sends a verification success email to the specified address.
 func (s *authServiceImpl) SendVerificationSuccessLetter(email string) error {
 	return s.mailer.SendHTML(
 		s.emailAddress,

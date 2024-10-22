@@ -24,6 +24,9 @@ type RouterArgs struct {
 	CdnUrlSigner           cdn.URLSigner
 }
 
+// MapV1Routes maps version 1 routes to the provided router.
+// It initializes handlers for authentication and user services, sets up JWT and verification middlewares,
+// and maps the routes for authentication and user endpoints.
 func MapV1Routes(args RouterArgs, router chi.Router) {
 	authHandler := auth.NewHandler(
 		args.HandlerComponents,

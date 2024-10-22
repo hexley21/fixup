@@ -21,6 +21,8 @@ func New(JSONDeserializer json.Deserializer) *standardBinder {
 	}
 }
 
+// BindJSON deserializes a JSON from the request body into the provided struct.
+// It checks if the request body is empty and if the Content-Type header is set to "application/json".
 func (b *standardBinder) BindJSON(r *http.Request, i any) *rest.ErrorResponse {
 	if r.ContentLength == 0 {
 		return binder.ErrEmptyBody
@@ -38,26 +40,30 @@ func (b *standardBinder) BindJSON(r *http.Request, i any) *rest.ErrorResponse {
 	return nil
 }
 
+// BindMultipartForm attempts to parse the multipart form with the specified max size and returns multipart form.
+// It verifies that the Content-Type header is set to "multipart/form-data".
 func (b *standardBinder) BindMultipartForm(r *http.Request, maxSize int64) (*multipart.Form, *rest.ErrorResponse) {
-	if !strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
-		return nil, binder.ErrUnsupportedMediaType
-	}
+    if !strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+        return nil, binder.ErrUnsupportedMediaType
+    }
 
-	if err := r.ParseMultipartForm(maxSize); err != nil {
+    if err := r.ParseMultipartForm(maxSize); err != nil {
 		return nil, rest.NewReadFileError(err)
-	}
+    }
 
-	return r.MultipartForm, nil
+    return r.MultipartForm, nil
 }
 
+// BindForm parses the form data and returns values
+// It verifies that the Content-Type header is set to "application/x-www-form-urlencoded".
 func (b *standardBinder) BindForm(r *http.Request) (url.Values, *rest.ErrorResponse) {
-	if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/x-www-form-urlencoded") {
-		return nil, binder.ErrUnsupportedMediaType
-	}
+    if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/x-www-form-urlencoded") {
+        return nil, binder.ErrUnsupportedMediaType
+    }
 
-	if err := r.ParseForm(); err != nil {
-		return nil, rest.NewInternalServerError(err)
-	}
+    if err := r.ParseForm(); err != nil {
+        return nil, rest.NewInternalServerError(err)
+    }
 
-	return r.Form, nil
+    return r.Form, nil
 }

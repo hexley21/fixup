@@ -13,6 +13,10 @@ var (
 	ErrInvalidPerPage = rest.NewBadRequestError(errors.New("invalid per_page parameter"))
 )
 
+// ParseLimitAndOffset parses the "page" and "per_page" query parameters from the request URL.
+// "page" parameter is a valid integer greater than 0.
+// "per_page" parameter is a valid integer greater than 0.
+// If "per_page" is not provided or exceeds the maximum allowed, it defaults to the specified defaultPerPage.
 func ParseLimitAndOffset(r *http.Request, maxPerPage int64, defaultPerPage int64) (int64, int64, *rest.ErrorResponse) {
 	pageParam := r.URL.Query().Get("page")
 	perPageParam := r.URL.Query().Get("per_page")

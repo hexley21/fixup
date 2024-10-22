@@ -212,6 +212,9 @@ type UpdateUserRow struct {
 	Email       string
 }
 
+// Update updates a user's information by their ID, supporting partial updates.
+// It constructs an SQL query based on the provided fields in UpdateUserRow and executes it.
+// It returns the updated user information or an error if the update fails or if no fields are provided.
 func (r *pgsqlUserRepository) Update(ctx context.Context, id int64, arg UpdateUserRow) (UpdateUserRow, error) {
 	var i UpdateUserRow
 

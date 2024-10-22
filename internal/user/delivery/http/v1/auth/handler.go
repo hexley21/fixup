@@ -402,6 +402,9 @@ func (h *Handler) VerifyUser(verifier verify_jwt.Verifier) http.HandlerFunc {
 	}
 }
 
+// sendVerificationLetter generates a verification JWT and sends a verification email.
+// It uses the provided generator to create the JWT and the service to send the email.
+// It logs errors and returns an error if any step fails.
 func (h *Handler) sendVerificationLetter(ctx context.Context, generator verify_jwt.Generator, id int64, email string, name string) *rest.ErrorResponse {
 	jwt, err := generator.Generate(id, email)
 	if err != nil {

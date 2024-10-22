@@ -29,6 +29,8 @@ func NewCategoryTypeService(categoryTypeRepository repository.CategoryTypeReposi
 	}
 }
 
+// Create adds a new category type to the repository using the provided name.
+// If the category type name is already taken, it returns ErrCategoryTypeNameTaken.
 func (s *categoryTypeImpl) Create(ctx context.Context, name string) (domain.CategoryType, error) {
 	model, err := s.categoryTypeRepository.Create(ctx, name)
 	if err != nil {
@@ -42,6 +44,8 @@ func (s *categoryTypeImpl) Create(ctx context.Context, name string) (domain.Cate
 	return domain.NewCategoryType(model.ID, model.Name), nil
 }
 
+// Delete removes a category type from the repository by its ID.
+// It returns an error if the deletion fails or if the category type is not found (indicated by no rows affected).
 func (s *categoryTypeImpl) Delete(ctx context.Context, id int32) error {
 	ok, err := s.categoryTypeRepository.Delete(ctx, id)
 	if err != nil {
@@ -54,6 +58,8 @@ func (s *categoryTypeImpl) Delete(ctx context.Context, id int32) error {
 	return nil
 }
 
+// Get retrieves a category type by its ID from the repository.
+// If the category type is not found, it returns ErrCategoryTypeNotFound.
 func (s *categoryTypeImpl) Get(ctx context.Context, id int32) (domain.CategoryType, error) {
 	model, err := s.categoryTypeRepository.Get(ctx, id)
 	if err != nil {
@@ -66,6 +72,7 @@ func (s *categoryTypeImpl) Get(ctx context.Context, id int32) (domain.CategoryTy
 	return domain.NewCategoryType(model.ID, model.Name), nil
 }
 
+// List retrieves a list of category types from the repository with the specified limit and offset.
 func (s *categoryTypeImpl) List(ctx context.Context, limit int64, offset int64) ([]domain.CategoryType, error) {
 	list, err := s.categoryTypeRepository.List(ctx, limit, offset)
 	if err != nil {
@@ -80,6 +87,9 @@ func (s *categoryTypeImpl) List(ctx context.Context, limit int64, offset int64) 
 	return categoryTypes, nil
 }
 
+// Update modifies an existing category type in the repository using the provided ID and name.
+// It returns ErrCategoryTypeNameTaken if name is taken
+// If category type not found, returns ErrCategoryNotFound.
 func (s *categoryTypeImpl) Update(ctx context.Context, id int32, name string) error {
 	ok, err := s.categoryTypeRepository.Update(ctx, id, name)
 	if err != nil {

@@ -14,9 +14,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// TODO: Add additional log messages to errors
-// TODO: Remove reduntant names from structs
-
+// TODO: move this to config
 var directory = "pfp/"
 
 type UserService interface {
@@ -48,6 +46,8 @@ func NewUserService(
 	}
 }
 
+// Get retrieves a user by their userId from the repository.
+// It returns ErrUserNotFound if the user does not exist, or the user entity and any other error encountered.
 func (s *userServiceImpl) Get(ctx context.Context, userId int64) (*domain.User, error) {
 	userModel, err := s.userRepository.Get(ctx, userId)
 	if err != nil {
@@ -61,6 +61,9 @@ func (s *userServiceImpl) Get(ctx context.Context, userId int64) (*domain.User, 
 	return MapUserModelToEntity(userModel)
 }
 
+// UpdatePersonalInfo updates a user's personal information by their ID and returns domain user personal info.
+// If the user is not found, it returns ErrUserNotFound.
+// If the update parameters are invalid, it returns ErrUserNotUpdated.
 func (s *userServiceImpl) UpdatePersonalInfo(ctx context.Context, id int64, personalInfo *domain.UserPersonalInfo) (*domain.UserPersonalInfo, error) {
 	user, err := s.userRepository.Update(ctx, id, repository.UpdateUserRow{
 		FirstName:   personalInfo.FirstName,
@@ -82,7 +85,10 @@ func (s *userServiceImpl) UpdatePersonalInfo(ctx context.Context, id int64, pers
 	return domain.NewUserPersonalInfo(user.Email, user.PhoneNumber, user.FirstName, user.LastName), nil
 }
 
-// UpdateProfilePicture uploads new picture to s3, updates record in db, deletes old one from s3 & invalidates cache
+// UpdateProfilePicture updates a user's profile picture by uploading a new picture to S3,
+// updating the user's picture path in the repository, and deleting the old picture from S3.
+// It also invalidates the old picture in the CDN if it exists. It returns an error if any step fails,
+// including user not found, S3 upload failure, repository update failure, S3 deletion failure, or CDN invalidation failure.
 func (s *userServiceImpl) UpdateProfilePicture(ctx context.Context, userId int64, file io.Reader, fileName string, fileSize int64, fileType string) error {
 	// fetch a picture in advance, also check if user exists
 	picture, err := s.userRepository.GetPicture(ctx, userId)
@@ -111,7 +117,7 @@ func (s *userServiceImpl) UpdateProfilePicture(ctx context.Context, userId int64
 		return ErrUserNotUpdated
 	}
 
-	// if old picture fetched before invalid, skip the deletion from s3 and cache invalidation
+	// if old picture fetched before is invalid, skip the deletion from s3 and cache invalidation
 	if picture.String == "" {
 		return nil
 	}
@@ -123,6 +129,11 @@ func (s *userServiceImpl) UpdateProfilePicture(ctx context.Context, userId int64
 	return s.cdnFileInvalidator.InvalidateFile(ctx, picture.String)
 }
 
+// UpdatePassword updates a user's password by verifying the old password and setting a new one.
+// It retrieves the user's current password hash from the repository and verifies it against the provided old password.
+// If the verification is successful, it hashes the new password and updates the repository with the new hash.
+// It returns an error if the user is not found, the old password is incorrect, the new password hashing fails,
+// or the repository update is unsuccessful.
 func (s *userServiceImpl) UpdatePassword(ctx context.Context, id int64, oldPassowrd string, newPassword string) error {
 	oldHash, err := s.userRepository.GetHashById(ctx, id)
 	if err != nil {
@@ -156,6 +167,10 @@ func (s *userServiceImpl) UpdatePassword(ctx context.Context, id int64, oldPasso
 	return nil
 }
 
+// Delete removes a user by their userId. It first retrieves the user's picture from the repository.
+// If the user has a picture, it deletes the picture from the S3 bucket and invalidates the file in the CDN.
+// Finally, it deletes the user from the repository.
+// If the user is not found, it returns ErrUserNotFound.
 func (s *userServiceImpl) Delete(ctx context.Context, userId int64) error {
 	picture, err := s.userRepository.GetPicture(ctx, userId)
 	if err != nil {

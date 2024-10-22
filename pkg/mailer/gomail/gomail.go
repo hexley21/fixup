@@ -20,6 +20,7 @@ func (m *goMailer) newDialer() *gomail.Dialer {
 	return gomail.NewDialer(m.cfg.Host, m.cfg.Port, m.cfg.User, m.cfg.Password)
 }
 
+// newMessage prepares basic message to be send in next steps.
 func newMessage(from string, to string, subject string, attachments ...string) *gomail.Message {
 	msg := gomail.NewMessage()
 	msg.SetHeader("From", from)
@@ -36,6 +37,7 @@ func newMessage(from string, to string, subject string, attachments ...string) *
 	return msg
 }
 
+// SendMessage sends plain text messaage to a recipient.
 func (m *goMailer) SendMessage(from string, to string, subject string, message string, attachments ...string) error {
 	msg := newMessage(from, to, subject, attachments...)
 	msg.SetBody("text/plain", message)
@@ -43,6 +45,7 @@ func (m *goMailer) SendMessage(from string, to string, subject string, message s
 	return m.newDialer().DialAndSend(msg)
 }
 
+// SendHTML sends an HTML email using the provided template and data.
 func (m *goMailer) SendHTML(from string, to string, subject string, template *template.Template, data any, attachments ...string) error {
 	msg := newMessage(from, to, subject, attachments...)
 

@@ -4,12 +4,11 @@ type (
 	Subcategory struct {
 		ID   int32
 		Info SubcategoryInfo
-	}
-
+	} // Subcategory Domain Entity
 	SubcategoryInfo struct {
 		CategoryID int32
 		Name       string
-	}
+	} // Subcategory info Value Object
 )
 
 func NewSubcategory(id int32, categoryID int32, name string) Subcategory {

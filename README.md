@@ -16,15 +16,12 @@ The application follows Domain-Driven Design (DDD) principles and employs layere
 1. **Domain-Driven Design (DDD):**
    - Uses domain components such as entities and value objects to encapsulate core business components.
    - Domain events are processed internally within each microservice, maintaining encapsulated business logic.
-
 2. **Repository Pattern:**
    - Abstracts data access using repositories to interact with the underlying data sources (Postgres, Redis).
    - The repository layer provides methods to manage database connections and operations, returning domain components or model components as needed.
-   
 3. **Service Layer:**
    - Contains business logic and handles transactions across multiple repositories when required.
    - Processes errors returned from the repository layer, translating them into meaningful service-level errors.
-   
 4. **Handler/Controller Layer:**
    - Acts as the entry point for HTTP requests, performing data validation, mapping to domain components, and handling responses.
    - Manages error handling and logging while formatting the final response for clients.
@@ -76,22 +73,26 @@ This project is licensed under the **Apache Software License 2.0**.
 See [LICENSE](LICENSE) for more information.
 
 ## Acknowledgements
+
 - [golang - go](https://github.com/golang/go) The Go programming language. (BSD-3-Clause license)
+- [go-gomail - gomail](https://github.com/go-gomail/gomail) The best way to send emails in Go. (MIT license)
+- [go-chi - chi](https://github.com/go-chi/chi) lightweight, idiomatic and composable router for building Go HTTP services. (MIT license)
+- [go-playground - validator](https://github.com/go-playground/validator) 💯Go Struct and Field validation, including Cross Field, Cross Struct. (MIT license)
+- [golang-jwt - jwt](https://github.com/golang-jwt/jwt) Go implementation of JSON Web Tokens (JWT). (MIT license)
+- [golang - crypto (argon2)](golang.org/x/crypto) Go supplementary cryptography libraries. (BSD-3-Clause license)
+- [go-yaml - yaml](https://github.com/go-yaml/yaml) YAML support for the Go language. (MIT license)
+- [go-swagger - go-swagger](https://github.com/go-swagger/go-swagger) Swagger 2.0 implementation for go. (Apache-2.0 license)
+- [golang-migrate - migrate](https://github.com/golang-migrate/migrate) Database migrations. CLI and Golang library. (MIT license)
+- [uber - zap](https://github.com/uber-go/zap) Blazing fast, structured, leveled logging in Go. (MIT license)
+- [uber - gomock](https://github.com/uber-go/mock) GoMock is a mocking framework for the Go programming language. (Apache-2.0 license)
+- [testcontainers](https://github.com/testcontainers/testcontainers-go) Create and clean up container-based dependencies for automated integration/smoke tests. (MIT license)
+- [bwmarrin - snowflake](https://github.com/bwmarrin/snowflake) A simple to use Go package to generate or parse Twitter snowflake IDs. (BSD-2-Clause license)
+- [aws - aws-sdk-go-v2](https://github.com/aws/aws-sdk-go-v2) AWS SDK for the Go programming language.  (Apache-2.0 license)
 - [prometheus - clien_golang](https://github.com/prometheus/prometheus) Prometheus instrumentation library for Go applications. (Apache-2.0 license)
 - [grafana](https://github.com/grafana/grafana) The open and composable observability and data visualization platform. (AGPL-3.0 license)
 - [redis - go redis](https://github.com/redis/go-redis) Redis Go client. (BSD-2-Clause license)
 - [jackc - pgx](https://github.com/jackc/pgx) PostgreSQL driver and toolkit for Go. (MIT license)
-- [go-gomail - gomail](https://github.com/go-gomail/gomail) The best way to send emails in Go. (MIT license)
-- [go-chi - chi](https://github.com/go-chi/chi) lightweight, idiomatic and composable router for building Go HTTP services. (MIT license)
-- [go-playground - validator](https://github.com/go-playground/validator) 💯Go Struct and Field validation, including Cross Field, Cross Struct. (MIT license)
-- [bwmarrin - snowflake](https://github.com/bwmarrin/snowflake) A simple to use Go package to generate or parse Twitter snowflake IDs. (BSD-2-Clause license)
-- [aws - aws-sdk-go-v2](https://github.com/aws/aws-sdk-go-v2) AWS SDK for the Go programming language.  (Apache-2.0 license)
-- [golang-jwt - jwt](https://github.com/golang-jwt/jwt) Go implementation of JSON Web Tokens (JWT). (MIT license)
-- [uber - zap](https://github.com/uber-go/zap) Blazing fast, structured, leveled logging in Go. (MIT license)
-- [uber - gomock](https://github.com/uber-go/mock) GoMock is a mocking framework for the Go programming language. (Apache-2.0 license)
-- [testcontainers](https://github.com/testcontainers/testcontainers-go) Create and clean up container-based dependencies for automated integration/smoke tests. (MIT license)
+license)
 - [joho - godotenv](https://github.com/joho/godotenv) A Go port of Ruby's dotenv library (Loads environment variables from .env files). (MIT license)
-- [go-swagger - go-swagger](https://github.com/go-swagger/go-swagger) Swagger 2.0 implementation for go. (Apache-2.0 license)
-- [golang-migrate - migrate](https://github.com/golang-migrate/migrate) Database migrations. CLI and Golang library. (MIT license)
 - [sqlc-dev - sqlc](https://github.com/sqlc-dev/sqlc) Generate type-safe code from SQL. (MIT license)
 - [anton putra - nginx exporter](https://github.com/antonputra/tutorials/tree/main/lessons/141/prometheus-nginx-exporter) Best Place for DevOps. (MIT license)

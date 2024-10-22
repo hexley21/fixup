@@ -7,6 +7,8 @@ import (
 	"github.com/hexley21/fixup/internal/user/jwt/verify_jwt"
 )
 
+// MapRoutes maps the authentication-related routes to the provided router.
+// It uses JWT managers for access, refresh, and verification tokens.
 func MapRoutes(
 	h *Handler,
 	accessJwtManager auth_jwt.Manager,

@@ -8,12 +8,12 @@ import (
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-chi/chi/v5"
-	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	chi_middleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	v1 "github.com/hexley21/fixup/internal/catalog/delivery/http/v1"
+	"github.com/hexley21/fixup/internal/catalog/delivery/http/v1"
 	"github.com/hexley21/fixup/internal/catalog/repository"
 	"github.com/hexley21/fixup/internal/catalog/service"
 	"github.com/hexley21/fixup/internal/common/auth_jwt"
@@ -50,6 +50,8 @@ type server struct {
 	services          *services
 }
 
+// NewServer initializes and returns a new server instance with the provided configuration and dependencies.
+// It sets up repositories, services, JWT managers, handler components, and HTTP servers for both main and metrics endpoints.
 func NewServer(
 	cfg *config.Config,
 	dbPool *pgxpool.Pool,
@@ -111,8 +113,11 @@ func NewServer(
 }
 
 func (s *server) Run() error {
+	// Initialize middleware with binder and writer components
 	Middleware := middleware.NewMiddleware(s.handlerComponents.Binder, s.handlerComponents.Writer)
-	chiLogger := &chiMiddleware.DefaultLogFormatter{
+
+	// Set up logging middleware for chi router
+	chiLogger := &chi_middleware.DefaultLogFormatter{
 		Logger:  s.handlerComponents.Logger,
 		NoColor: false,
 	}
@@ -125,8 +130,8 @@ func (s *server) Run() error {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
-	s.router.Use(chiMiddleware.Recoverer)
-	s.router.Use(chiMiddleware.RequestLogger(chiLogger))
+	s.router.Use(chi_middleware.Recoverer)
+	s.router.Use(chi_middleware.RequestLogger(chiLogger))
 
 	v1.MapV1Routes(v1.RouterArgs{
 		CategoryTypeService: s.services.categoryTypes,
@@ -138,7 +143,9 @@ func (s *server) Run() error {
 		PaginationConfig:    &s.cfg.Pagination,
 	}, s.router)
 
-	s.metricsRouter.Use(chiMiddleware.Recoverer)
+
+	// Setup metrics endpoint
+	s.metricsRouter.Use(chi_middleware.Recoverer)
 	s.metricsRouter.Handle("/metrics", promhttp.Handler())
 
 	mainErrChan := make(chan error, 1)
@@ -160,6 +167,9 @@ func (s *server) Run() error {
 	}
 }
 
+// Close gracefully shuts down the server, including its HTTP mux, metrics mux and database pool.
+// Errors during shutdown are logged, but the function returns nil to ensure all components attempt to close.
+// Complies to io.Closer interface.
 func (s *server) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), s.cfg.Server.ShutdownTimeout)
 	defer cancel()
