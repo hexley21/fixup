@@ -19,6 +19,11 @@ func New() *playgroundValidator {
 		log.Fatalf("failed to register phone validator: %v", err)
 	}
 
+	err = validate.RegisterValidation("password", passwordValidator)
+	if err != nil {
+		log.Fatalf("failed to register password validator: %v", err)
+	}
+
 	return &playgroundValidator{validator: validate}
 }
 
@@ -31,10 +36,20 @@ func (v *playgroundValidator) Validate(i any) *rest.ErrorResponse {
 	return nil
 }
 
-// phoneNumberValidator validates a phone number using a regular expression.
+// phoneNumberValidator checks if string
+// Starts with 1-9,
+// Continues with 0-9,
+// Between 7-14 characters,
+// Expects only a phone number, without +.
 func phoneNumberValidator(fl validator.FieldLevel) bool {
 	phone := fl.Field().String()
 
-	re := regexp.MustCompile(`^[1-9]?[0-9]{7,14}$`)
-	return re.MatchString(phone)
+	return regexp.MustCompile("^[1-9]?[0-9]{7,14}$").MatchString(phone)
+}
+
+// passwordValidator checks if string is any ASCII character but space and control characters.
+func passwordValidator(fl validator.FieldLevel) bool {
+	password := fl.Field().String()
+
+	return regexp.MustCompile(`^[\x21-\x7E]{8,36}$`).MatchString(password)
 }
