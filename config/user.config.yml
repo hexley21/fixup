@@ -53,9 +53,9 @@ jwt:
 argon2:
     salt_len: 16
     key_len: 79
-    time: 3
-    memory: 65536
-    threads: 4
+    time: 1
+    memory: 47104
+    threads: 1
 
 logging:
     level: debug
