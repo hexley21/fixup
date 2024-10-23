@@ -16,6 +16,7 @@ import (
 	"github.com/hexley21/fixup/pkg/infra/redis"
 	"github.com/hexley21/fixup/pkg/infra/s3"
 	"github.com/hexley21/fixup/pkg/logger/zap_logger"
+	"github.com/hexley21/fixup/pkg/mailer"
 	"github.com/hexley21/fixup/pkg/mailer/gomail"
 	"github.com/hexley21/fixup/pkg/validator/playground_validator"
 )
@@ -69,7 +70,12 @@ func main() {
 		zapLogger.Fatal(err)
 	}
 
-	goMailer := gomail.NewGoMailer(&cfg.Mailer)
+	var goMailer mailer.Mailer
+	if cfg.Server.IsProd {
+		goMailer = gomail.New(&cfg.Mailer)
+	} else {
+		goMailer = gomail.NewDev(&cfg.Mailer)
+	}
 	argon2Hasher := argon2.NewHasher(cfg.Argon2)
 	aesEncryption := aes.NewAesEncryptor(cfg.AesEncryptor.Key)
 

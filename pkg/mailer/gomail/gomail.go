@@ -12,7 +12,7 @@ type goMailer struct {
 	cfg *config.Mailer
 }
 
-func NewGoMailer(cfg *config.Mailer) *goMailer {
+func New(cfg *config.Mailer) *goMailer {
 	return &goMailer{cfg: cfg}
 }
 
